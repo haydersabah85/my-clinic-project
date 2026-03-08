@@ -3,3 +3,5 @@ config.php
 database.php
 node_modules/
 vendor/
+backup/
+logs/
