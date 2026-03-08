@@ -1,0 +1,198 @@
+/* ================= THEME VARIABLES ================= */
+
+/* Light Theme (افتراضي) */
+:root{
+    --bg-main: #f4f6f8;
+    --bg-card: #ffffff;
+    --bg-form: #f1f8e9;
+
+    --text-main: #37474f;
+    --text-title: #1976d2;
+    --text-muted: #607d8b;
+
+    --primary: #1976d2;
+    --primary-hover: #0d47a1;
+
+    --success: #2e7d32;
+    --success-hover: #1b5e20;
+
+    --border-color: #cccccc;
+
+    --input-bg: #ffffff;
+    --input-border: #cccccc;
+
+    --shadow: 0 4px 10px rgba(0,0,0,.1);
+    --shadow-strong: 0 6px 15px rgba(0,0,0,.15);
+}
+
+/* Dark Theme */
+body[data-theme="dark"]{
+    --bg-main: #121212;
+    --bg-card: #1e1e1e;
+    --bg-form: #1b1b1b;
+
+    --text-main: #e0e0e0;
+    --text-title: #90caf9;
+    --text-muted: #b0bec5;
+
+    --primary: #1565c0;
+    --primary-hover: #0d47a1;
+
+    --success: #388e3c;
+    --success-hover: #2e7d32;
+
+    --border-color: #444;
+
+    --input-bg: #2a2a2a;
+    --input-border: #444;
+
+    --shadow: 0 4px 12px rgba(0,0,0,.6);
+    --shadow-strong: 0 6px 15px rgba(0,0,0,.8);
+}
+body{
+    font-family:'Cairo',sans-serif;
+    background:var(--bg-main);
+    color:var(--text-main);
+    margin:20px;
+    padding:0;
+    direction:ltr;
+}
+h2{
+    text-align:center;
+    color:var(--text-title);
+    margin:20px 0;
+}
+
+h3{
+    text-align:center;
+    color:var(--text-main);
+    margin:25px 0 10px;
+    font-size:20px;
+    border-bottom:2px solid var(--primary);
+    display:inline-block;
+    padding-bottom:5px;
+}
+.patient_info{
+    background:var(--bg-card);
+    border-radius:12px;
+    padding:15px;
+    margin:20px auto;
+    max-width:85%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:var(--shadow);
+}
+
+.patient_info a{
+    background:var(--primary);
+    color:#fff;
+}
+.patient_info a:hover{
+    background:var(--primary-hover);
+}
+form{
+    max-width:900px;
+    margin:20px auto;
+    border-radius:15px;
+    padding:20px;
+    box-shadow:var(--shadow-strong);
+    direction:ltr;
+    background:var(--bg-form);
+}
+label{
+    font-size:16px;
+    color:var(--text-main);
+    font-weight:600;
+}
+select,
+input[type="date"],
+textarea{
+    width:100%;
+    border-radius:8px;
+    border:1px solid var(--input-border);
+    padding:8px;
+    font-size:14px;
+    background:var(--input-bg);
+    color:var(--text-main);
+}
+button{
+    background:var(--success);
+    color:#fff;
+    border:none;
+    padding:10px 25px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:.3s;
+}
+button:hover{
+    background:var(--success-hover);
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+th,td{
+    padding:12px 15px;
+    text-align:left;
+    border-bottom:1px solid var(--border-color);
+}
+th{
+    background:var(--primary);
+    color:#fff;
+}
+tr:nth-child(even){
+    background:var(--bg-card);
+}
+tr:hover{
+    background:var(--primary-hover);
+    color:#fff;
+}
+.pagination{
+    text-align:center;
+    margin:20px 0;
+}
+.pagination a{
+    display:inline-block;
+    margin:0 5px;
+    padding:8px 12px;
+    background:var(--primary);
+    color:#fff;
+    border-radius:6px;
+    text-decoration:none;
+}
+.pagination a:hover{
+    background:var(--primary-hover);
+}
+.pagination a.active{
+    background:var(--success);
+}
+.pagination a.active:hover{
+    background:var(--success-hover);
+}
+.error-message{
+    color:#d32f2f;
+    font-weight:600;
+    margin-top:5px;
+    font-size:14px;
+}
+.success-message{
+    color:#388e3c;
+    font-weight:600;
+    margin-top:5px;
+    font-size:14px;
+}
+@media (max-width:600px){
+    .patient_info{
+        flex-direction:column;
+        text-align:center;
+    }
+    .patient_info div{
+        margin:10px 0;
+    }
+    form{
+        direction:rtl;
+    }
+}
+/* ================= END THEME VARIABLES ================= */
