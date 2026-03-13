@@ -362,10 +362,12 @@ if (isset($_GET['patient_id'])) {
         background: linear-gradient(135deg, #6b7280, #374151);
         color: #fff;
     }
-.followup-btn {
+
+    .followup-btn {
         background: linear-gradient(135deg, #8bafce, #36bcf5);
         color: #000;
     }
+
     /* DELETE SHAKE EFFECT */
     /* ============================= */
     .delete-icon:hover {
@@ -454,6 +456,78 @@ if (isset($_GET['patient_id'])) {
     .icon-btn:not(.edit-icon, .delete-icon):hover::after {
         opacity: 1;
     }
+
+    /* الخلفية */
+.modal{
+    display:none;
+    position:fixed;
+    z-index:1000;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.45);
+}
+
+/* الصندوق */
+.modal-content{
+    background:#fff;
+    width:350px;
+    padding:25px;
+    border-radius:12px;
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    animation:pop 0.25s ease;
+}
+
+/* حركة الظهور */
+@keyframes pop{
+    from{
+        transform:translate(-50%,-60%) scale(0.9);
+        opacity:0;
+    }
+    to{
+        transform:translate(-50%,-50%) scale(1);
+        opacity:1;
+    }
+}
+
+/* زر الاغلاق */
+.close-btn{
+    float:left;
+    font-size:22px;
+    cursor:pointer;
+    color:#999;
+}
+
+/* الحقول */
+.modal input{
+    width:100%;
+    padding:8px;
+    margin-top:5px;
+    margin-bottom:15px;
+    border:1px solid #ddd;
+    border-radius:6px;
+}
+
+/* زر الحفظ */
+.modal button{
+    width:100%;
+    padding:10px;
+    border:none;
+    background:#28a745;
+    color:white;
+    border-radius:6px;
+    font-size:15px;
+    cursor:pointer;
+}
+
+.modal button:hover{
+    background:#23913c;
+}
 </style>
 
 
@@ -502,51 +576,11 @@ if (isset($_GET['patient_id'])) {
             🚨
         </a>
 
-        <button onclick="showFollowupBox()"
-      
-        class="icon-btn followup-btn"
-            data-title="تعليم متابعة">
+        <a href="#" class="icon-btn followup-btn"
+            data-title="إضافة متابعة"
+           onclick="openFollowup(event)">
             📌
-        </button>
-
-        <div id="followupBox" style="
-display:none;
-margin-top:15px;
-padding:15px;
-background:#f8f9fa;
-border:1px solid #ddd;
-border-radius:10px;
-width:350px;
-">
-
-            <form method="POST" action="save_followup.php?id=<?php echo $row['id']; ?>">
-
-                <input type="hidden" name="patient_id" value="<?php echo $row['id']; ?>">
-
-                <label>تاريخ المراجعة:</label><br>
-                <input type="date" name="followup_date" required><br><br>
-
-                <label>سبب المراجعة:</label><br>
-                <input type="text" name="followup_reason" placeholder="مثال: مراجعة ضغط العين"
-                    style="width:100%;" ><br><br>
-
-                <button type="submit" style="
-background:#28a745;
-color:#fff;
-padding:6px 12px;
-border:none;
-border-radius:6px; width: 80px;">
-                     حفظ 
-                </button>
-
-                <button type="button" onclick="hideFollowupBox()"
-                    style="background:#dc3545;color:#fff;padding:6px 12px;border:none;border-radius:6px; width: 80px;">
-                    إلغاء
-                </button>
-
-            </form>
-
-        </div>
+        </a>
 
         <a href="visits.php"
             class="icon-btn visits-icon"
@@ -848,15 +882,57 @@ border-radius:6px; width: 80px;">
         };
     </script>
 
-    <script>
-        function showFollowupBox() {
-            document.getElementById("followupBox").style.display = "block";
-        }
+<div id="followupModal" class="modal">
 
-        function hideFollowupBox() {
-            document.getElementById("followupBox").style.display = "none";
-        }
-    </script>
+    <div class="modal-content">
+
+        <span class="close-btn" onclick="closeFollowup()">×</span>
+
+        <h3>📅 تحديد موعد المراجعة</h3>
+
+        <form method="POST" action="save_followup.php?id=<?php echo $row['id']; ?>">
+
+            <input type="hidden" name="patient_id" value="<?php echo $row['id']; ?>">
+
+            <label>تاريخ المراجعة</label>
+            <input type="date" name="followup_date" required>
+
+            <label>سبب المراجعة</label>
+            <input type="text" name="followup_reason" placeholder="مثال: مراجعة ضغط العين">
+
+            <button type="submit">💾 حفظ المتابعة</button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+function openFollowup(e){
+    e.preventDefault();
+    document.getElementById("followupModal").style.display = "block";
+}
+
+function closeFollowup(){
+    document.getElementById("followupModal").style.display = "none";
+}
+
+/* اغلاق عند الضغط خارج الصندوق */
+
+window.onclick = function(event){
+
+    let modal = document.getElementById("followupModal");
+
+    if(event.target == modal){
+        modal.style.display = "none";
+    }
+
+}
+
+</script>
+
 </body>
 <div class="links">
     <a href="surgery-appointment.php?id=<?php echo htmlspecialchars($row['id']); ?>">موعد عملية</a>
