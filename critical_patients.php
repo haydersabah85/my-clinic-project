@@ -1,7 +1,6 @@
 <?php
 include "config.php";
 
-
 /* ===== SQL: GET CRITICAL PATIENTS ===== */
 $sql = "
 SELECT DISTINCT
