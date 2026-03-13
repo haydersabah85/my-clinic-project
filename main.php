@@ -2,6 +2,7 @@
 
 include 'config.php';
 include 'auth.php';
+include 'auto_backup.php';
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
