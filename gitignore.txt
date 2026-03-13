@@ -1,4 +1,4 @@
-config.php
+config
 .env
 database.php
 node_modules/
