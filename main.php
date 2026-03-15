@@ -299,6 +299,7 @@ include 'auto_backup.php';
                 <span>👤 المرضى</span>
                 <a href="add-patient.php">إضافة مريض</a>
                 <a href="confirmed-list.php">قوائم العمليات</a>
+                <a href="import_surgery_excel.php">استيراد العمليات</a>
                 <a href="followups.php">المتابعة</a>
             </div>
 

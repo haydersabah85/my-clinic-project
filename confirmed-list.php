@@ -194,6 +194,9 @@ th {
 
 <h2>العمليات المؤكدة</h2>
 <a href="main.php">الصفحة الرئيسية</a>
+<a href="export_surgery_excel.php?date=<?php echo $date; ?>" class="btn btn-success">
+Export Surgery List
+</a>
 <a href="operation-by-date.php?date=<?php echo $date; ?>">عرض العمليات حسب التاريخ</a>
 
 <div class="filter-box">

@@ -246,7 +246,7 @@ input[type="submit"]:hover {
         $types = [
             "Phaco","Vitrectomy","Phaco and Vitrectomy","SOR",
             "Phaco and SOR","Squint","EUA","Probing","SMILE",
-            "PRK","Secondary IOL","Anterior Vitrectomy"
+            "PRK","Secondary IOL","IOL Exchange","Anterior Vitrectomy"
         ];
         foreach ($types as $type) {
             $selected = ($row_surgery['surgery_type'] == $type) ? "selected" : "";

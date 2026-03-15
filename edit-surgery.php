@@ -181,7 +181,7 @@ button#edit_surgery:hover {
 
             <?php
             $surgery_types = [ 'Phaco', 'Vitrectomy', 'Phaco and Vitrectomy', 'SOR',
-             'Phaco and SOR', 'Squint', 'EUA', 'Probing', 'SMILE', 'PRK', 'Secondary IOL', 
+             'Phaco and SOR', 'Squint', 'EUA', 'Probing', 'SMILE', 'PRK', 'Secondary IOL', 'IOL Exchange', 
              'Pterygium with Graft', 'Pterygium'];
             foreach ($surgery_types as $type) {
                 $selected = ($surgery_row['surgery_type'] === $type) ? 'selected' : '';
@@ -197,7 +197,7 @@ button#edit_surgery:hover {
             <option value="">اختر نوع العدسة</option>
             <?php
             $iol_types = [  'Sensar', 'Eyhance', 'Alcon', 'Clareon', 
-              'Synergy', 'Rayner Monofocal', 'Rayner Trifocal', 'Eleon'];
+              'Synergy', 'Rayner Monofocal', 'Rayner Trifocal', 'Eleon', 'Artisan'];
             foreach ($iol_types as $iol) {
                 $selected = ($surgery_row['iol_type'] === $iol) ? 'selected' : '';
                 echo "<option value=\"$iol\" $selected>$iol</option>";

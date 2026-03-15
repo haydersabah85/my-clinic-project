@@ -244,6 +244,7 @@ button:hover{
             <option value="SMILE">SMILE</option>
             <option value="PRK">PRK</option>
             <option value="Secondary IOL">Secondary IOL</option>
+            <option value="IOL Exchange">IOL Exchange</option>
             <option value="Pterygium with Graft">Pterygium with Graft</option>
             <option value="Pterygium">Pterygium</option>
           </ul>
