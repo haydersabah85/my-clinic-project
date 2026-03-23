@@ -5,6 +5,7 @@ include 'config.php';
 include 'auth.php';
 
 if (isset($_POST['surgery_btn'])) {
+   
     $patient_id = intval($_POST['id']);
     $eye = $_POST['eye'];
     $surgery_type = $_POST['surgery_type'];
@@ -21,9 +22,8 @@ if (isset($_POST['surgery_btn'])) {
 
     // Update the surgery_appointment table to mark the operation as done
 
-    $update_query = "UPDATE surgery_appointment SET status = 'done' WHERE patient_id = '$patient_id'";
+    $update_query = "UPDATE surgery_appointment SET status = 'done' WHERE patient_id = '$patient_id' AND date = '$date'";
     mysqli_query($con, $update_query);
-
 
     header("Location: operation-by-date.php?date=" . urlencode($date));
 

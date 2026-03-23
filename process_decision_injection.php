@@ -1,0 +1,74 @@
+<?php
+include 'config.php';
+
+include 'auth.php';
+
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+    
+
+} else {
+    // Redirect or handle the error if 'id' is not set
+    header("Location: error_page.php");
+    exit();
+}
+
+
+?>
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>قرار العملية</title>
+<link rel="stylesheet" href="assets/theme.css">
+<script src="assets/theme.js" defer></script>
+
+
+</head>
+<style>
+.box{
+    width:400px;
+    margin:100px auto;
+    padding:20px;
+    border-radius:10px;
+    background:#f9f9f9;
+    text-align:center;
+}
+button{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    font-size:16px;
+    cursor:pointer;
+}
+.done{ background:#4CAF50; color:white; }
+.dis{ background:#e74c3c; color:white; }
+</style>
+
+
+<body>
+
+
+<div class="box">
+    <h3>هل حضر المريض؟</h3>
+
+     <!-- إبر -->
+    <form action="add-injection.php?id=<?php echo $id; ?>" method="get">
+        <input type="hidden" name="id" value="<?php echo $id; ?>">
+        <button class="done">💉 تم إعطاء الإبرة</button>
+    </form>
+
+
+    
+    <!-- لم يحضر -->
+    <form action="discharge_injection.php?id=<?php echo $id; ?>" method="post">
+        <input type="hidden" name="id" value="<?php echo $id; ?>">
+        <button class="dis" name="dis_btn">✖ لم يحضر المريض</button>
+    </form>
+</div>
+
+
+</body>
+</html>
+

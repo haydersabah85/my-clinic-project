@@ -315,6 +315,7 @@ if (isset($_GET['id'])) {
                 <option value="Eylea 2mg">Eylea 2mg</option>
                 <option value="Vabysmo">Vabysmo</option>
                 <option value="Eylea 8mg">Eylea 8mg</option>
+                <option value="Lucentis">Lucentis</option>
                 <option value="Ozurdix">Ozurdix</option>
             </ul>
         </select>

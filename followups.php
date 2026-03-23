@@ -3,13 +3,13 @@ include 'config.php';
 include 'auth.php';
 
 $today = date('Y-m-d');
-$next_week = date('Y-m-d', strtotime('+7 days'));
+$next_two_weeks = date('Y-m-d', strtotime('+14 days'));
 
 $query = mysqli_query($con,"
 SELECT f.*, p.full_name, p.phone_no AS phone
 FROM followups f
 JOIN add_patient p ON f.patient_id = p.id
-WHERE f.followup_date BETWEEN '$today' AND '$next_week'
+WHERE f.followup_date BETWEEN '$today' AND '$next_two_weeks'
 AND f.status = 'pending'
 ORDER BY f.followup_date ASC
 ");
@@ -78,7 +78,7 @@ button:hover{
 
 <body>
 
-<h2>📅 مراجعات الأسبوع القادم</h2>
+<h2>📅 مراجعات الأسبوعين القادمين</h2>
 
 <?php
 $current_date = '';
@@ -98,7 +98,7 @@ if(mysqli_num_rows($query) > 0){
             echo "<div class='day-card'>";
             echo "<div class='day-title'>📌 ".date('l d-m-Y', strtotime($current_date))."</div>";
         }
-
+       
         $class = '';
         if($row['followup_date'] == $today){
             $class = 'today';
@@ -126,7 +126,7 @@ if(mysqli_num_rows($query) > 0){
     echo "</div>";
 
 }else{
-    echo "<p>لا توجد مراجعات خلال الأسبوع القادم</p>";
+    echo "<p>لا توجد مراجعات خلال الأسبوعين القادمين</p>";
 }
 ?>
 

@@ -10,11 +10,10 @@ if (isset($_POST['id'])) {
     $select_patient = "SELECT * FROM add_patient WHERE id = $id";
     $result_patient = mysqli_query($con, $select_patient);
     $row_patient = mysqli_fetch_assoc($result_patient);
-    
-    // Update the appointment status to 'discharged'
-    $update_query = "UPDATE surgery_appointment SET status = 'discharged' WHERE patient_id = '$id'";
-    mysqli_query($con, $update_query);
 
+    // Update the appointment status to 'discharged'
+    $update_laser_query = "UPDATE laser_appointment SET status = 'discharged' WHERE patient_id = '$id'";
+    mysqli_query($con, $update_laser_query);
 
     // Optionally, you can add more logic here, such as logging the discharge or notifying staff
 
@@ -25,4 +24,3 @@ if (isset($_POST['id'])) {
     echo "No appointment ID provided.";
     exit();
 }
-

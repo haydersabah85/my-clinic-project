@@ -940,6 +940,7 @@ window.onclick = function(event){
     <a href="injection-appointment.php?id=<?php echo htmlspecialchars($row['id']); ?>">موعد حقن</a>
     <a href="add-va.php?id=<?php echo htmlspecialchars($row['id']); ?>">اضافة فحص النظر</a>
     <a href="show-image.php?id=<?php echo htmlspecialchars($row['id']); ?>"> عرض الصور</a>
+    <a href="patient_reports.php?id=<?php echo htmlspecialchars($row['id']); ?>">التقارير الطبية</a>
 </div>
 
 </html>

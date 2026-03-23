@@ -213,7 +213,7 @@ tr:hover {
 
     echo "</td>
         <td><a id='edit' href='edit-surgery-appointment.php?id={$row['id']}'>تعديل</a></td>
-        <td><a id='add' href='process_decision.php?id={$row['patient_id']}'>اضافة</a></td>
+        <td><a id='add' href='process_decision_surgery.php?id={$row['patient_id']}'>اضافة</a></td>
         <td><a id='delete' onclick=\"return confirm('هل أنت متأكد من حذف هذا الموعد؟')\" href='delete-surgery-appointment.php?id={$row['id']}'>حذف</a></td>
         
         
@@ -244,7 +244,7 @@ tr:hover {
     laser_appointment.date
     FROM laser_appointment
     JOIN add_patient ON laser_appointment.patient_id = add_patient.id
-    WHERE date = ? ORDER BY laser_appointment.serial_no ASC");
+    WHERE date = ? and status = 'pending' ORDER BY laser_appointment.serial_no ASC");
     $stmt->bind_param("s", $date);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -291,7 +291,7 @@ tr:hover {
 
     echo "</td>
         <td><a id='edit' href='edit-laser-appointment.php?id={$row['id']}'>تعديل</a></td>
-        <td><a id='add' href='add-laser.php?id={$row['patient_id']}'>اضافة</a></td>
+        <td><a id='add' href='process_decision_laser.php?id={$row['patient_id']}'>اضافة</a></td>
         <td><a id='delete' onclick=\"return confirm('هل أنت متأكد من حذف هذا الموعد؟')\" href='delete-laser-appointment.php?id={$row['id']}'>حذف</a></td>
 
         
@@ -324,7 +324,7 @@ tr:hover {
     injection_appointment.date
     FROM injection_appointment
     JOIN add_patient ON injection_appointment.patient_id = add_patient.id
-    WHERE date = ? ORDER BY injection_appointment.serial_no ASC");
+    WHERE date = ? and status = 'pending' ORDER BY injection_appointment.serial_no ASC");
     $stmt->bind_param("s", $date);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -371,7 +371,7 @@ tr:hover {
 
     echo "</td>
         <td><a id='edit' href='edit-injection-appointment.php?id={$row['id']}'>تعديل</a></td>
-        <td><a id='add' href='add-injection.php?id={$row['patient_id']}'>اضافة</a></td>
+        <td><a id='add' href='process_decision_injection.php?id={$row['patient_id']}'>اضافة</a></td>
         <td><a id='delete' onclick=\"return confirm('هل أنت متأكد من حذف هذا الموعد؟')\" href='delete-injection-appointment.php?id={$row['id']}'>حذف</a></td>
         
         

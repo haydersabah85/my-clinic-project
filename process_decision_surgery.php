@@ -49,21 +49,27 @@ button{
 
 <body>
 
-<div class="box">
-    <h3>هل تمت العملية؟</h3>
 
-    <!-- تمت العملية -->
+<div class="box">
+    <h3>هل حضر المريض؟</h3>
+
+    <!-- عملية -->
     <form action="add-surgery.php?id=<?php echo $id; ?>" method="get">
         <input type="hidden" name="id" value="<?php echo $id; ?>">
-        <button class="done">نعم، تمت العملية</button>
+        <button class="done">✔ تمت العملية</button>
     </form>
 
+   
     <!-- لم يحضر -->
-    <form action="discharge.php?id=<?php echo $id; ?>" method="post">
+    <form action="discharge_surgery.php?id=<?php echo $id; ?>" method="post">
         <input type="hidden" name="id" value="<?php echo $id; ?>">
-        <button class="dis" name="dis_btn">لا، لم يحضر المريض</button>
+        <button class="dis" name="dis_btn">✖ لم يحضر المريض</button>
     </form>
 </div>
 
+
 </body>
 </html>
+
+
+

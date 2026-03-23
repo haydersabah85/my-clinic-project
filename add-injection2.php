@@ -13,11 +13,10 @@ if (isset($_POST['injection_btn'])) {
     $insert_query = "INSERT INTO injection (patient_id, eye, injection_type, notes, date) 
     VALUES ('$patient_id', '$eye', '$injection_type', '$notes', '$date')";
     mysqli_query($con, $insert_query);
-    
-    $delete_query = "DELETE FROM injection_appointment WHERE patient_id = '$patient_id'";
-    mysqli_query($con, $delete_query);
+
+    $update_query = "UPDATE injection_appointment SET status = 'done' WHERE patient_id = '$patient_id' AND date = '$date'";
+    mysqli_query($con, $update_query);
 
     header("Location: operation-by-date.php?date=" . urlencode($date));
     exit();
 }
-?>
