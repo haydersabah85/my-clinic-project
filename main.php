@@ -350,7 +350,8 @@ include 'auto_backup.php';
                     <tbody>
                         <?php
                         $q = mysqli_query($con, "
-SELECT add_patient.*, surgery_appointment.status
+SELECT add_patient.*,
+surgery_appointment.status
 FROM add_patient
 LEFT JOIN surgery_appointment
 ON surgery_appointment.id=(

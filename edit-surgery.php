@@ -181,7 +181,7 @@ button#edit_surgery:hover {
 
             <?php
             $surgery_types = [ 'Phaco', 'Vitrectomy', 'Phaco and Vitrectomy', 'SOR',
-             'Phaco and SOR', 'Squint', 'EUA', 'Probing', 'SMILE', 'PRK', 'Secondary IOL', 'IOL Exchange', 
+             'Phaco and SOR', 'Squint', 'ECCE' , 'ICCE' ,  'EUA', 'Probing', 'SMILE', 'PRK', 'Secondary IOL', 'IOL Exchange', 
              'Pterygium with Graft', 'Pterygium'];
             foreach ($surgery_types as $type) {
                 $selected = ($surgery_row['surgery_type'] === $type) ? 'selected' : '';

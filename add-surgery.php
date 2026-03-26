@@ -238,6 +238,8 @@ button:hover{
             <option value="SOR">SOR</option>
             <option value="Phaco and SOR">Phaco and SOR</option>
             <option value="Squint">Squint</option>
+            <option value="ECCE">ECCE</option>
+            <option value="ICCE">ICCE</option>
             <option value="Chalazion">Chalazion</option>
             <option value="EUA">EUA</option>
             <option value="Probing">Probing</option>

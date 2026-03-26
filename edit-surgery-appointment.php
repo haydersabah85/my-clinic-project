@@ -245,7 +245,7 @@ input[type="submit"]:hover {
             <?php
         $types = [
             "Phaco","Vitrectomy","Phaco and Vitrectomy","SOR",
-            "Phaco and SOR","Squint","EUA","Probing","SMILE",
+            "Phaco and SOR","Squint", "ECCE" , "ICCE", "EUA","Probing","SMILE",
             "PRK","Secondary IOL","IOL Exchange","Anterior Vitrectomy"
         ];
         foreach ($types as $type) {
