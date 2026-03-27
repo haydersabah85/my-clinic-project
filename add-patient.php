@@ -217,7 +217,7 @@ include "auth.php";
   </header>
 
   <div class="sidenav">
-    <a href="main.php">الصفحة الرئيسية</a>
+    <a href="dashboard.php">الصفحة الرئيسية</a>
     <a href="visits.php">زيارات اليوم</a>
     <a href="appointment.php">المواعيد</a>
     <a href="vouchers.php">الفواتير</a>

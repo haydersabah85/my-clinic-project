@@ -100,7 +100,7 @@ body[data-theme="dark"] {
 
 
 <div>
-<a id="main" href="main.php">الصفحة الرئيسية</a>
+<a id="main" href="dashboard.php">الصفحة الرئيسية</a>
 <a id="restore" href="restore.php">Restore</a>
 <form method="post">
     <button name="manual_backup"

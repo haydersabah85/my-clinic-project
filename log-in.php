@@ -19,7 +19,7 @@ if(isset($_POST['login'])){
             $_SESSION['role'] = $user['role'];
             $_SESSION['name'] = $user['full_name'];
 
-            header("Location: main.php");
+            header("Location: dashboard.php");
             exit;
         }
     }

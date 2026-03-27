@@ -173,7 +173,7 @@ include 'auth.php';
 
     <div class="container">
 
-        <a href="main.php" class="back-link">⬅ الصفحة الرئيسية</a>
+        <a href="dashboard.php" class="back-link">⬅ الصفحة الرئيسية</a>
 
         <div class="table-responsive">
             <table>

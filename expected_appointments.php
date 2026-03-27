@@ -90,7 +90,7 @@ button{
 
 <h2>مواعيد اليوم المتوقعة</h2>
 <div class="links">التاريخ: <?= htmlspecialchars($date) ?>
-<a href="main.php">الصفحة الرئيسية</a>
+<a href="dashboard.php">الصفحة الرئيسية</a>
 <a href="visits.php">زيارات اليوم</a>
 
 </div>

@@ -587,7 +587,7 @@ if (isset($_GET['patient_id'])) {
             data-title="زيارات اليوم">
             🏥 </a>
 
-        <a href="main.php"
+        <a href="dashboard.php"
             class="icon-btn home-icon"
             data-title="الصفحة الرئيسية">
             🏠 </a>

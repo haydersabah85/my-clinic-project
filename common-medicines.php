@@ -311,7 +311,7 @@ include 'auth.php';
             <div class="card">
                 <div class="top-actions">
                     <input type="text" id="searchInput" placeholder="Search for a Drug ..." onkeyup="filterTable()">
-                    <a class="btn btn-secondary" href="main.php">العودة إلى الصفحة الرئيسية</a>
+                    <a class="btn btn-secondary" href="dashboard.php">العودة إلى الصفحة الرئيسية</a>
                 </div>
 
                 <!-- #region -->

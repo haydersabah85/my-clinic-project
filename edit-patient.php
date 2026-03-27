@@ -194,7 +194,7 @@ h2 {
   </header>
   <body>
     <div class="sidenav">
-      <a href="main.php">الصفحة الرئيسية</a>
+      <a href="dashboard.php">الصفحة الرئيسية</a>
       <a href="add-patient.html">أضافة مريض جديد</a>
       <a href="appointment.html">المواعيد</a>
       <a href="vouchers.html">الفواتير</a>

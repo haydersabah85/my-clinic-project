@@ -370,7 +370,7 @@ body[data-theme="dark"] .visit_type a:hover {
         <!-- Navigation -->
         <nav>
             <ul>
-                <li><a href="main.php">الصفحة الرئيسية</a></li>
+                <li><a href="dashboard.php">الصفحة الرئيسية</a></li>
                 <li><a href="patient-file.php?id=<?php echo $row['id']; ?>">الزيارات</a></li>
                 <li><a href="add-va.php?id=<?php echo $row['id']; ?>">إضافة فحص النظر</a></li>
                 <li><a href="add-surgery.php?id=<?php echo $row['id']; ?>">إضافة عملية</a></li>

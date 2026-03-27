@@ -110,7 +110,7 @@ a:hover {
 <h2>مواعيد العمليات</h2>
 
     
-<a href="main.php">الصفحة الرئيسية</a>
+<a href="dashboard.php">الصفحة الرئيسية</a>
 <a href="confirmed-list.php">قائمة العمليات المؤكدة</a>
 
 <?php
