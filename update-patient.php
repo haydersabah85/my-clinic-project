@@ -27,7 +27,7 @@ if (isset($_POST['update_patient'])) {
         WHERE id=$id";
         $result = mysqli_query($con, $update_query);
         if ($result) {
-            header('location:main.php');
+            header('location:patient-data.php?id=' . $id);
         } else {
             die(mysqli_error($con));
         }
