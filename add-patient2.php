@@ -18,5 +18,5 @@ if (isset($_POST['submit'])) {
     VALUES('$full_name','$age','$date_of_birth','$gender','$phone_no','$phone_no_alt','$address','$notes')";
     $result = mysqli_query($con, $insert);
 
-    header('Location: main.php');
+    header('Location: dashboard.php');
 }

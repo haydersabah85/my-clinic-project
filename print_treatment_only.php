@@ -72,7 +72,7 @@ while ($m = mysqli_fetch_assoc($q)) {
         /* كل دواء */
         .medicine {
             margin-bottom: 6mm;
-            color: #108fe4fe;
+            color: #0b5885fe;
         }
 
         /* زر الطباعة */
@@ -106,12 +106,12 @@ while ($m = mysqli_fetch_assoc($q)) {
            <center><?php echo $p['diagnosis']; ?></center> 
 
              
-                <hr style="border: 1px dashed #504d4d; margin: 10px 0;"><br>
+             <br>
             <?php while ($row = mysqli_fetch_assoc($items)) { ?>
                 <div class="medicine">
                     <b><?php echo $medicine_names[$row['medicine_id']]; ?></b>
                     <?php echo $row['dose']; ?> -
-                    <?php echo $row['frequency']; ?> ---  
+                    <?php echo $row['frequency']; ?> - - 
                     <?php echo $row['duration']; ?>- 
                     <?php echo $row['instructions']; ?>
                     <?php if ($row['eye'] == 'right') echo " - العين اليمنى"; ?>
