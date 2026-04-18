@@ -14,6 +14,7 @@ if (isset($_POST['update_va'])) {
    $old_glasses_os = $_POST['old_glasses_os'];
    $ref_od = $_POST['ref_od'];
    $ref_os = $_POST['ref_os'];
+   $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
 
    $update_query = "UPDATE va SET 
       patient_id='$patient_id', 
@@ -24,7 +25,8 @@ if (isset($_POST['update_va'])) {
       old_glasses_od='$old_glasses_od', 
       old_glasses_os='$old_glasses_os', 
       ref_od='$ref_od', 
-      ref_os='$ref_os' 
+      ref_os='$ref_os',
+      updated_at = NOW() $syncPart
       WHERE va_id=$va_id";
 
    $result = mysqli_query($con, $update_query);

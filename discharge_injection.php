@@ -6,12 +6,13 @@ include 'auth.php';
 
 if (isset($_POST['id'])) {
     $id = $_POST['id'];
+    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
 
     $select_patient = "SELECT * FROM add_patient WHERE id = $id";
     $result_patient = mysqli_query($con, $select_patient);
     $row_patient = mysqli_fetch_assoc($result_patient);
 
-    $update_injection_query = "UPDATE injection_appointment SET status = 'discharged' WHERE patient_id = '$id'";
+    $update_injection_query = "UPDATE injection_appointment SET status = 'discharged', updated_at = NOW() $syncPart WHERE patient_id = '$id'";
     mysqli_query($con, $update_injection_query);
 
 

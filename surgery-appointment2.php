@@ -12,6 +12,8 @@ if (isset($_POST['submit_surgery'])) {
     $phone_alt = $_POST['phone_alt'];
     $date = $_POST['date'];
     $notes = $_POST['notes'];
+    $syncFields = $IS_LOCAL ? ", sync_status" : "";
+    $syncValues = $IS_LOCAL ? ", 0" : "";
  
  $sql_serial = "SELECT MAX(serial_no) AS max_serial FROM surgery_appointment WHERE date = '$date'";
    $result_serial = mysqli_query($con,$sql_serial);
@@ -24,10 +26,12 @@ if (isset($_POST['submit_surgery'])) {
    }
 
     $insert_query = "INSERT INTO surgery_appointment
-    (patient_id, eye, surgery_type, phone, phone_alt, date, notes, serial_no) 
-    VALUES ('$patient_id', '$eye', '$surgery_type', '$phone', '$phone_alt', '$date', '$notes', '$serial_no')";
+    (patient_id, eye, surgery_type, phone, phone_alt, date, notes, serial_no, updated_at $syncFields) 
+    VALUES ('$patient_id', '$eye', '$surgery_type', '$phone', '$phone_alt', '$date', '$notes', '$serial_no', NOW() $syncValues)";
 
-    $insert_phone = "UPDATE add_patient SET phone_no = '$phone', phone_no_alt = '$phone_alt' WHERE id = '$patient_id'";
+
+    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
+    $insert_phone = "UPDATE add_patient SET phone_no = '$phone', phone_no_alt = '$phone_alt', updated_at = NOW() $syncPart WHERE id = '$patient_id'";
     mysqli_query($con, $insert_phone);
     
     if (mysqli_query($con, $insert_query)) {

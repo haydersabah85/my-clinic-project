@@ -11,8 +11,10 @@ if (isset($_POST['id'])) {
     $result_patient = mysqli_query($con, $select_patient);
     $row_patient = mysqli_fetch_assoc($result_patient);
 
+    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
+
     // Update the appointment status to 'discharged'
-    $update_laser_query = "UPDATE laser_appointment SET status = 'discharged' WHERE patient_id = '$id'";
+    $update_laser_query = "UPDATE laser_appointment SET status = 'discharged', updated_at = NOW() $syncPart WHERE patient_id = '$id'";
     mysqli_query($con, $update_laser_query);
 
     // Optionally, you can add more logic here, such as logging the discharge or notifying staff

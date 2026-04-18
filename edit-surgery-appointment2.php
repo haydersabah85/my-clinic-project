@@ -14,6 +14,7 @@ if (isset($_POST['edit_surgery_appointment'])) {
     $phone_alt  = $_POST['phone_alt'];
     $date       = $_POST['date'];
     $notes      = $_POST['notes'];
+    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
 
     $stmt = $con->prepare("
         UPDATE surgery_appointment SET
@@ -22,7 +23,9 @@ if (isset($_POST['edit_surgery_appointment'])) {
             phone = ?,
             phone_alt = ?,
             date = ?,
-            notes = ?
+            notes = ?,
+            updated_at = NOW() $syncPart
+
         WHERE id = ?
     ");
 
@@ -37,7 +40,7 @@ if (isset($_POST['edit_surgery_appointment'])) {
         $id
     );
 
-    $insert_phone = "UPDATE add_patient SET phone_no = '$phone', phone_no_alt = '$phone_alt' WHERE id = '$patient_id'";
+    $insert_phone = "UPDATE add_patient SET phone_no = '$phone', phone_no_alt = '$phone_alt', updated_at = NOW() $syncPart WHERE id = '$patient_id'";
     mysqli_query($con, $insert_phone);
     
 

@@ -10,6 +10,7 @@ if (isset($_POST['edit_laser'])) {
     $laser_type = $_POST['laser_type'];
     $date = $_POST['date'];
     $laser_notes = $_POST['notes'];
+    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
    
     
     $update_query = "UPDATE laser SET 
@@ -17,8 +18,8 @@ if (isset($_POST['edit_laser'])) {
         eye='$eye', 
         laser_type='$laser_type' ,
         notes='$laser_notes', 
-        date='$date'
-
+        date='$date',
+        updated_at = NOW() $syncPart
         WHERE id=$laser_id";
     $result = mysqli_query($con, $update_query);
 

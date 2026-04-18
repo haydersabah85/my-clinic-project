@@ -3,6 +3,7 @@
 include "config.php";
 include "auth.php";
 
+
 /* ===== إحصائيات ===== */
 
 // إجمالي المرضى
@@ -782,18 +783,21 @@ if ($soon > 0) // قريبة
     }
   </script>
 
+<script>
+function syncData() {
+  fetch('sync_to_online.php')
+    .then(response => response.text())
+    .then(data => console.log(data))
+    .catch(err => console.log("Sync error:", err));
+}
 
-  <script>
-    setInterval(function() {
-      fetch('sync_to_online.php')
-        .then(response => response.text())
-        .then(data => console.log(data));
-    }, 300000);
-  </script>
+// أول تشغيل عند فتح الصفحة
+syncData();
 
-  <script>
-    fetch('sync_to_online.php');
-  </script>
+// تشغيل كل 5 دقائق
+setInterval(syncData, 300000);
+</script>
+
 
 </body>
 

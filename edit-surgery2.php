@@ -12,6 +12,7 @@ if (isset($_POST['edit_surgery'])) {
     $iol_type = $_POST['iol_type'];
     $date = $_POST['date'];
     $notes = $_POST['notes'];
+      $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
     
     $update_query = "UPDATE surgery SET 
         patient_id='$patient_id', 
@@ -19,7 +20,8 @@ if (isset($_POST['edit_surgery'])) {
         surgery_type='$surgery_type', 
         iol_type='$iol_type',
          notes='$notes',
-         date='$date' 
+         date='$date',
+         updated_at = NOW() $syncPart
          WHERE id='$surgery_id'";
     $result = mysqli_query($con, $update_query);
 

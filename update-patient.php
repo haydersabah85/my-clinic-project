@@ -14,6 +14,7 @@ if (isset($_POST['update_patient'])) {
     $phone_no_alt = $_POST['phone_no_alt'];
     $address = $_POST['address'];
     $notes = $_POST['notes'];
+    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
 
     $update_query = "UPDATE add_patient SET 
         full_name='$full_name', 
@@ -23,7 +24,8 @@ if (isset($_POST['update_patient'])) {
         phone_no='$phone_no',   
         phone_no_alt='$phone_no_alt',
         address='$address',
-        notes='$notes'
+        notes='$notes',
+        updated_at = NOW() $syncPart
         WHERE id=$id";
         $result = mysqli_query($con, $update_query);
         if ($result) {

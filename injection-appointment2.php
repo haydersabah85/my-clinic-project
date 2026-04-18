@@ -11,20 +11,23 @@ if (isset($_POST['submit_injection'])) {
     $phone_alt = $_POST['phone_alt'];
     $date = $_POST['date'];
     $notes = $_POST['notes'];
- 
-$sql_serial = "SELECT MAX(serial_no) AS max_serial FROM injection_appointment WHERE date = '$date'";
-$result_serial = mysqli_query($con, $sql_serial);
-$row_serial = mysqli_fetch_assoc($result_serial);
-$next_serial = $row_serial['max_serial'] ? $row_serial['max_serial'] + 1 : 1;
+    $syncFields = $IS_LOCAL ? ", sync_status" : "";
+    $syncValues = $IS_LOCAL ? ", 0" : "";
+
+    $sql_serial = "SELECT MAX(serial_no) AS max_serial FROM injection_appointment WHERE date = '$date'";
+    $result_serial = mysqli_query($con, $sql_serial);
+    $row_serial = mysqli_fetch_assoc($result_serial);
+    $next_serial = $row_serial['max_serial'] ? $row_serial['max_serial'] + 1 : 1;
 
     $insert_query = "INSERT INTO injection_appointment
-    (patient_id, eye, injection_type, phone, phone_alt, date, notes, serial_no) 
-    VALUES ('$patient_id', '$eye', '$injection_type', '$phone', '$phone_alt', '$date', '$notes', '$next_serial')";
+    (patient_id, eye, injection_type, phone, phone_alt, date, notes, serial_no, updated_at $syncFields) 
+    VALUES ('$patient_id', '$eye', '$injection_type', '$phone', '$phone_alt', '$date', '$notes', '$next_serial', NOW() $syncValues)";
 
-    $insert_phone = "UPDATE add_patient SET phone_no = '$phone', phone_no_alt = '$phone_alt' WHERE id = '$patient_id'";
+    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
+    $insert_phone = "UPDATE add_patient SET phone_no = '$phone', phone_no_alt = '$phone_alt', updated_at = NOW() $syncPart WHERE id = '$patient_id'";
     mysqli_query($con, $insert_phone);
 
-    
+
 
 
     if (mysqli_query($con, $insert_query)) {
@@ -33,6 +36,4 @@ $next_serial = $row_serial['max_serial'] ? $row_serial['max_serial'] + 1 : 1;
         echo "خطأ: " . mysqli_error($con);
     }
     echo "<script>window.location.href = 'patient-file.php?id=$patient_id';</script>";
-
 }
-?>
