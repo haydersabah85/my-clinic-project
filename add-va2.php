@@ -14,6 +14,9 @@ if (isset($_POST['submit_bt'])) {
    $ref_od = $_POST['ref_od'];
    $ref_os = $_POST['ref_os'];
    $exam_date = date('Y-m-d');
+   $syncFields = $IS_LOCAL ? ", sync_status" : "";
+   $syncValues = $IS_LOCAL ? ", 0" : "";
+
 
    $insert_id = " SELECT id FROM add_patient WHERE id = $patient_id ";
    $insert_result = mysqli_query($con, $insert_id);
@@ -29,8 +32,8 @@ if (isset($_POST['submit_bt'])) {
       echo "<script>window.location.href = 'patient-data.php?id=" . $patient_id . "';</script>";
       exit;
    }
-   $sql = "INSERT INTO va (patient_id, va_od, va_os, bcva_od, bcva_os, old_glasses_od, old_glasses_os, ref_od, ref_os, exam_date) 
-    VALUES ('$patient_id', '$va_od', '$va_os', '$bcva_od', '$bcva_os', '$old_glasses_od', '$old_glasses_os', '$ref_od', '$ref_os', '$exam_date')";
+   $sql = "INSERT INTO va (patient_id, va_od, va_os, bcva_od, bcva_os, old_glasses_od, old_glasses_os, ref_od, ref_os, exam_date, updated_at $syncFields) 
+    VALUES ('$patient_id', '$va_od', '$va_os', '$bcva_od', '$bcva_os', '$old_glasses_od', '$old_glasses_os', '$ref_od', '$ref_os', '$exam_date', NOW() $syncValues)";
 
    $result = mysqli_query($con, $sql);
 

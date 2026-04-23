@@ -11,6 +11,10 @@ if (isset($_POST['submit_laser'])) {
     $phone_alt = $_POST['phone_alt'];
     $date = $_POST['date'];
     $notes = $_POST['notes'];
+    $syncFields = $IS_LOCAL ? ", sync_status" : "";
+    $syncValues = $IS_LOCAL ? ", 0" : "";
+    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
+
  
 $sql_serial = "SELECT MAX(serial_no) AS max_serial FROM laser_appointment WHERE date = '$date'";
 $result_serial = mysqli_query($con, $sql_serial);
@@ -18,10 +22,10 @@ $row_serial = mysqli_fetch_assoc($result_serial);
 $next_serial = $row_serial['max_serial'] ? $row_serial['max_serial'] + 1 : 1;
 
     $insert_query = "INSERT INTO laser_appointment
-    (patient_id, eye, laser_type, phone, phone_alt, date, notes, serial_no) 
-    VALUES ('$patient_id', '$eye', '$laser_type', '$phone', '$phone_alt', '$date', '$notes', '$next_serial')";
+    (patient_id, eye, laser_type, phone, phone_alt, date, notes, serial_no, updated_at $syncFields) 
+    VALUES ('$patient_id', '$eye', '$laser_type', '$phone', '$phone_alt', '$date', '$notes', '$next_serial', NOW() $syncValues)";
 
-    $insert_phone = "UPDATE add_patient SET phone_no = '$phone', phone_no_alt = '$phone_alt' WHERE id = '$patient_id'";
+    $insert_phone = "UPDATE add_patient SET phone_no = '$phone', phone_no_alt = '$phone_alt', updated_at = NOW() $syncPart WHERE id = '$patient_id'";
     mysqli_query($con, $insert_phone);
     
     if (mysqli_query($con, $insert_query)) {

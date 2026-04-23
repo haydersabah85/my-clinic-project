@@ -10,8 +10,9 @@ if (isset($_POST['edit_medicine'])) {
     $strength = $_POST['strength'];
     $category = $_POST['category'];
 
+    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
     $update = "UPDATE medicines 
-    SET medicine_name='$medicine_name', medicine_form='$medicine_form', strength='$strength', category='$category' 
+    SET medicine_name='$medicine_name', medicine_form='$medicine_form', strength='$strength', category='$category' , updated_at = NOW() $syncPart
     WHERE id='$id_medicine'";
     if (mysqli_query($con, $update)) {
         header("Location: common-medicines.php");

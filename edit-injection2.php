@@ -10,13 +10,15 @@ if (isset($_POST['edit_injection'])) {
    $injection_type = $_POST['injection_type'];
    $date = $_POST['date'];
    $notes = $_POST['notes'];
+   $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
 
    $update_query = "UPDATE injection SET 
         patient_id='$patient_id', 
         eye='$eye', 
         injection_type='$injection_type',
          date='$date',
-         notes='$notes'
+         notes='$notes',
+         updated_at = NOW() $syncPart
          WHERE id=$injection_id";
    $result = mysqli_query($con, $update_query);
 

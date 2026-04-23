@@ -3,6 +3,7 @@
 include "config.php";
 include "auth.php";
 
+
 /* ===== إحصائيات ===== */
 
 // إجمالي المرضى
@@ -72,7 +73,7 @@ $late = mysqli_num_rows(mysqli_query($con, "
   WHERE status='pending' AND date < CURDATE()
 "));
 if ($late > 0) // متأخرة
-$alerts[] = "<div class='alert alert-danger'>🔴 يوجد $late عملية متأخرة</div>";
+  $alerts[] = "<div class='alert alert-danger'>🔴 يوجد $late عملية متأخرة</div>";
 
 // عمليات قريبة
 $soon = mysqli_num_rows(mysqli_query($con, "
@@ -80,7 +81,7 @@ $soon = mysqli_num_rows(mysqli_query($con, "
   WHERE status='pending' AND date BETWEEN CURDATE() AND DATE_ADD(CURDATE(),INTERVAL 5 DAY)
 "));
 if ($soon > 0) // قريبة
-$alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات خلال 5 أيام</div>";
+  $alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات خلال 5 أيام</div>";
 
 ?>
 <!DOCTYPE html>
@@ -411,93 +412,93 @@ $alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات
   }
 
 
-/* ===== Alerts Container ===== */
-.alerts {
- margin: 20px 0;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  gap: 15px;
-}
+  /* ===== Alerts Container ===== */
+  .alerts {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    gap: 15px;
+  }
 
-/* ===== Base Alert ===== */
-.alert {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  font-weight: 600;
-  box-shadow: var(--shadow);
-  background: var(--card);
-  border-right: 5px solid;
-  transition: .3s;
-  animation: fadeIn 0.4s ease;
-  width: fit-content;
-}
+  /* ===== Base Alert ===== */
+  .alert {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: var(--shadow);
+    background: var(--card);
+    border-right: 5px solid;
+    transition: .3s;
+    animation: fadeIn 0.4s ease;
+    width: fit-content;
+  }
 
 
 
-.alert:hover {
-  transform: translateY(-2px);
-}
+  .alert:hover {
+    transform: translateY(-2px);
+  }
 
-/* ===== أنواع التنبيهات ===== */
+  /* ===== أنواع التنبيهات ===== */
 
-/* 🔴 خطر */
-.alert-danger {
-  border-color: #dc2626;
-  background: rgba(220, 38, 38, 0.08);
-  color: #b91c1c;
-}
+  /* 🔴 خطر */
+  .alert-danger {
+    border-color: #dc2626;
+    background: rgba(220, 38, 38, 0.08);
+    color: #b91c1c;
+  }
 
-/* ⚠️ تحذير */
-.alert-warning {
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.1);
-  color: #92400e;
-}
+  /* ⚠️ تحذير */
+  .alert-warning {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+  }
 
-/* 🟢 نجاح */
-.alert-success {
-  border-color: #16a34a;
-  background: rgba(22, 163, 74, 0.1);
-  color: #065f46;
-}
+  /* 🟢 نجاح */
+  .alert-success {
+    border-color: #16a34a;
+    background: rgba(22, 163, 74, 0.1);
+    color: #065f46;
+  }
 
-/* 🔵 معلومات */
-.alert-info {
-  border-color: #2563eb;
-  background: rgba(37, 99, 235, 0.1);
-  color: #1e3a8a;
-}
+  /* 🔵 معلومات */
+  .alert-info {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.1);
+    color: #1e3a8a;
+  }
 
-/* أيقونة */
-.alert i {
-  font-size: 18px;
-}
+  /* أيقونة */
+  .alert i {
+    font-size: 18px;
+  }
 
-/* ===== زر الحالات الحرجة ===== */
-.danger-card {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(220, 38, 38, 0.1);
-  color: #b91c1c;
-  padding: 12px 18px;
-  border-radius: 12px;
-  font-weight: 700;
-  border: 2px solid #dc2626;
-  text-decoration: none;
-  transition: .3s;
-}
+  /* ===== زر الحالات الحرجة ===== */
+  .danger-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(220, 38, 38, 0.1);
+    color: #b91c1c;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-weight: 700;
+    border: 2px solid #dc2626;
+    text-decoration: none;
+    transition: .3s;
+  }
 
-.danger-card:hover {
-  background: #dc2626;
-  color: #fff;
-}
+  .danger-card:hover {
+    background: #dc2626;
+    color: #fff;
+  }
 
- 
+
 
   .theme-toggle {
 
@@ -517,7 +518,7 @@ $alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات
     transform: scale(1.1);
   }
 
- 
+
 
   @media (max-width: 1024px) {
     .search-box input {
@@ -549,6 +550,7 @@ $alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات
       width: 100%;
     }
   }
+
   @media (max-width: 400px) {
     .toggle-sidebar {
       padding: 6px 12px;
@@ -561,12 +563,17 @@ $alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات
     }
   }
 
-@keyframes fadeIn {
-  from {opacity: 0; transform: translateY(10px);}
-  to {opacity: 1; transform: translateY(0);}
-}
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
 
-
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 </style>
 
 
@@ -632,7 +639,6 @@ $alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات
       </div>
 
       <div id="results"></div>
-      <!-- إذا تحب أو انسخ السايد بار مباشرة -->
 
 
 
@@ -693,13 +699,13 @@ $alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات
 
       <!-- ===== Alerts ===== -->
       <section class="alerts">
-       
-        
-        
+
+
+
         <a href="critical_patients.php" class="danger-card">
           🚨 المرضى الحرِجون
-      
-         
+
+
         </a>
 
         <?php if (empty($alerts)) { ?>
@@ -776,6 +782,21 @@ $alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات
       }
     }
   </script>
+
+<script>
+function syncData() {
+  fetch('sync_to_online.php')
+    .then(response => response.text())
+    .then(data => console.log(data))
+    .catch(err => console.log("Sync error:", err));
+}
+
+// أول تشغيل عند فتح الصفحة
+syncData();
+
+// تشغيل كل 5 دقائق
+setInterval(syncData, 300000);
+</script>
 
 
 </body>

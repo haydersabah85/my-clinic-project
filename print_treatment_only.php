@@ -72,7 +72,7 @@ while ($m = mysqli_fetch_assoc($q)) {
         /* كل دواء */
         .medicine {
             margin-bottom: 6mm;
-            color: #0b5885fe;
+            color: black;
         }
 
         /* زر الطباعة */
