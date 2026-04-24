@@ -1,0 +1,9 @@
+config.php
+online-config.php
+.env
+database.php
+node_modules/
+vendor/
+backup/
+
+uploads/
