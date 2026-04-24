@@ -128,6 +128,7 @@ ORDER BY f.followup_date ASC
             </div>
 
     <?php
+    
         }
 
         echo "</div>";
