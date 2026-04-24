@@ -41,7 +41,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إضافة موعد عملية</title>
+    <title>موعد عملية للمريض <?= htmlspecialchars($row['full_name']) ?></title>
 
  
 

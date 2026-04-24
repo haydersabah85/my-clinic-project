@@ -607,8 +607,7 @@ if ($soon > 0) // قريبة
       <div class="menu-group">
         <span>👤 المرضى</span>
         <a href="add-patient.php">➕ إضافة مريض</a>
-        <a href="confirmed-list.php">📋 قوائم العمليات</a>
-        <a href="import_surgery_excel.php">📥 استيراد العمليات</a>
+        <a href="main.php">👥 بيانات المرضى</a>
         <a href="followups.php">🔄 المتابعة</a>
       </div>
 
@@ -616,10 +615,16 @@ if ($soon > 0) // قريبة
       <div class="menu-group">
         <span>📅 المواعيد</span>
         <a href="visits.php">📅 زيارات اليوم</a>
-        <a href="operation-by-date.php">🏥 مواعيد العمليات</a>
         <a href="import_expected.php">📥 استيراد المواعيد</a>
         <a href="expected_appointments.php">📅 المواعيد المتوقعة</a>
 
+      </div>
+
+      <div class="menu-group">
+        <span>💉 العمليات</span>
+        <a href="operation-by-date.php">🏥 مواعيد العمليات</a>
+        <a href="confirmed-list.php">📋 قوائم العمليات</a>
+        <a href="import_surgery_excel.php">📥 استيراد العمليات</a>
       </div>
 
 
@@ -783,20 +788,20 @@ if ($soon > 0) // قريبة
     }
   </script>
 
-<script>
-function syncData() {
-  fetch('sync_to_online.php')
-    .then(response => response.text())
-    .then(data => console.log(data))
-    .catch(err => console.log("Sync error:", err));
-}
+  <script>
+    function syncData() {
+      fetch('sync_to_online.php')
+        .then(response => response.text())
+        .then(data => console.log(data))
+        .catch(err => console.log("Sync error:", err));
+    }
 
-// أول تشغيل عند فتح الصفحة
-syncData();
+    // أول تشغيل عند فتح الصفحة
+    syncData();
 
-// تشغيل كل 5 دقائق
-setInterval(syncData, 300000);
-</script>
+    // تشغيل كل 3 دقائق
+    setInterval(syncData, 180000);
+  </script>
 
 
 </body>
