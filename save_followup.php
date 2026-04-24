@@ -7,6 +7,8 @@ include 'auth.php';
 $patient_id = $_POST['patient_id'];
 $followup_date = $_POST['followup_date'];
 $reason = $_POST['followup_reason'];
+$syncFields = $IS_LOCAL ? ", sync_status" : "";
+$syncValues = $IS_LOCAL ? ", 0" : "";
 
 
 // حساب عدد المتابعات في نفس اليوم
@@ -28,8 +30,8 @@ if ($row['total'] >= 3) {
 }
 
 mysqli_query($con,"
-INSERT INTO followups (patient_id, followup_date, followup_reason)
-VALUES ('$patient_id', '$followup_date', '$reason')
+INSERT INTO followups (patient_id, followup_date, followup_reason, updated_at $syncFields)
+VALUES ('$patient_id', '$followup_date', '$reason', NOW() $syncValues)
 ");
 
 header("Location: patient-file.php?id=$patient_id");

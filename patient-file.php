@@ -528,6 +528,27 @@ if (isset($_GET['patient_id'])) {
 .modal button:hover{
     background:#23913c;
 }
+
+@media (max-width: 400px) {
+    .modal-content {    
+        width: 90%;
+    }
+}
+@media (max-width: 600px) {
+    .previous_visits,
+    .previous_va,
+    .previous_surgeries,
+    .previous_lasers,
+    .previous_injections {
+        width: 100%;
+    }
+}
+@media (max-width:1200px) {
+    .nav {
+        gap: 30px;
+    }
+}
+
 </style>
 
 
