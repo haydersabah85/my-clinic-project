@@ -1,151 +1,386 @@
- * {
-      box-sizing: border-box;
-    }
+<?php
+include 'auth.php';
+?>
 
-    body {
-      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-      margin: 0;
-      background: #eaf6fb;
-      color: #333;
-    }
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 
-    h1 {
-      text-align: center;
-      margin: 20px 0;
-      font-size: 32px;
-      color: #8b2e2e;
-    }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>زيارات اليوم 🏥</title>
 
-    /* ===== Container ===== */
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 20px;
-      background: linear-gradient(135deg, #a83232, #f46b45);
-      border-radius: 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
+    <link rel="stylesheet" href="assets/theme.css">
+    <script src="assets/theme.js" defer></script>
 
-    /* ===== Navigation ===== */
-    nav {
-      flex: 1 1 240px;
-      background: #fff3e6;
-      border-radius: 10px;
-      padding: 15px;
-    }
+    <style>
+        * {
+            box-sizing: border-box;
+           
+        }
 
-    nav ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+        body {
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            margin: 0;
+            background: #eef4f8;
+            color: #333;
+            direction: rtl;
+        }
 
-    nav ul li {
-      background: #ffe2c6;
-      padding: 10px;
-      border-radius: 6px;
-      transition: 0.3s;
-    }
+        /* ===== Header ===== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: var(--card);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 10px;
+            z-index: 1000;
+        }
 
-    nav ul li:hover {
-      background: #ffb870;
-      transform: translateX(-5px);
-    }
+        h1 {
+            font-size: 22px;
+            color: #7a1f1f;
+            margin: 0;
+        }
 
-    nav ul li a {
-      text-decoration: none;
-      color: #2b2b2b;
-      font-weight: bold;
-      display: block;
-      text-align: center;
-    }
+        .toggle-sidebar {
+            border: none;
+            cursor: pointer;
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            font-weight: bold;
+        }
 
-    /* ===== Patient Info ===== */
-    .info {
-      flex: 2 1 450px;
-      background: #f4f8f1;
-      border-radius: 10px;
-      padding: 20px;
-      font-size: 18px;
-    }
+      /* ===== Layout ===== */
+.layout {
+    display: flex;
+}
 
-    .info p {
-      margin: 10px 0;
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 1px dashed #ccc;
-      padding-bottom: 6px;
-    }
+        /* ===== Sidebar ===== */
+        .sidebar {
+    width: 200px;
+    background: var(--card);
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    right: -200px; /* مخفي بالبداية */
+    height: 100%;
+    transition: 0.3s;
+    z-index: 1000;
+}
 
-    .info span:first-child {
-      font-weight: bold;
-      color: #444;
-    }
+.sidebar.show {
+    right: 0;
+}
+        .sidebar h3 {
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
 
-    /* ===== Visit Buttons ===== */
-    .visit_type {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
+        .menu-group {
+            margin-bottom: 20px;
+        }
 
-    .visit_type a {
-      padding: 12px 20px;
-      border-radius: 30px;
-      color: #fff;
-      text-decoration: none;
-      font-size: 18px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
+        .menu-group span {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #777;
+        }
 
-    .visit_type a:hover {
-      transform: scale(1.08);
-      opacity: 0.9;
-    }
+        .menu-group a {
+            display: block;
+            padding: 8px 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text);
+            margin-bottom: 5px;
+            transition: 0.3s;
+        }
 
-    #a {
-      background: #6fbf73;
-    }
+        .menu-group a:hover,
+        .menu-group a.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+        }
 
-    #b {
-      background: #3fa7d6;
-    }
+        .danger:hover {
+            background: red !important;
+        }
 
-    #c {
-      background: #b3396d;
-    }
+     
+      
 
-    /* ===== Responsive ===== */
-    @media (max-width: 992px) {
-      h1 {
-        font-size: 26px;
-      }
+       /* ===== Content ===== */
+.content {
+    transition: 0.3s;
+    width: 100%;
+    padding: 20px;
+}
 
-      .info {
-        font-size: 16px;
-      }
-    }
+/* عند ظهور السايدبار */
+.content.shift {
+    margin-right: 200px;
+}
 
-    @media (max-width: 600px) {
-      .container {
-        padding: 15px;
-      }
+/* عند الإخفاء */
+.content.full {
+    margin-right: 0;
+}
+        /* ===== Table ===== */
+        .table-card {
+            background: #fff;
+            border-radius: 14px;
+            overflow: auto;
+            max-height: 75vh;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        }
 
-      nav ul li {
-        font-size: 15px;
-      }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
 
-      .visit_type a {
-        font-size: 16px;
-        padding: 10px 14px;
-      }
-    }
+        thead {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #3fa7d6, #2d89b5);
+            color: #fff;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        tbody tr:hover {
+            background: #f1f5f9;
+        }
+
+        a {
+            text-decoration: none;
+            color: #2d89b5;
+        }
+
+        /* ===== Buttons ===== */
+        .enter-btn {
+            background: #ffb703;
+            padding: 6px 12px;
+            border-radius: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .enter-btn:hover {
+            background: #ffa200;
+        }
+
+        .edit-btn {
+            font-size: 18px;
+        }
+
+        /* ===== Badges ===== */
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .first {
+            background: #4caf50;
+        }
+
+        .repeat {
+            background: #2196f3;
+        }
+
+        .free {
+            background: #9c27b0;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 18px;
+            }
+
+            .content {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== Header ===== -->
+    <header class="topbar">
+        <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+        <h1>زيارات اليوم</h1>
+    </header>
+
+    <div class="layout">
+
+        <!-- ===== Sidebar ===== -->
+        <aside class="sidebar" id="sidebar">
+            <h3>القائمة</h3>
+
+            <div class="menu-group">
+                <a href="dashboard.php">📊 لوحة التحكم</a>
+            </div>
+
+            <div class="menu-group">
+                <span>👤 المرضى</span>
+                <a href="add-patient.php">إضافة مريض</a>
+                <a href="confirmed-list.php">قوائم العمليات</a>
+                <a href="import_surgery_excel.php">استيراد العمليات</a>
+                <a href="followups.php">المتابعة</a>
+            </div>
+
+            <div class="menu-group">
+                <span>📅 المواعيد</span>
+                <a href="visits.php" class="active">زيارات اليوم</a>
+                <a href="operation-by-date.php">مواعيد العمليات</a>
+                <a href="import_expected.php">استيراد المواعيد</a>
+                <a href="expected_appointments.php">المواعيد المتوقعة</a>
+            </div>
+
+            <div class="menu-group">
+                <span>⚙️ النظام</span>
+                <a href="reports.php">التقارير</a>
+                <a href="common-medicines.php">الأدوية</a>
+                <a href="settings.php">الإعدادات</a>
+                <a href="logout.php" class="danger">تسجيل الخروج</a>
+            </div>
+        </aside>
+
+        
+
+        <!-- ===== Content ===== -->
+       <main class="content full" id="content">
+
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>اسم المريض</th>
+                            <th>العمر</th>
+                            <th>التاريخ</th>
+                            <th>نوع الزيارة</th>
+                            <th>تعديل</th>
+                            <th>الدخول</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <?php
+                        include 'config.php';
+
+                        $today = date("Y-m-d");
+
+                        $sql = "
+                        SELECT
+                        visits.daily_serial,
+                        visits.visit_type,
+                        visits.visit_date,
+                        visits.visit_id,
+                        add_patient.id,
+                        add_patient.full_name,
+                        add_patient.age
+                        FROM visits
+                        JOIN add_patient ON visits.patient_id = add_patient.id
+                        WHERE visits.visit_date = '$today'
+                        ORDER BY visits.daily_serial ASC
+                        ";
+
+                        $result_select = mysqli_query($con, $sql);
+
+                        while ($row = mysqli_fetch_assoc($result_select)) {
+
+                            switch ($row['visit_type']) {
+                                case 'first':
+                                    $visit_text = 'أول مرة';
+                                    $visit_class = 'first';
+                                    break;
+                                case 'repeat':
+                                    $visit_text = 'متكررة';
+                                    $visit_class = 'repeat';
+                                    break;
+                                case 'free':
+                                    $visit_text = 'مراجعة';
+                                    $visit_class = 'free';
+                                    break;
+                                default:
+                                    $visit_text = 'غير معروف';
+                                    $visit_class = '';
+                            }
+                        ?>
+
+                            <tr>
+                                <td><?= $row['daily_serial']; ?></td>
+
+                                <td>
+                                    <a href="patient-file.php?id=<?= $row['id']; ?>">
+                                        <?= htmlspecialchars($row['full_name']); ?>
+                                    </a>
+                                </td>
+
+                                <td><?= $row['age']; ?></td>
+                                <td><?= $row['visit_date']; ?></td>
+
+                                <td>
+                                    <span class="badge <?= $visit_class; ?>">
+                                        <?= $visit_text; ?>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <a class="edit-btn"
+                                        href="edit-visit.php?id_edit=<?= $row['visit_id']; ?>">
+                                        ✏️
+                                    </a>
+                                </td>
+
+                                <td>
+                                    <a class="enter-btn"
+                                        href="patient-file.php?id=<?= $row['id']; ?>">
+                                        دخول
+                                    </a>
+                                </td>
+                            </tr>
+
+                        <?php } ?>
+
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+
+    </div>
+
+    <script>
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            sidebar.classList.toggle('show');
+            content.classList.toggle('shift');
+            content.classList.toggle('full');
+        }
+        
+    </script>
+
+</body>
+
+</html>

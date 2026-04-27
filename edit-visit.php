@@ -4,26 +4,23 @@ include "config.php";
 
 include 'auth.php';
 
-if (isset($_GET['id_open'])) {
-    $id = $_GET['id_open'];
-    $visit_id = $_GET['visit_id'];
-    $select_query = "SELECT * FROM add_patient WHERE id = $id";
-    $result = mysqli_query($con, $select_query);
-    $row = mysqli_fetch_assoc($result);
-}
-?>
-<?php
-include 'config.php';
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-    $patient_id = $id;
+if (isset($_GET['id_edit'])) {
+    $id = $_GET['id_edit'];
+   
+    $select_query = "SELECT 
+    add_patient.*,
+    visits.visit_id,
+    visits.visit_type,
+    visits.visit_date
+     FROM add_patient
+        JOIN visits ON add_patient.id = visits.patient_id
     
-    $select_query = "SELECT * FROM add_patient WHERE id = $id";
+     WHERE visits.visit_id = $id";
     $result = mysqli_query($con, $select_query);
     $row = mysqli_fetch_assoc($result);
 }
-
 ?>
+
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -382,9 +379,9 @@ body[data-theme="dark"] .visit_type a:hover {
 
         <!-- Visit Types -->
         <div class="visit_type">
-            <a id="a" href="visits2.php?patient_id=<?php echo $row['id']; ?>&visit_type=first">زيارة أول مرة</a>
-            <a id="b" href="visits2.php?patient_id=<?php echo $row['id']; ?>&visit_type=repeat">زيارة متكررة</a>
-            <a id="c" href="visits2.php?patient_id=<?php echo $row['id']; ?>&visit_type=free">زيارة مراجعة</a>
+            <a id="a" href="edit-visit2.php?visit_id=<?php echo $row['visit_id']; ?>&visit_type=first">زيارة أول مرة</a>
+            <a id="b" href="edit-visit2.php?visit_id=<?php echo $row['visit_id']; ?>&visit_type=repeat">زيارة متكررة</a>
+            <a id="c" href="edit-visit2.php?visit_id=<?php echo $row['visit_id']; ?>&visit_type=free">زيارة مراجعة</a>
         </div>
 
     </div>

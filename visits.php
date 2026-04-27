@@ -36,10 +36,88 @@ include 'auth.php';
         }
 
         .container {
+            display: flex;
             max-width: 1200px;
             margin: auto;
             padding: 15px;
+            overflow: hidden;
+            overflow-y: auto;
+            gap: 20px;
         }
+
+        /* ===== Sidebar ===== */
+
+          .toggle-sidebar {
+        border: none;
+        cursor: pointer;
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: #fff;
+        box-shadow: var(--shadow);
+        transition: .3s;
+    }
+
+    .toggle-sidebar:hover {
+        transform: translateY(-2px);
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+        width: 200px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+        padding: 0 20px;
+        transition: .3s;
+    }
+
+    .sidebar.hidden {
+        width: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .sidebar h3 {
+        color: var(--primary);
+        margin-bottom: 20px;
+        font-weight: bold;
+        font-size: 24px;
+    }
+
+    .menu-group {
+        margin-bottom: 25px;
+    }
+
+    .menu-group span {
+        display: block;
+        font-weight: bold;
+        font-size: 18px;
+        color: var(--muted);
+        margin-bottom: 10px;
+    }
+
+    .menu-group a {
+        display: block;
+        padding: 10px 14px;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        text-decoration: none;
+        color: var(--text);
+        transition: .3s;
+    }
+
+    .menu-group a:hover {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: #fff;
+        transform: translateX(-5px);
+    }
+
+    .menu-group a.danger:hover {
+        background: linear-gradient(135deg, var(--danger), #ef4444);
+    }
+
 
         /* ===== Back Button ===== */
         .back-link {
@@ -47,7 +125,7 @@ include 'auth.php';
             align-items: center;
             gap: 6px;
             margin-bottom: 15px;
-            background: #4caf50;
+            background: #4c74af;
             color: #fff;
             padding: 8px 16px;
             border-radius: 20px;
@@ -71,6 +149,7 @@ include 'auth.php';
             background: #fff;
             border-radius: 14px;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            height: fit-content;
         }
 
         table {
@@ -153,6 +232,48 @@ include 'auth.php';
             transform: translateY(-2px);
         }
 
+        .edit-btn {
+            font-size: 18px;
+            color: #2d89b5;
+            position: relative;
+
+            transition: color 0.3s;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: color 0.3s;
+
+        }
+
+        .icon-btn:hover::after {
+            opacity: 1;
+            bottom: 150%;
+        }
+
+        .icon-btn::after {
+            content: attr(data-title);
+            position: absolute;
+            bottom: 125%;
+            right: 50%;
+            transform: translateX(50%);
+            background: #333;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+
+        .edit-btn:hover {
+            color: #1b5f9e;
+        }
+
+
         /* ===== Responsive ===== */
         @media (max-width: 768px) {
             h1 {
@@ -168,12 +289,62 @@ include 'auth.php';
 </head>
 
 <body>
-
     <h1>زيارات اليوم</h1>
+
+    <header>
+        <div>
+            <button class="toggle-sidebar" onclick="toggleSidebar()">
+                ⬅️ القائمة
+            </button>
+
+        </div>
+
+    </header>
+
+
+
 
     <div class="container">
 
-        <a href="dashboard.php" class="back-link">⬅ الصفحة الرئيسية</a>
+     <!-- ===== Sidebar ===== -->
+        <aside class="sidebar hidden" id="sidebar">
+            <h3>القائمة</h3>
+            <div class="menu-group">
+
+                <a href="dashboard.php">📊 لوحة التحكم</a>
+
+            </div>
+
+            <div class="menu-group">
+                <span>👤 المرضى</span>
+                <a href="add-patient.php">إضافة مريض</a>
+                <a href="confirmed-list.php">قوائم العمليات</a>
+                <a href="import_surgery_excel.php">استيراد العمليات</a>
+                <a href="followups.php">المتابعة</a>
+            </div>
+
+
+            <div class="menu-group">
+                <span>📅 المواعيد</span>
+                <a href="visits.php">زيارات اليوم</a>
+                <a href="operation-by-date.php">مواعيد العمليات</a>
+                <a href="import_expected.php">استيراد المواعيد</a>
+                <a href="expected_appointments.php">المواعيد المتوقعة</a>
+
+            </div>
+
+
+            <div class="menu-group">
+                <span>⚙️ النظام</span>
+                <a href="reports.php">التقارير</a>
+                <a href="common-medicines.php">الأدوية الأكثر استعمالًا</a>
+                <a href="settings.php">الإعدادات</a>
+                <a href="logout.php" class="danger">تسجيل الخروج</a>
+            </div>
+        </aside>
+
+
+       
 
         <div class="table-responsive">
             <table>
@@ -184,6 +355,7 @@ include 'auth.php';
                         <th>العمر</th>
                         <th>التاريخ</th>
                         <th>نوع الزيارة</th>
+                        <th>تعديل</th>
                         <th>الدخول</th>
                     </tr>
                 </thead>
@@ -200,6 +372,7 @@ include 'auth.php';
                         visits.daily_serial,
                         visits.visit_type,
                         visits.visit_date,
+                        visits.visit_id,
                         add_patient.id,
                         add_patient.full_name,
                         add_patient.age
@@ -238,13 +411,16 @@ include 'auth.php';
                             <td><a href="patient-file.php?id=<?= $row['id']; ?>">
                                     <?= htmlspecialchars($row['full_name']); ?></a></td>
 
-                            
+
                             <td><?= $row['age']; ?></td>
                             <td><?= $row['visit_date']; ?></td>
                             <td>
                                 <span class="badge <?= $visit_class; ?>">
                                     <?= $visit_text; ?>
                                 </span>
+                            </td>
+                            <td>
+                                <a class='icon-btn edit-icon edit-btn' data-title="تعديل الزيارة" href="edit-visit.php?id_edit=<?= $row['visit_id']; ?>">✏️</a>
                             </td>
                             <td>
                                 <a class="enter-btn" href="patient-file.php?id=<?= $row['id']; ?>">
@@ -260,6 +436,23 @@ include 'auth.php';
         </div>
 
     </div>
+
+    <script>
+
+        /* Sidebar Toggle */
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const btn = document.querySelector(".toggle-sidebar");
+
+            sidebar.classList.toggle("hidden");
+
+            if (sidebar.classList.contains("hidden")) {
+                btn.innerHTML = "➡️ إظهار القائمة";
+            } else {
+                btn.innerHTML = "⬅️ إخفاء القائمة";
+            }
+        }
+    </script>
 
 </body>
 
