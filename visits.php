@@ -16,6 +16,7 @@ include 'auth.php';
     <style>
         * {
             box-sizing: border-box;
+
         }
 
         body {
@@ -25,6 +26,8 @@ include 'auth.php';
             color: #333;
             transition: background 0.3s, color 0.3s;
             direction: rtl;
+
+
         }
 
         h1 {
@@ -37,86 +40,87 @@ include 'auth.php';
 
         .container {
             display: flex;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: auto;
             padding: 15px;
             overflow: hidden;
             overflow-y: auto;
+            height: calc(100vh - 120px);
             gap: 20px;
         }
 
         /* ===== Sidebar ===== */
 
-          .toggle-sidebar {
-        border: none;
-        cursor: pointer;
-        padding: 8px 16px;
-        border-radius: 12px;
-        font-size: 15px;
-        font-weight: 700;
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
-        color: #fff;
-        box-shadow: var(--shadow);
-        transition: .3s;
-    }
+        .toggle-sidebar {
+            border: none;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            box-shadow: var(--shadow);
+            transition: .3s;
+        }
 
-    .toggle-sidebar:hover {
-        transform: translateY(-2px);
-    }
+        .toggle-sidebar:hover {
+            transform: translateY(-2px);
+        }
 
-    /* ===== Sidebar ===== */
-    .sidebar {
-        width: 200px;
-        background: var(--card);
-        box-shadow: var(--shadow);
-        padding: 0 20px;
-        transition: .3s;
-    }
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 200px;
+            background: var(--card);
+            box-shadow: var(--shadow);
+            padding: 0 20px;
+            transition: .3s;
+        }
 
-    .sidebar.hidden {
-        width: 0;
-        padding: 0;
-        overflow: hidden;
-    }
+        .sidebar.hidden {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+        }
 
-    .sidebar h3 {
-        color: var(--primary);
-        margin-bottom: 20px;
-        font-weight: bold;
-        font-size: 24px;
-    }
+        .sidebar h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 24px;
+        }
 
-    .menu-group {
-        margin-bottom: 25px;
-    }
+        .menu-group {
+            margin-bottom: 25px;
+        }
 
-    .menu-group span {
-        display: block;
-        font-weight: bold;
-        font-size: 18px;
-        color: var(--muted);
-        margin-bottom: 10px;
-    }
+        .menu-group span {
+            display: block;
+            font-weight: bold;
+            font-size: 18px;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
 
-    .menu-group a {
-        display: block;
-        padding: 10px 14px;
-        border-radius: 10px;
-        margin-bottom: 6px;
-        text-decoration: none;
-        color: var(--text);
-        transition: .3s;
-    }
+        .menu-group a {
+            display: block;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            text-decoration: none;
+            color: var(--text);
+            transition: .3s;
+        }
 
-    .menu-group a:hover {
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
-        color: #fff;
-        transform: translateX(-5px);
-    }
+        .menu-group a:hover {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            transform: translateX(-5px);
+        }
 
-    .menu-group a.danger:hover {
-        background: linear-gradient(135deg, var(--danger), #ef4444);
-    }
+        .menu-group a.danger:hover {
+            background: linear-gradient(135deg, var(--danger), #ef4444);
+        }
 
 
         /* ===== Back Button ===== */
@@ -145,7 +149,7 @@ include 'auth.php';
             overflow-x: auto;
             overflow: hidden;
             overflow-y: auto;
-            max-height: 700px;
+            max-height: 750px;
             background: #fff;
             border-radius: 14px;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
@@ -275,6 +279,22 @@ include 'auth.php';
 
 
         /* ===== Responsive ===== */
+        @media (max-width: 992px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                order: -1;
+                margin-bottom: 20px;
+            }
+
+            .table-responsive {
+                max-height: 500px;
+            }
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 26px;
@@ -306,7 +326,7 @@ include 'auth.php';
 
     <div class="container">
 
-     <!-- ===== Sidebar ===== -->
+        <!-- ===== Sidebar ===== -->
         <aside class="sidebar hidden" id="sidebar">
             <h3>القائمة</h3>
             <div class="menu-group">
@@ -344,7 +364,7 @@ include 'auth.php';
         </aside>
 
 
-       
+
 
         <div class="table-responsive">
             <table>
@@ -438,7 +458,6 @@ include 'auth.php';
     </div>
 
     <script>
-
         /* Sidebar Toggle */
         function toggleSidebar() {
             const sidebar = document.getElementById("sidebar");

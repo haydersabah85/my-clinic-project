@@ -6,7 +6,7 @@ include 'auth.php';
 
 if (isset($_GET['id_open'])) {
     $id = $_GET['id_open'];
-    $visit_id = $_GET['visit_id'];
+  
     $select_query = "SELECT * FROM add_patient WHERE id = $id";
     $result = mysqli_query($con, $select_query);
     $row = mysqli_fetch_assoc($result);
