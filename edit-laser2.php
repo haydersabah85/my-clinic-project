@@ -13,8 +13,17 @@ if (isset($_POST['edit_laser'])) {
     $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
    
     
+    $getPatient = mysqli_query($con, "
+    SELECT uuid
+    FROM add_patient
+    WHERE id = '$patient_id'
+");
+    $patientData = mysqli_fetch_assoc($getPatient);
+    $patient_uuid = $patientData['uuid'];
+
     $update_query = "UPDATE laser SET 
         patient_id='$patient_id', 
+        patient_uuid = '$patient_uuid',
         eye='$eye', 
         laser_type='$laser_type' ,
         notes='$laser_notes', 

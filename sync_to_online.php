@@ -1,17 +1,94 @@
 <?php
-include 'config.php';          // قاعدة بيانات العيادة المحلية
-include 'online-config.php';   // قاعدة بيانات الموقع الأونلاين
+include 'config.php';
 
-// ❌ منع التشغيل على الأونلاين
-if (!$IS_LOCAL) {
-    exit("Not allowed");
+$secret = "MY_SECRET_KEY";
+
+// ================== FUNCTION ==================
+function syncTable($con, $url, $dataKey, $tableName) {
+
+    echo "<b>=== Sync $tableName ===</b><br>";
+
+    if (empty($dataKey['data'])) {
+        echo "No data<br><br>";
+        return;
+    }
+
+    $data = [
+        "auth" => "MY_SECRET_KEY",
+        $dataKey['key'] => $dataKey['data']
+    ];
+
+    $ch = curl_init($url);
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json'
+    ]);
+
+    // 🔁 Retry
+    $maxRetries = 3;
+    $attempt = 0;
+    $response = false;
+
+    while ($attempt < $maxRetries) {
+
+        $response = curl_exec($ch);
+
+        if ($response !== false) {
+            break;
+        }
+
+        $attempt++;
+        sleep(2);
+    }
+
+    if ($response === false) {
+        echo "❌ Failed after retries: " . curl_error($ch) . "<br><br>";
+        return;
+    }
+
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    echo "HTTP Code: $httpCode<br>";
+    echo $response . "<br>";
+
+    if ($httpCode != 200) {
+        echo "Request failed<br><br>";
+        return;
+    }
+
+    $responseData = json_decode($response, true);
+
+    if (!$responseData || $responseData['status'] !== 'success') {
+        echo "API Error<br><br>";
+        return;
+    }
+
+    // ✅ تحديث sync_status
+    $ids = array_column($dataKey['data'], 'id');
+
+    if (!empty($ids)) {
+
+        $idsList = implode(",", $ids);
+
+        mysqli_query($con, "
+            UPDATE $tableName
+            SET sync_status = 1
+            WHERE id IN ($idsList)
+        ");
+    }
+
+    echo "✅ Synced: " . count($ids) . "<br><br>";
 }
 
-// زيادة وقت التنفيذ (اختياري)
-set_time_limit(0);
 
+// =====================================================
+// ================== PATIENTS =========================
+// =====================================================
 
-// جلب المرضى المعدلين بعد آخر مزامنة
 $result = mysqli_query($con, "
     SELECT * FROM add_patient
     WHERE sync_status = 0
@@ -19,1028 +96,153 @@ $result = mysqli_query($con, "
     LIMIT 50
 ");
 
-echo "Rows found: " . mysqli_num_rows($result) . "<br>";
+$patients = [];
 
 while ($row = mysqli_fetch_assoc($result)) {
 
-    $id = (int)$row['id'];
-    $name = mysqli_real_escape_string($online, $row['full_name']);
-    $age = mysqli_real_escape_string($online, $row['age']);
-    $gender = mysqli_real_escape_string($online, $row['gender']);
-    $address = mysqli_real_escape_string($online, $row['address']);
-    $phone = mysqli_real_escape_string($online, $row['phone_no']);
-    $phone_no_alt = mysqli_real_escape_string($online, $row['phone_no_alt']);
-    $date_of_birth = mysqli_real_escape_string($online, $row['date_of_birth']);
-    $notes = mysqli_real_escape_string($online, $row['notes']);
-    $is_critical = mysqli_real_escape_string($online, $row['is_critical']);
-    $updated = mysqli_real_escape_string($online, $row['updated_at']);
+    // ❌ لا نرسل sync_status
+    unset($row['sync_status']);
 
-    mysqli_query($online, "
-        INSERT INTO add_patient (
-            id,
-            full_name,
-            age,
-            gender,
-            address,
-            phone_no,
-            phone_no_alt,
-            date_of_birth,
-            notes,
-            is_critical,
-            updated_at
-        )
-        VALUES (
-            '$id',
-            '$name',
-            '$age',
-            '$gender',
-            '$address',
-            '$phone',
-            '$phone_no_alt',
-            '$date_of_birth',
-            '$notes',
-            '$is_critical',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            full_name = '$name',
-            age = '$age',
-            gender = '$gender',
-            address = '$address',
-            phone_no = '$phone',
-            phone_no_alt = '$phone_no_alt',
-            date_of_birth = '$date_of_birth',
-            notes = '$notes',
-            is_critical = '$is_critical',
-            updated_at = NOW()
-    ");
+    // 🔥 توليد UUID إذا غير موجود
+    if (empty($row['uuid'])) {
 
-    if ($result) {
+        $newUUID = bin2hex(random_bytes(16));
 
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
         mysqli_query($con, "
-            UPDATE add_patient 
-            SET sync_status = 1 
-            WHERE id = $id
+            UPDATE add_patient
+            SET uuid = '$newUUID'
+            WHERE id = {$row['id']}
         ");
 
-        echo "✅ Patient ID: $id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Patient ID: $id failed<br>";
+        $row['uuid'] = $newUUID;
     }
+
+    $patients[] = $row;
 }
 
+syncTable(
+    $con,
+    "https://hayder-sabah-clinic.com/api/sync_patients.php",
+    ["key" => "patients", "data" => $patients],
+    "add_patient"
+);
 
-// جلب الزيارات المعدلة بعد آخر مزامنة
-$resultVisits = mysqli_query($con, "
-    SELECT * FROM visits
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
+
+
+
+// =====================================================
+// ================== PATIENT_VISITS ===================
+// =====================================================
+
+$result = mysqli_query($con, "
+    SELECT pv.*, ap.uuid AS patient_uuid
+    FROM patient_visits pv
+    LEFT JOIN add_patient ap
+    ON pv.patient_id = ap.id
+    WHERE pv.sync_status = 0
+    ORDER BY pv.updated_at ASC
     LIMIT 50
 ");
 
-echo "Rows found: " . mysqli_num_rows($resultVisits) . "<br>";
+$patientVisits = [];
 
+while ($row = mysqli_fetch_assoc($result)) {
 
-while ($visit = mysqli_fetch_assoc($resultVisits)) {
+    unset($row['sync_status']);
 
-    $visit_id = (int)$visit['visit_id'];
-    $patient_id = (int)$visit['patient_id'];
-    $visit_type = mysqli_real_escape_string($online, $visit['visit_type']);
-    $visit_date = mysqli_real_escape_string($online, $visit['visit_date']);
-    $daily_serial = mysqli_real_escape_string($online, $visit['daily_serial']);
-    $updated = mysqli_real_escape_string($online, $visit['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO visits (
-            visit_id,
-            patient_id,
-            visit_type,
-            visit_date,
-            daily_serial,
-            updated_at 
-        )
-        VALUES (
-            '$visit_id',
-            '$patient_id',
-            '$visit_type',
-            '$visit_date',
-            '$daily_serial',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            visit_type = '$visit_type',
-            visit_date = '$visit_date',
-            daily_serial = '$daily_serial',
-            updated_at = NOW()
-    ");
-
-    if ($resultVisits) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE visits 
-                SET sync_status = 1 
-                WHERE visit_id = $visit_id
-            ");
-
-        echo "✅ Visit ID: $visit_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Visit ID: $visit_id failed<br>";
-    }
+    // 🔥 مهم جداً
+    // نرسل patient_uuid بدل الاعتماد على patient_id فقط
+    $patientVisits[] = $row;
 }
 
-// جلب زيارات المريض المعدلة بعد آخر مزامنة
-$resultPatientVisits = mysqli_query($con, "
-    SELECT * FROM patient_visits
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
-    LIMIT 50
-");
-echo "Rows found: " . mysqli_num_rows($resultPatientVisits) . "<br>";
+syncTable(
+    $con,
+    "https://hayder-sabah-clinic.com/api/sync_patient_visits.php",
+    ["key" => "patient_visits", "data" => $patientVisits],
+    "patient_visits"
+);
 
-while ($patientVisit = mysqli_fetch_assoc($resultPatientVisits)) {
 
-    $patient_visit_id = (int)$patientVisit['id'];
-    $patient_id = (int)$patientVisit['patient_id'];
-    $date = mysqli_real_escape_string($online, $patientVisit['date']);
-    $notes = mysqli_real_escape_string($online, $patientVisit['notes']);
-    $updated = mysqli_real_escape_string($online, $patientVisit['updated_at']);
 
-    mysqli_query($online, "
-        INSERT INTO patient_visits (
-            id,
-            patient_id,
-            date,
-            notes,
-            updated_at
-        )
-        VALUES (
-            '$patient_visit_id',
-            '$patient_id',
-            '$date',
-            '$notes',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            date = '$date',
-            notes = '$notes',
-            updated_at = NOW()
-    ");
+// ================== SURGERY ==================
 
-    if ($resultPatientVisits) {
 
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE patient_visits 
-                SET sync_status = 1 
-                WHERE id = $patient_visit_id
-            ");
-
-        echo "✅ Patient Visit ID: $patient_visit_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Patient Visit ID: $patient_visit_id failed<br>";
-    }
-}
-
-
-
-//جلب مواعيد العمليات المعدلة بعد آخر مزامنة
-$resultOperations = mysqli_query($con, "
-    SELECT * FROM surgery_appointment
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
-    LIMIT 50
-");
-echo "Rows found: " . mysqli_num_rows($resultOperations) . "<br>";
-
-
-while ($operation = mysqli_fetch_assoc($resultOperations)) {
-
-    $operation_id = (int)$operation['id'];
-    $patient_id = (int)$operation['patient_id'];
-    $surgery_date = mysqli_real_escape_string($online, $operation['date']);
-    $surgery_type = mysqli_real_escape_string($online, $operation['surgery_type']);
-    $eye = mysqli_real_escape_string($online, $operation['eye']);
-    $phone = mysqli_real_escape_string($online, $operation['phone']);
-    $phone_alt = mysqli_real_escape_string($online, $operation['phone_alt']);
-    $serial_no = mysqli_real_escape_string($online, $operation['serial_no']);
-    $attendance_status = mysqli_real_escape_string($online, $operation['attendance_status']);
-    $status = mysqli_real_escape_string($online, $operation['status']);
-    $notes = mysqli_real_escape_string($online, $operation['notes']);
-    $updated = mysqli_real_escape_string($online, $operation['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO surgery_appointment (
-            id,
-            patient_id,
-            date,
-            surgery_type,
-            eye,
-            phone,
-            phone_alt,
-            serial_no,
-            attendance_status,
-            status,
-            notes,
-            updated_at
-        )
-        VALUES (
-            '$operation_id',
-            '$patient_id',
-            '$surgery_date',
-            '$surgery_type',
-            '$eye',
-            '$phone',
-            '$phone_alt',
-            '$serial_no',
-            '$attendance_status',
-            '$status',
-            '$notes',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            date = '$surgery_date',
-            surgery_type = '$surgery_type',
-            eye = '$eye',
-            phone = '$phone',
-            phone_alt = '$phone_alt',
-            serial_no = '$serial_no',
-            attendance_status = '$attendance_status',
-            status = '$status',
-            notes = '$notes',
-            updated_at = NOW()
-    ");
-
-    if ($resultOperations) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE surgery_appointment 
-                SET sync_status = 1 
-                WHERE id = $operation_id
-            ");
-
-        echo "✅ Surgery Appointment ID: $operation_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Surgery Appointment ID: $operation_id failed<br>";
-    }
-}
-
-
-//جلب مواعيد الليزر المعدلة بعد آخر مزامنة
-$resultLasers = mysqli_query($con, "
-    SELECT * FROM laser_appointment
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
-    LIMIT 50
-");
-echo "Rows found: " . mysqli_num_rows($resultLasers) . "<br>";
-
-
-while ($laser = mysqli_fetch_assoc($resultLasers)) {
-
-    $laser_id = (int)$laser['id'];
-    $patient_id = (int)$laser['patient_id'];
-    $laser_date = mysqli_real_escape_string($online, $laser['date']);
-    $laser_type = mysqli_real_escape_string($online, $laser['laser_type']);
-    $eye = mysqli_real_escape_string($online, $laser['eye']);
-    $phone = mysqli_real_escape_string($online, $laser['phone']);
-    $phone_alt = mysqli_real_escape_string($online, $laser['phone_alt']);
-    $serial_no = mysqli_real_escape_string($online, $laser['serial_no']);
-    $attendance_status = mysqli_real_escape_string($online, $laser['attendance_status']);
-    $status = mysqli_real_escape_string($online, $laser['status']);
-    $notes = mysqli_real_escape_string($online, $laser['notes']);
-    $updated = mysqli_real_escape_string($online, $laser['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO laser_appointment (
-            id,
-            patient_id,
-            date,
-            laser_type,
-            eye,
-            phone,
-            phone_alt,
-            serial_no,
-            attendance_status,
-            status,
-            notes,
-            updated_at
-        )
-        VALUES (
-            '$laser_id',
-            '$patient_id',
-            '$laser_date',
-            '$laser_type',
-            '$eye',
-            '$phone',
-            '$phone_alt',
-            '$serial_no',
-            '$attendance_status',
-            '$status',
-            '$notes',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            date = '$laser_date',
-            laser_type = '$laser_type',
-            eye = '$eye',
-            phone = '$phone',
-            phone_alt = '$phone_alt',
-            serial_no = '$serial_no',
-            attendance_status = '$attendance_status',
-            status = '$status',
-            notes = '$notes',
-            updated_at = NOW()
-    ");
-
-    if ($resultLasers) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE laser_appointment 
-                SET sync_status = 1 
-                WHERE id = $laser_id
-            ");
-
-        echo "✅ Laser Appointment ID: $laser_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Laser Appointment ID: $laser_id failed<br>";
-    }
-}
-
-
-
-//جلب مواعيد الحقن المعدلة بعد آخر مزامنة
-$resultInjections = mysqli_query($con, "
-    SELECT * FROM injection_appointment
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
-    LIMIT 50
-");
-echo "Rows found: " . mysqli_num_rows($resultInjections) . "<br>";
-while ($injection = mysqli_fetch_assoc($resultInjections)) {
-
-    $injection_id = (int)$injection['id'];
-    $patient_id = (int)$injection['patient_id'];
-    $injection_date = mysqli_real_escape_string($online, $injection['date']);
-    $injection_type = mysqli_real_escape_string($online, $injection['injection_type']);
-    $eye = mysqli_real_escape_string($online, $injection['eye']);
-    $phone = mysqli_real_escape_string($online, $injection['phone']);
-    $phone_alt = mysqli_real_escape_string($online, $injection['phone_alt']);
-    $serial_no = mysqli_real_escape_string($online, $injection['serial_no']);
-    $attendance_status = mysqli_real_escape_string($online, $injection['attendance_status']);
-    $status = mysqli_real_escape_string($online, $injection['status']);
-    $notes = mysqli_real_escape_string($online, $injection['notes']);
-    $updated = mysqli_real_escape_string($online, $injection['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO injection_appointment (
-            id,
-            patient_id,
-            date,
-            injection_type,
-            eye,
-            phone,
-            phone_alt,
-            serial_no,
-            attendance_status,
-            status,
-            notes,
-            updated_at
-        )
-        VALUES (
-            '$injection_id',
-            '$patient_id',
-            '$injection_date',
-            '$injection_type',
-            '$eye',
-            '$phone',
-            '$phone_alt',
-            '$serial_no',
-            '$attendance_status',
-            '$status',
-            '$notes',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            date = '$injection_date',
-            injection_type = '$injection_type',
-            eye = '$eye',
-            phone = '$phone',
-            phone_alt = '$phone_alt',
-            serial_no = '$serial_no',
-            attendance_status = '$attendance_status',
-            status = '$status',
-            notes = '$notes',
-            updated_at = NOW()
-    ");
-
-    if ($resultInjections) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE injection_appointment 
-                SET sync_status = 1 
-                WHERE id = $injection_id
-            ");
-
-        echo "✅ Injection Appointment ID: $injection_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Injection Appointment ID: $injection_id failed<br>";
-    }
-}
-
-
-// جلب العمليات المعدلة بعد آخر مزامنة
-$resultSurgery = mysqli_query($con, "
-    SELECT * FROM surgery
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
-    LIMIT 50
-");
-echo "Rows found: " . mysqli_num_rows($resultSurgery) . "<br>";
-while ($surgery = mysqli_fetch_assoc($resultSurgery)) {
-
-    $surgery_id = (int)$surgery['id'];
-    $patient_id = (int)$surgery['patient_id'];
-    $surgery_date = mysqli_real_escape_string($online, $surgery['date']);
-    $surgery_type = mysqli_real_escape_string($online, $surgery['surgery_type']);
-    $eye = mysqli_real_escape_string($online, $surgery['eye']);
-    $iol_type = mysqli_real_escape_string($online, $surgery['iol_type']);
-    $notes = mysqli_real_escape_string($online, $surgery['notes']);
-    $updated = mysqli_real_escape_string($online, $surgery['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO surgery (
-            id,
-            patient_id,
-            date,
-            surgery_type,
-            eye,
-            iol_type,
-            notes,
-            updated_at
-        )
-        VALUES (
-            '$surgery_id',
-            '$patient_id',
-            '$surgery_date',
-            '$surgery_type',
-            '$eye',
-            '$iol_type',
-            '$notes',
-             NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            date = '$surgery_date',
-            surgery_type = '$surgery_type',
-            eye = '$eye',
-            iol_type = '$iol_type',
-            notes = '$notes',
-            updated_at = NOW()
-    ");
-
-    if ($resultSurgery) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE surgery
-                SET sync_status = 1 
-                WHERE id = $surgery_id
-            ");
-
-        echo "✅ Surgery Appointment ID: $surgery_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Surgery Appointment ID: $surgery_id failed<br>";
-    }
-}
-
-
-
-//جلب الليزر المعدلة بعد آخر مزامنة
-$resultLaser = mysqli_query($con, "
-    SELECT * FROM laser
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
-    LIMIT 50
-");
-echo "Rows found: " . mysqli_num_rows($resultLaser) . "<br>";
-while ($laser = mysqli_fetch_assoc($resultLaser)) {
-
-    $laser_id = (int)$laser['id'];
-    $patient_id = (int)$laser['patient_id'];
-    $laser_date = mysqli_real_escape_string($online, $laser['date']);
-    $laser_type = mysqli_real_escape_string($online, $laser['laser_type']);
-    $eye = mysqli_real_escape_string($online, $laser['eye']);
-    $notes = mysqli_real_escape_string($online, $laser['notes']);
-    $updated = mysqli_real_escape_string($online, $laser['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO laser (
-            id,
-            patient_id,
-            date,
-            laser_type,
-            eye,
-            notes,
-            updated_at
-        )
-        VALUES (
-            '$laser_id',
-            '$patient_id',
-            '$laser_date',
-            '$laser_type',
-            '$eye',
-            '$notes',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            date = '$laser_date',
-            laser_type = '$laser_type',
-            eye = '$eye',
-            notes = '$notes',
-            updated_at = NOW()
-    ");
-
-
-    if ($resultLaser) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE laser
-                SET sync_status = 1 
-                WHERE id = $laser_id
-            ");
-
-        echo "✅ Laser Appointment ID: $laser_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Laser Appointment ID: $laser_id failed<br>";
-    }
-}
-
-
-// جلب الحقن المعدلة بعد آخر مزامنة
-$resultInjection = mysqli_query($con, "
-    SELECT * FROM injection
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
-    LIMIT 50
-");
-echo "Rows found: " . mysqli_num_rows($resultInjection) . "<br>";
-
-while ($injection = mysqli_fetch_assoc($resultInjection)) {
-
-    $injection_id = (int)$injection['id'];
-    $patient_id = (int)$injection['patient_id'];
-    $injection_date = mysqli_real_escape_string($online, $injection['date']);
-    $injection_type = mysqli_real_escape_string($online, $injection['injection_type']);
-    $eye = mysqli_real_escape_string($online, $injection['eye']);
-    $notes = mysqli_real_escape_string($online, $injection['notes']);
-    $updated = mysqli_real_escape_string($online, $injection['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO injection (
-            id,
-            patient_id,
-            date,
-            injection_type,
-            eye,
-            notes,
-            updated_at
-        )
-        VALUES (
-            '$injection_id',
-            '$patient_id',
-            '$injection_date',
-            '$injection_type',
-            '$eye',
-            '$notes',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            date = '$injection_date',
-            injection_type = '$injection_type',
-            eye = '$eye',
-            notes = '$notes',
-            updated_at = NOW()
-    ");
-
-
-    if ($resultInjection) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE injection 
-                SET sync_status = 1 
-                WHERE id = $injection_id
-            ");
-
-        echo "✅ Injection Appointment ID: $injection_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Injection Appointment ID: $injection_id failed<br>";
-    }
-}
-
-
-//جلب المتابعة المعدلة بعد آخر مزامنة
-$resultFollowUp = mysqli_query($con, "
-    SELECT * FROM followups
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
-    LIMIT 50
-");
-echo "Rows found: " . mysqli_num_rows($resultFollowUp) . "<br>";
-
-while ($followUp = mysqli_fetch_assoc($resultFollowUp)) {
-
-    $followup_id = (int)$followUp['id'];
-    $patient_id = (int)$followUp['patient_id'];
-    $followup_date = mysqli_real_escape_string($online, $followUp['followup_date']);
-    $followup_reason = mysqli_real_escape_string($online, $followUp['followup_reason']);
-    $status = mysqli_real_escape_string($online, $followUp['status']);
-    $notes = mysqli_real_escape_string($online, $followUp['note']);
-    $created_at = mysqli_real_escape_string($online, $followUp['created_at']);
-    $updated = mysqli_real_escape_string($online, $followUp['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO followups (
-            id,
-            patient_id,
-            followup_date,
-            followup_reason,
-            status,
-            note,
-            created_at,
-            updated_at
-        )
-        VALUES (
-            '$followup_id',
-            '$patient_id',
-            '$followup_date',
-            '$followup_reason',
-            '$status',
-            '$notes',
-            '$created_at',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            followup_date = '$followup_date',
-            followup_reason = '$followup_reason',
-            status = '$status',
-            note = '$notes',
-            created_at = '$created_at',
-            updated_at = NOW()
-    ");
-
-    if ($resultFollowUp) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-            UPDATE followups 
-            SET sync_status = 1 
-            WHERE id = $followup_id
-        ");
-
-        echo "✅ Follow-up ID: $followup_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Follow-up ID: $followup_id failed<br>";
-    }
-}
-
-
-
-
-//جلب الادوية المعدلة بعد آخر مزامنة
-$resultMedication = mysqli_query($con, "
-    SELECT * FROM medicines
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
-    LIMIT 50
-");
-echo "Rows found: " . mysqli_num_rows($resultMedication) . "<br>";
-
-while ($medication = mysqli_fetch_assoc($resultMedication)) {
-
-    $medicine_id = (int)$medication['id'];
-    $medicine_name = mysqli_real_escape_string($online, $medication['medicine_name']);
-    $medicine_form = mysqli_real_escape_string($online, $medication['medicine_form']);
-    $strength = mysqli_real_escape_string($online, $medication['strength']);
-    $category = mysqli_real_escape_string($online, $medication['category']);
-    $created_at = mysqli_real_escape_string($online, $medication['created_at']);
-    $updated = mysqli_real_escape_string($online, $medication['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO medicines (
-            id,
-            medicine_name,
-            medicine_form,
-            strength,
-            category,
-            created_at,
-            updated_at
-        )
-        VALUES (
-            '$medicine_id',
-            '$medicine_name',
-            '$medicine_form',
-            '$strength',
-            '$category',
-            '$created_at',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            medicine_name = '$medicine_name',
-            medicine_form = '$medicine_form',
-            strength = '$strength',
-            category = '$category',
-            created_at = '$created_at',
-            updated_at = NOW()
-    ");
-
-    if ($resultMedication) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE medicines 
-                SET sync_status = 1 
-                WHERE id = $medicine_id
-            ");
-
-        echo "✅ Medicine ID: $medicine_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Medicine ID: $medicine_id failed<br>";
-    }
-}
-
-
-//جلب الوصفات المعدلة بعد آخر مزامنة
-$resultPrescriptions = mysqli_query($con, "
-    SELECT * FROM prescriptions
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
+$result = mysqli_query($con, "
+    SELECT s.*, ap.uuid AS patient_uuid
+    FROM surgery s
+    LEFT JOIN add_patient ap ON s.patient_id = ap.id
+    WHERE s.sync_status = 0
+    ORDER BY s.updated_at ASC
     LIMIT 50
 ");
 
-echo "Rows found: " . mysqli_num_rows($resultPrescriptions) . "<br>";
+$surgeries = [];
 
-while ($prescription = mysqli_fetch_assoc($resultPrescriptions)) {
-
-    $prescription_id = (int)$prescription['id'];
-    $patient_id = (int)$prescription['patient_id'];
-    $visit_id = (int)$prescription['visit_id'];
-    $prescription_date = mysqli_real_escape_string($online, $prescription['prescription_date']);
-    $diagnosis = mysqli_real_escape_string($online, $prescription['diagnosis']);
-    $notes = mysqli_real_escape_string($online, $prescription['notes']);
-    $next_visit_date = mysqli_real_escape_string($online, $prescription['next_visit_date']);
-    $status = mysqli_real_escape_string($online, $prescription['status']);
-    $updated = mysqli_real_escape_string($online, $prescription['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO prescriptions (
-            id,
-            patient_id,
-            visit_id,
-            prescription_date,
-            diagnosis,
-            notes,
-            next_visit_date,
-            status,
-            updated_at
-        )
-        VALUES (
-            '$prescription_id',
-            '$patient_id',
-            '$visit_id',
-            '$prescription_date',
-            '$diagnosis',
-            '$notes',
-            '$next_visit_date',
-            '$status',
-             NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            visit_id = '$visit_id',
-            prescription_date = '$prescription_date',
-            diagnosis = '$diagnosis',
-            notes = '$notes',
-            next_visit_date = '$next_visit_date',
-            status = '$status',
-            updated_at = NOW()
-    ");
-
-
-    if ($resultPrescriptions) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE prescriptions 
-                SET sync_status = 1
-                WHERE id = $prescription_id
-            ");
-
-        echo "✅ Prescription ID: $prescription_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Prescription ID: $prescription_id failed<br>";
-    }
+while ($row = mysqli_fetch_assoc($result)) {
+    unset($row['sync_status']);
+    $surgeries[] = $row;
 }
 
+syncTable(
+    $con,
+    "https://hayder-sabah-clinic.com/api/sync_surgery.php",
+    ["key" => "surgeries", "data" => $surgeries],
+    "surgery"
+);
 
 
-//جلب فقرات العلاج المعدلة بعد آخر مزامنة
-$resultTreatmentItems = mysqli_query($con, "
-    SELECT * FROM prescription_items
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
+
+// ================== INJECTION ==================
+$result = mysqli_query($con, "
+    SELECT i.*, ap.uuid AS patient_uuid
+    FROM injection i
+    LEFT JOIN add_patient ap ON i.patient_id = ap.id
+    WHERE i.sync_status = 0
+    ORDER BY i.updated_at ASC
     LIMIT 50
 ");
 
-echo "Rows found: " . mysqli_num_rows($resultTreatmentItems) . "<br>";
-while ($item = mysqli_fetch_assoc($resultTreatmentItems)) {
+$injections = [];
 
-    $item_id = (int)$item['id'];
-    $prescription_id = (int)$item['prescription_id'];
-    $medicine_id = (int)$item['medicine_id'];
-    $dose = mysqli_real_escape_string($online, $item['dose']);
-    $frequency = mysqli_real_escape_string($online, $item['frequency']);
-    $duration = mysqli_real_escape_string($online, $item['duration']);
-    $eye = mysqli_real_escape_string($online, $item['eye']);
-    $instructions = mysqli_real_escape_string($online, $item['instructions']);
-    $updated = mysqli_real_escape_string($online, $item['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO prescription_items (
-            id,
-            prescription_id,
-            medicine_id,
-            dose,
-            frequency,
-            duration,
-            eye,
-            instructions,
-            updated_at
-        )
-        VALUES (
-            '$item_id',
-            '$prescription_id',
-            '$medicine_id',
-            '$dose',
-            '$frequency',
-            '$duration',
-            '$eye',
-            '$instructions',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            prescription_id = '$prescription_id',
-            medicine_id = '$medicine_id',
-            dose = '$dose',
-            frequency = '$frequency',
-            duration = '$duration',
-            eye = '$eye',
-            instructions = '$instructions',
-            updated_at = NOW()
-    ");
-
-
-    if ($resultTreatmentItems) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE prescription_items 
-                SET sync_status = 1 
-                WHERE id = $item_id
-            ");
-
-        echo "✅ Prescription Item ID: $item_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Prescription Item ID: $item_id failed<br>";
-    }
+while ($row = mysqli_fetch_assoc($result)) {
+    unset($row['sync_status']);
+    $injections[] = $row;
 }
 
+syncTable(
+    $con,
+    "https://hayder-sabah-clinic.com/api/sync_injection.php",
+    ["key" => "injections", "data" => $injections],
+    "injection"
+);
 
 
-//جلب فحص النظر المعدلة بعد آخر مزامنة
-$resultEyeExams = mysqli_query($con, "
-    SELECT * FROM va
-    WHERE sync_status = 0
-    ORDER BY updated_at ASC
+
+
+// ================== LASER ==================
+$result = mysqli_query($con, "
+    SELECT l.*, ap.uuid AS patient_uuid
+    FROM laser l
+    LEFT JOIN add_patient ap ON l.patient_id = ap.id
+    WHERE l.sync_status = 0
+    ORDER BY l.updated_at ASC
     LIMIT 50
 ");
 
-echo "Rows found: " . mysqli_num_rows($resultEyeExams) . "<br>";
-while ($exam = mysqli_fetch_assoc($resultEyeExams)) {
+$lasers = [];
 
-    $va_id = (int)$exam['va_id'];
-    $patient_id = (int)$exam['patient_id'];
-    $va_od = mysqli_real_escape_string($online, $exam['va_od']);
-    $va_os = mysqli_real_escape_string($online, $exam['va_os']);
-    $bcva_od = mysqli_real_escape_string($online, $exam['bcva_od']);
-    $bcva_os = mysqli_real_escape_string($online, $exam['bcva_os']);
-    $old_glasses_od = mysqli_real_escape_string($online, $exam['old_glasses_od']);
-    $old_glasses_os = mysqli_real_escape_string($online, $exam['old_glasses_os']);
-    $ref_od = mysqli_real_escape_string($online, $exam['ref_od']);
-    $ref_os = mysqli_real_escape_string($online, $exam['ref_os']);
-    $exam_date = mysqli_real_escape_string($online, $exam['exam_date']);
-    $updated = mysqli_real_escape_string($online, $exam['updated_at']);
-
-    mysqli_query($online, "
-        INSERT INTO va (
-           va_id,
-            patient_id,
-           va_od,
-            va_os,
-            bcva_od,
-            bcva_os,
-            old_glasses_od,
-            old_glasses_os,
-            ref_od,
-            ref_os,
-            exam_date,
-            updated_at
-        )
-        VALUES (
-            '$va_id',
-            '$patient_id',
-            '$va_od',
-            '$va_os',
-            '$bcva_od',
-            '$bcva_os',
-            '$old_glasses_od',
-            '$old_glasses_os',
-            '$ref_od',
-            '$ref_os',
-            '$exam_date',
-            NOW()
-        )
-        ON DUPLICATE KEY UPDATE
-            patient_id = '$patient_id',
-            va_od = '$va_od',
-            va_os = '$va_os',
-            bcva_od = '$bcva_od',
-            bcva_os = '$bcva_os',
-            old_glasses_od = '$old_glasses_od',
-            old_glasses_os = '$old_glasses_os',
-            ref_od = '$ref_od',
-            ref_os = '$ref_os',
-            exam_date = '$exam_date',
-            updated_at = NOW()
-    ");
-
-    if ($resultEyeExams) {
-
-        // ✅ نجاح → تحديث الحالة إلى تمت المزامنة
-        mysqli_query($con, "
-                UPDATE va 
-                SET sync_status = 1 
-                WHERE va_id = $va_id
-            ");
-
-        echo "✅ Eye Exam ID: $va_id synced<br>";
-    } else {
-
-        // ❌ فشل → يبقى 0 ليعاد لاحقاً
-        echo "❌ Eye Exam ID: $va_id failed<br>";
-    }
+while ($row = mysqli_fetch_assoc($result)) {
+    unset($row['sync_status']);
+    $lasers[] = $row;
 }
 
+syncTable(
+    $con,
+    "https://hayder-sabah-clinic.com/api/sync_laser.php",
+    ["key" => "lasers", "data" => $lasers],
+    "laser"
+);
 
 
-echo "Sync completed";
+
+?>

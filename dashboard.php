@@ -789,18 +789,11 @@ if ($soon > 0) // قريبة
   </script>
 
   <script>
-    function syncData() {
+    setInterval(() => {
       fetch('sync_to_online.php')
-        .then(response => response.text())
-        .then(data => console.log(data))
-        .catch(err => console.log("Sync error:", err));
-    }
-
-    // أول تشغيل عند فتح الصفحة
-    syncData();
-
-    // تشغيل كل 3 دقائق
-    setInterval(syncData, 180000);
+        .then(res => res.text())
+        .then(console.log);
+    }, 120000); // كل دقيقتين
   </script>
 
 

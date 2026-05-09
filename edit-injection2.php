@@ -11,9 +11,17 @@ if (isset($_POST['edit_injection'])) {
    $date = $_POST['date'];
    $notes = $_POST['notes'];
    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
-
+   $getPatient = mysqli_query($con, "
+    SELECT uuid
+    FROM add_patient
+    WHERE id = '$patient_id'
+");
+   $patientData = mysqli_fetch_assoc($getPatient);
+   $patient_uuid = $patientData['uuid'];
+   
    $update_query = "UPDATE injection SET 
         patient_id='$patient_id', 
+        patient_uuid = '$patient_uuid',
         eye='$eye', 
         injection_type='$injection_type',
          date='$date',

@@ -9,12 +9,21 @@ if (isset($_POST['injection_btn'])) {
     $injection_type = $_POST['injection_type'];
     $notes = $_POST['notes'];
     $date = $_POST['date'];
+    $injection_uuid = bin2hex(random_bytes(16));
+    $getPatient = mysqli_query($con, "
+    SELECT uuid
+    FROM add_patient
+    WHERE id = '$patient_id'
+");
+
+    $patientData = mysqli_fetch_assoc($getPatient);
+    $patient_uuid = $patientData['uuid'];
 
     $syncFields = $IS_LOCAL ? ", sync_status" : "";
     $syncValues = $IS_LOCAL ? ", 0" : "";
 
-    $insert_query = "INSERT INTO injection (patient_id, eye, injection_type, notes, date, updated_at $syncFields) 
-    VALUES ('$patient_id', '$eye', '$injection_type', '$notes', '$date', NOW() $syncValues)";
+    $insert_query = "INSERT INTO injection (patient_id, patient_uuid, injection_uuid, eye, injection_type, notes, date, updated_at $syncFields) 
+    VALUES ('$patient_id', '$patient_uuid', '$injection_uuid', '$eye', '$injection_type', '$notes', '$date', NOW() $syncValues)";
     mysqli_query($con, $insert_query);
 
     $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
