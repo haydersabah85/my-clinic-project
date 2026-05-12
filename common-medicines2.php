@@ -7,11 +7,14 @@ if (isset($_POST['add_medicine'])) {
     $medicine_form = $_POST['medicine_form'];
     $category = $_POST['category'];
     $strength = $_POST['strength'];
+    
+    $medicine_uuid = bin2hex(random_bytes(16));
     $syncFields = $IS_LOCAL ? ", sync_status" : "";
     $syncValues = $IS_LOCAL ? ", 0" : "";
 
 
-    $sql = "INSERT INTO medicines (medicine_name, medicine_form, category, strength, updated_at $syncFields) VALUES ('$medicine_name', '$medicine_form', '$category', '$strength', NOW() $syncValues)";
+    $sql = "INSERT INTO medicines (medicine_uuid, medicine_name, medicine_form, category, strength, updated_at $syncFields) 
+    VALUES ('$medicine_uuid', '$medicine_name', '$medicine_form', '$category', '$strength', NOW() $syncValues)";
     if (mysqli_query($con, $sql)) {
         echo "<script>alert('Medicine added successfully.'); window.location.href='common-medicines.php';</script>";
     } else {

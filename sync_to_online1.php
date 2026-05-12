@@ -22,6 +22,11 @@ function syncTable($con, $url, $dataKey, $tableName) {
 
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 300);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json'
@@ -62,10 +67,12 @@ function syncTable($con, $url, $dataKey, $tableName) {
 
     $responseData = json_decode($response, true);
 
-    if (!$responseData || $responseData['status'] !== 'success') {
-        echo "API Error<br><br>";
-        return;
-    }
+   if (!$responseData || $responseData['status'] !== 'success') {
+    echo "<pre>";
+    echo htmlspecialchars($response);
+    echo "</pre><br><br>";
+    return;
+}
 
     // ✅ تحديث sync_status
     $ids = array_column($dataKey['data'], 'id');
@@ -244,5 +251,110 @@ syncTable(
 );
 
 
+
+
+// ================== MEDICINES ==================
+$result = mysqli_query($con, "
+    SELECT * FROM medicines
+    WHERE sync_status = 0
+    ORDER BY updated_at ASC
+    LIMIT 50
+");
+
+$medicines = [];
+
+while ($row = mysqli_fetch_assoc($result)) {
+    unset($row['sync_status']);
+    $medicines[] = $row;
+}
+
+syncTable(
+    $con,
+    "https://hayder-sabah-clinic.com/api/sync_medicines.php",
+    ["key" => "medicines", "data" => $medicines],
+    "medicines"
+);
+
+
+// ================== PRESCRIPTIONS ==================
+$result = mysqli_query($con, "
+    SELECT pr.*,
+           ap.uuid AS patient_uuid,
+           pv.visit_uuid
+    FROM prescriptions pr
+    LEFT JOIN add_patient ap ON pr.patient_id = ap.id
+    LEFT JOIN patient_visits pv ON pr.visit_id = pv.id
+    WHERE pr.sync_status = 0
+    ORDER BY pr.updated_at ASC
+    LIMIT 50
+");
+
+$prescriptions = [];
+
+while ($row = mysqli_fetch_assoc($result)) {
+    unset($row['sync_status']);
+    $prescriptions[] = $row;
+}
+
+syncTable(
+    $con,
+    "https://hayder-sabah-clinic.com/api/sync_prescriptions.php",
+    ["key" => "prescriptions", "data" => $prescriptions],
+    "prescriptions"
+);
+
+
+
+// ================== PRESCRIPTION ITEMS ==================
+$result = mysqli_query($con, "
+    SELECT pi.*,
+           p.prescription_uuid,
+           m.medicine_uuid
+    FROM prescription_items pi
+    LEFT JOIN prescriptions p ON pi.prescription_id = p.id
+    LEFT JOIN medicines m ON pi.medicine_id = m.id
+    WHERE pi.sync_status = 0
+    ORDER BY pi.updated_at ASC
+    LIMIT 50
+");
+
+$prescriptionItems = [];
+
+while ($row = mysqli_fetch_assoc($result)) {
+    unset($row['sync_status']);
+    $prescriptionItems[] = $row;
+}
+
+syncTable(
+    $con,
+    "https://hayder-sabah-clinic.com/api/sync_prescription_items.php",
+    ["key" => "prescription_items", "data" => $prescriptionItems],
+    "prescription_items"
+);
+
+
+
+// ================== VA ==================
+$result = mysqli_query($con, "
+    SELECT *
+    FROM va
+    WHERE sync_status = 0
+    ORDER BY updated_at ASC
+    LIMIT 50
+");
+
+$vaRecords = [];
+
+while ($row = mysqli_fetch_assoc($result)) {
+    unset($row['sync_status']);
+    $vaRecords[] = $row;
+}
+
+syncTable(
+    $con,
+    "https://hayder-sabah-clinic.com/api/sync_va.php",
+    ["key" => "va_records", "data" => $vaRecords],
+    "va"
+);
 
 ?>
