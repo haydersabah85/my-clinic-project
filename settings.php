@@ -77,6 +77,20 @@ body[data-theme="dark"] {
         background-color: rgba(0, 90, 190, 1);
     }
 
+    #backup {
+        text-decoration: none;
+        background-color: rgb(161, 53, 175);
+        font-size: 18px;
+        padding: 10px 20px;
+        border-radius: 5px;
+        color: white;
+        margin-top: 20px;
+        cursor: pointer;
+    }
+    #backup:hover {
+        background-color: rgb(120, 40, 150);
+    }
+
     button {
         padding: 10px 20px;
         background-color: #28a745;
@@ -102,6 +116,7 @@ body[data-theme="dark"] {
 <div>
 <a id="main" href="dashboard.php">الصفحة الرئيسية</a>
 <a id="restore" href="restore.php">Restore</a>
+<a id="backup" href="backup_and_upload.php">Backup Online</a>
 <form method="post">
     <button name="manual_backup"
             onclick="return confirm('هل تريد إنشاء نسخة احتياطية الآن؟')">

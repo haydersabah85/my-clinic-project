@@ -788,15 +788,6 @@ if ($soon > 0) // قريبة
     }
   </script>
 
-  <script>
-    setInterval(() => {
-      fetch('sync_to_online.php')
-        .then(res => res.text())
-        .then(console.log);
-    }, 120000); // كل دقيقتين
-  </script>
-
-
 </body>
 
 </html>
