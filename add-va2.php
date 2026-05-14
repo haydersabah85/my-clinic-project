@@ -24,7 +24,7 @@ if (isset($_POST['submit_bt'])) {
     $exam_date = date('Y-m-d');
 
     // UUID خاص بسجل فحص النظر (يُنشأ مرة واحدة عند الإضافة)
-    $va_uuid = bin2hex(random_bytes(16));
+  
 
     // إعداد حقول المزامنة
     $syncFields = $IS_LOCAL ? ", sync_status" : "";
@@ -79,9 +79,9 @@ if (isset($_POST['submit_bt'])) {
     // =========================
     $sql = "
         INSERT INTO va (
-            va_uuid,
+         
             patient_id,
-            patient_uuid,
+          
             va_od,
             va_os,
             bcva_od,
@@ -95,9 +95,9 @@ if (isset($_POST['submit_bt'])) {
             $syncFields
         )
         VALUES (
-            '$va_uuid',
+      
             '$patient_id',
-            '$patient_uuid',
+           
             '$va_od',
             '$va_os',
             '$bcva_od',

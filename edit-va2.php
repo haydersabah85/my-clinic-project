@@ -35,7 +35,7 @@ $patient_uuid = $patientData['uuid'];
       old_glasses_os='$old_glasses_os', 
       ref_od='$ref_od', 
       ref_os='$ref_os',
-      patient_uuid = '$patient_uuid',
+    
       updated_at = NOW() $syncPart
       WHERE va_id=$va_id";
 
