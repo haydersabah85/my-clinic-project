@@ -693,7 +693,7 @@ if ($soon > 0) // قريبة
               <td><?= $r['date'] ?></td>
               <td><?= $r['surgery_type'] ?></td>
               <td><?= $r['eye'] ?></td>
-              <td><a class="open-btn" href="patient-file.php?id_open=<?= $r['patient_id'] ?>">فتح</a></td>
+              <td><a class="open-btn" href="patient-file.php?id=<?= $r['patient_id'] ?>">فتح</a></td>
             </tr>
           <?php } ?>
 
