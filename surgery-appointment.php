@@ -15,7 +15,7 @@ if (isset($_GET['id'])) {
 <?php
 // process_add_operation.php أو نفس الملف إذا كنت تستخدم POST في نفس الصفحة
 if($_SERVER['REQUEST_METHOD'] == "POST") {
-    // تأكد من تعريف قاعدة البيانات $conn قبل هذا الجزء
+    // تأكد من تعريف قاعدة البيانات $con قبل هذا الجزء
     $patient_name = $_POST['patient_name'];
     $phone = $_POST['phone'];
     $eye_type = $_POST['eye_type'];
@@ -28,7 +28,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST") {
     $sql = "INSERT INTO operations (patient_name, phone, eye_type, operation_type, lens_type, operation_date, notes)
             VALUES ('$patient_name', '$phone', '$eye_type', '$operation_type', '$lens_type', '$operation_date', '$notes')";
 
-    if(mysqli_query($conn, $sql)){
+    if(mysqli_query($con, $sql)){
         echo "<script>alert('تم حفظ العملية بنجاح');</script>";
     } else {
         echo "<script>alert('حدث خطأ أثناء الحفظ');</script>";
@@ -233,6 +233,7 @@ input[type="submit"]:active {
             <option value="Probing">Probing</option>
             <option value="SMILE">SMILE</option>
             <option value="PRK">PRK</option>
+            <option value="AC Washout">AC Washout</option>
             <option value="Secondary IOL">Secondary IOL</option>
             <option value="Anterior Vitrectomy">Anterior Vitrectomy</option>
             
