@@ -3,6 +3,8 @@ include 'config.php';
 
 include 'auth.php';
 
+$row = [];
+
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
     $select_query = "SELECT * FROM add_patient WHERE id = $id";
@@ -930,6 +932,10 @@ if (isset($_GET['patient_id'])) {
 
             $critical_class = ($row['is_critical'] == 1) ? 'critical-blink' : '';
             ?>
+
+            <a href="marked_as_done.php?id=<?= $id ?>"
+                class="icon-btn done-icon"
+                data-title="تمت الزيارة">✅</a>
 
             <a href="mark_critical.php?id=<?= $id ?>"
                 class="icon-btn warning-icon <?= $critical_class ?>"

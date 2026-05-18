@@ -39,7 +39,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="refresh" content="60">
-<title>زيارات اليوم الاحترافية</title>
+<title>زيارات اليوم </title>
 
 <link rel="stylesheet" href="assets/theme.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -334,11 +334,12 @@ tbody tr:hover {
                         <th>التاريخ</th>
                         <th>نوع الزيارة</th>
                         <th>الإجراء</th>
+                        <th>حالة الزيارة</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if (empty($visits)): ?>
-                    <tr><td colspan="6" class="empty">لا توجد زيارات اليوم</td></tr>
+                    <tr><td colspan="7" class="empty">لا توجد زيارات اليوم</td></tr>
                 <?php else: ?>
                     <?php foreach ($visits as $row): ?>
                         <?php
@@ -383,6 +384,18 @@ tbody tr:hover {
                                     <i class="fa-solid fa-trash-can"></i>
                                 </a>
                             </td>
+                            <td>
+                                <?php
+                                $visit_id = $row['visit_id'];
+                                $is_done_query = "SELECT is_done FROM visits WHERE visit_id = $visit_id";
+                                $is_done_result = mysqli_query($con, $is_done_query);
+                                $is_done_row = mysqli_fetch_assoc($is_done_result);
+                                if ($is_done_row['is_done'] == 1) {
+                                    echo '<span class="badge" style="background: #43a047;"> تمت</span>';
+                                } else {
+                                    echo '<span class="badge" style="background: #e74c3c;"> قيد الانتظار</span>';
+                                }
+                                ?>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
