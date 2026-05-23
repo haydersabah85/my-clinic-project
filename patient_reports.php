@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include 'config.php';
 
 $id = $_GET['id'];
@@ -86,6 +86,8 @@ $row = mysqli_fetch_assoc($result);
         }
     }
 </style>
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 
 <body>

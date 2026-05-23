@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include "config.php";
 
 include 'auth.php';
@@ -180,6 +180,7 @@ th {
     }
 }
 </style>
+    <link rel="stylesheet" href="assets/dark-mode.css">
 </head>
 
 <body>

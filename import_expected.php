@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include "config.php";
 require 'vendor/autoload.php';
 
@@ -70,6 +70,8 @@ button{
     cursor:pointer;
 }
 </style>
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 <body>
 

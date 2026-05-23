@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include 'config.php';
 
 include 'auth.php';
@@ -206,6 +206,8 @@ input[type="submit"]:active {
     
     </style>
 
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 <body>
      

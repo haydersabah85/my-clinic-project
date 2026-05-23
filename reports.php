@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 include "config.php";
 
@@ -232,6 +232,7 @@ body{
 }
 
 </style>
+    <link rel="stylesheet" href="assets/dark-mode.css">
 </head>
 
 <body>

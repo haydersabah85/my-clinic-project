@@ -1,4 +1,4 @@
-
+﻿
 <?php
 session_start();
 include "config.php";
@@ -33,6 +33,8 @@ if(isset($_POST['login'])){
 <meta charset="UTF-8">
 <title>تسجيل الدخول</title>
 
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 
 <style>

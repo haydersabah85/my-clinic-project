@@ -1,4 +1,4 @@
-
+﻿
 <?php
 include 'config.php';
 
@@ -45,6 +45,8 @@ $row_surgery = $result->fetch_assoc();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>حجز موعد عملية</title>
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 
 

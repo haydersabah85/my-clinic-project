@@ -1,4 +1,4 @@
-
+﻿
 <?php
 include "config.php";
 
@@ -34,6 +34,7 @@ form{width:350px;margin:50px auto;background:#fff;padding:20px;border-radius:12p
 input,select,button{width:100%;padding:10px;margin-top:10px}
 button{background:#0d6efd;color:#fff;border:none}
 </style>
+    <link rel="stylesheet" href="assets/dark-mode.css">
 </head>
 <body>
 

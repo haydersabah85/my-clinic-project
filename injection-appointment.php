@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include 'config.php';
 
 
@@ -20,6 +20,8 @@ if (isset($_GET['id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>موعد حقن للمريض <?= htmlspecialchars($row['full_name']) ?></title>
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 
 

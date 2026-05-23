@@ -1,4 +1,4 @@
-
+﻿
 <?php
 include 'config.php';
 
@@ -38,6 +38,8 @@ if (isset($_GET['id_edit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تعديل معلومات الحقن</title>
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 
 

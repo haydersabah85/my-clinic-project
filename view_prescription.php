@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include 'config.php';
 
 $id = (int)$_GET['id'];
@@ -30,6 +30,8 @@ while ($m = mysqli_fetch_assoc($q)) {
     <meta charset="UTF-8">
     <title>عرض الوصفة</title>
 
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 
 <style>

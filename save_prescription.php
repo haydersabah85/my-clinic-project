@@ -1,5 +1,8 @@
 <?php
 include 'config.php';
+include_once 'clinic_helpers.php';
+
+clinic_ensure_infrastructure($con);
 
 $patient_id = $_POST['patient_id'];
 $diagnosis = $_POST['diagnosis'];
@@ -29,6 +32,10 @@ mysqli_query($con, "INSERT INTO prescriptions (patient_id, diagnosis, updated_at
 VALUES ('$patient_id','$diagnosis', NOW() $syncValues)");
 
 $prescription_id = mysqli_insert_id($con);
+clinic_audit($con, 'create', 'prescriptions', $prescription_id, null, [
+    'patient_id' => $patient_id,
+    'diagnosis' => $diagnosis,
+]);
 
 foreach ($_POST['medicine_id'] as $index => $medicine_id) {
 

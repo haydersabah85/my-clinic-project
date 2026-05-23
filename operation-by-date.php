@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include 'auth.php';
 ?>
 
@@ -9,6 +9,8 @@ include 'auth.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مواعيد العمليات</title>
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 
 

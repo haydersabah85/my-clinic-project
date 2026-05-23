@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include 'config.php';
 
 include 'auth.php';
@@ -25,6 +25,7 @@ if (isset($_GET['id'])) {
 <script src="assets/theme.js" defer></script>
 
 
+    <link rel="stylesheet" href="assets/dark-mode.css">
 </head>
 <style>
 .box{

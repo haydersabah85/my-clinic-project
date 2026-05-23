@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include 'auth.php';
 ?>
 
@@ -13,6 +13,7 @@ include 'auth.php';
 
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js" defer></script>
+    <link rel="stylesheet" href="assets/dark-mode.css">
 </head>
 
 

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include "config_backup.php";
 
 include 'auth.php';
@@ -13,6 +13,8 @@ rsort($files); // الأحدث أولاً
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restore</title>
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 
 <style>

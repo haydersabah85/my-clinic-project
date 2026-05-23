@@ -1,12 +1,24 @@
-<?php
+﻿<?php
 
 include "config.php";
 
 include 'auth.php';
 
+$id = isset($_GET['id_edit']) ? (int) $_GET['id_edit'] : 0;
+$row = [
+    'id' => '',
+    'full_name' => '',
+    'age' => '',
+    'gender' => '',
+    'phone_no' => '',
+    'phone_no_alt' => '',
+    'address' => '',
+    'visit_id' => '',
+    'visit_type' => '',
+    'visit_date' => ''
+];
+
 if (isset($_GET['id_edit'])) {
-    $id = $_GET['id_edit'];
-   
     $select_query = "SELECT 
     add_patient.*,
     visits.visit_id,
@@ -17,7 +29,10 @@ if (isset($_GET['id_edit'])) {
     
      WHERE visits.visit_id = $id";
     $result = mysqli_query($con, $select_query);
-    $row = mysqli_fetch_assoc($result);
+    $fetched = mysqli_fetch_assoc($result);
+    if ($fetched) {
+        $row = $fetched;
+    }
 }
 ?>
 
@@ -29,321 +44,236 @@ if (isset($_GET['id_edit'])) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>بيانات <?php echo htmlspecialchars($row['full_name']); ?> 📁</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
     <script src="assets/theme.js" defer></script>
-    
+
+    <link rel="stylesheet" href="assets/dark-mode.css">
 </head>
 
-    <style>
-/*================= DARK THEME =================*/
-body[data-theme="dark"] {
-    background: linear-gradient(135deg, #1e1e1e, #262626);
-    color: #e0e0e0;
-}
-body[data-theme="dark"] .container {
-    background: linear-gradient(135deg, #2c2c2c, #333333);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-}
-body[data-theme="dark"] nav {   
-    background: linear-gradient(135deg, #3a3a3a, #4a4a4a);
-    box-shadow: 0 6px 14px rgba(0, 0,
-    0, 0.5);
-}
-body[data-theme="dark"] nav ul li {
-    background: linear-gradient(135deg, #4a4a4a, #5a5a5a);
-}
-body[data-theme="dark"] nav ul li:hover {
-    background: linear-gradient(135deg, #6a6a6a, #7a7a7a);
-}
-body[data-theme="dark"] nav ul li a {
-    color: #f0f0f0;
-}
-body[data-theme="dark"] .info {
-    background: linear-gradient(135deg, #2e2e2e, #3a3a3a);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
-}
-body[data-theme="dark"] .info p {
-    border-bottom: 1px dashed #555555;
-}
-body[data-theme="dark"] .visit_type a {
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
-}
-body[data-theme="dark"] .visit_type a:hover {
-    opacity: 0.9;
-}
-/*================= END DARK THEME =================*/
+<style>
+    :root {
+        --bg-1: #f2f4fb;
+        --bg-2: #e8ecf8;
+        --ink: #1d2740;
+        --muted: #5b6883;
+        --panel: rgba(255, 255, 255, 0.92);
+        --panel-border: rgba(88, 112, 173, 0.24);
+        --title-grad: linear-gradient(120deg, #273a73, #3458a5 52%, #da7c46);
+        --nav-grad: linear-gradient(150deg, #f5f8ff, #edf2ff);
+        --link-bg: rgba(58, 91, 165, 0.08);
+        --link-hover: rgba(58, 91, 165, 0.18);
+        --line: rgba(91, 104, 131, 0.28);
+        --shadow-soft: 0 14px 28px rgba(25, 41, 78, 0.12);
+        --shadow-strong: 0 24px 48px rgba(25, 41, 78, 0.18);
+    }
 
+    body[data-theme="dark"],
+    body.dark {
+        --bg-1: #151b2d;
+        --bg-2: #1d2438;
+        --ink: #e5edff;
+        --muted: #a4b2d2;
+        --panel: rgba(24, 35, 60, 0.9);
+        --panel-border: rgba(117, 145, 214, 0.28);
+        --title-grad: linear-gradient(120deg, #1d2b57, #3153a2 52%, #c96d3f);
+        --nav-grad: linear-gradient(150deg, #202d4c, #1a2742);
+        --link-bg: rgba(125, 163, 255, 0.14);
+        --link-hover: rgba(125, 163, 255, 0.24);
+        --line: rgba(164, 178, 210, 0.34);
+        --shadow-soft: 0 16px 34px rgba(0, 0, 0, 0.34);
+        --shadow-strong: 0 30px 56px rgba(0, 0, 0, 0.44);
+    }
 
+    * {
+        box-sizing: border-box;
+    }
 
-        /* ================== Global ================== */
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+        color: var(--ink);
+        background:
+            radial-gradient(circle at 88% 8%, rgba(218, 124, 70, 0.22), transparent 26%),
+            radial-gradient(circle at 8% 0%, rgba(52, 88, 165, 0.2), transparent 24%),
+            linear-gradient(180deg, var(--bg-1), var(--bg-2));
+    }
 
-        body {
-            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-            margin: 0;
-            background: linear-gradient(135deg, #f4f7fb, #eaf1f7);
-            color: #2c3e50;
-        }
+    h1 {
+        margin: 0;
+        padding: 22px 14px;
+        text-align: center;
+        color: #ffffff;
+        font-size: clamp(24px, 4vw, 35px);
+        font-weight: 800;
+        background: var(--title-grad);
+        border-bottom-left-radius: 26px;
+        border-bottom-right-radius: 26px;
+        box-shadow: var(--shadow-strong);
+        letter-spacing: 0.3px;
+    }
 
-        /* ================== Title ================== */
-        h1 {
-            text-align: center;
-            margin: 25px 0;
-            font-size: 32px;
-            color: #8b2e2e;
-            font-weight: 700;
-        }
+    .container {
+        max-width: 1180px;
+        margin: 24px auto 34px;
+        padding: 18px;
+        border-radius: 22px;
+        border: 1px solid var(--panel-border);
+        background: var(--panel);
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 18px;
+        box-shadow: var(--shadow-strong);
+        backdrop-filter: blur(8px);
+    }
 
-        /* ================== Container ================== */
+    nav {
+        background: var(--nav-grad);
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        padding: 12px;
+        box-shadow: var(--shadow-soft);
+    }
+
+    nav ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    nav ul li a {
+        display: block;
+        text-decoration: none;
+        font-weight: 700;
+        text-align: center;
+        color: var(--ink);
+        background: var(--link-bg);
+        border: 1px solid transparent;
+        border-radius: 11px;
+        padding: 10px 11px;
+        transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    nav ul li a:hover {
+        transform: translateY(-2px);
+        background: var(--link-hover);
+        border-color: rgba(58, 91, 165, 0.36);
+    }
+
+    .info {
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.52);
+        box-shadow: var(--shadow-soft);
+    }
+
+    .info p {
+        margin: 0;
+        padding: 11px 0;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px dashed var(--line);
+        font-size: 16px;
+    }
+
+    .info p:last-child {
+        border-bottom: none;
+    }
+
+    .info span:first-child {
+        font-weight: 700;
+        color: var(--muted);
+    }
+
+    .visit_type {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(170px, 1fr));
+        gap: 12px;
+    }
+
+    .visit_type a {
+        text-decoration: none;
+        color: #ffffff;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 700;
+        border-radius: 12px;
+        padding: 13px 10px;
+        box-shadow: 0 12px 22px rgba(24, 41, 74, 0.24);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .visit_type a:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 28px rgba(24, 41, 74, 0.32);
+    }
+
+    #a {
+        background: linear-gradient(120deg, #2f8d6b, #45ac84);
+    }
+
+    #b {
+        background: linear-gradient(120deg, #2d5eb3, #3d7de0);
+    }
+
+    #c {
+        background: linear-gradient(120deg, #b0602c, #d5823c);
+    }
+
+    @media (max-width: 900px) {
         .container {
-            max-width: 1200px;
-            margin: auto;
-            padding: 25px;
-            background: linear-gradient(135deg, #ffffff, #f8fbff);
-            border-radius: 18px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 22px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-        }
-
-        /* ================== Navigation ================== */
-        nav {
-            flex: 1 1 240px;
-            background: linear-gradient(135deg, #fff3e6, #ffe7cc);
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
-        }
-
-        nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        nav ul li {
-            background: linear-gradient(135deg, #ffe2c6, #ffd1a3);
+            grid-template-columns: 1fr;
+            margin: 16px 10px 30px;
             padding: 12px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
         }
 
-        nav ul li:hover {
-            background: linear-gradient(135deg, #ffb870, #ffa24d);
-            transform: translateX(-6px);
-        }
-
-        nav ul li a {
-            text-decoration: none;
-            color: #2b2b2b;
-            font-weight: 700;
-            display: block;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        /* ================== Patient Info ================== */
-        .info {
-            flex: 2 1 450px;
-            background: linear-gradient(135deg, #f9fcf8, #f1f6ee);
-            border-radius: 16px;
-            padding: 22px;
-            font-size: 18px;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
-        }
-
-        .info p {
-            margin: 12px 0;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px dashed #cfd8dc;
-            padding-bottom: 8px;
-        }
-
-        .info span:first-child {
-            font-weight: 700;
-            color: #34495e;
-        }
-
-        /* ================== Visit Buttons ================== */
         .visit_type {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            gap: 18px;
-            margin-top: 25px;
-            flex-wrap: wrap;
+            grid-template-columns: 1fr;
         }
+    }
 
-        .visit_type a {
-            padding: 12px 24px;
-            border-radius: 30px;
-            color: #fff;
-            text-decoration: none;
-            font-size: 17px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
-        }
-
-        .visit_type a:hover {
-            transform: translateY(-4px) scale(1.05);
-            opacity: 0.95;
-        }
-
-        /* ألوان طبية هادئة */
-        #a {
-            background: linear-gradient(135deg, #6fbf73, #3fa75a);
-        }
-
-        #b {
-            background: linear-gradient(135deg, #3fa7d6, #2c82b7);
-        }
-
-        #c {
-            background: linear-gradient(135deg, #b3396d, #8e2a55);
-        }
-
-        /* ================== Responsive ================== */
-        @media (max-width: 992px) {
-            h1 {
-                font-size: 26px;
-            }
-
-            .info {
-                font-size: 16px;
-            }
-
-            .container {
-                padding: 20px;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px;
-            }
-
-            nav {
-                flex: 1 1 100%;
-            }
-
-            .info {
-                flex: 1 1 100%;
-            }
-
-            nav ul li a {
-                font-size: 15px;
-            }
-
-            .visit_type a {
-                font-size: 15px;
-                padding: 10px 18px;
-            }
-        }
-
-        /* ================== Animations ================== */
-        @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(25px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeSlideRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        /* ================== Entry Animations ================== */
+    @media (prefers-reduced-motion: no-preference) {
         .container {
-            animation: fadeSlideUp 0.8s ease forwards;
+            animation: inUp 0.5s ease;
         }
 
-        nav {
-            animation: fadeSlideRight 0.9s ease forwards;
-        }
-
+        nav,
         .info {
-            animation: fadeSlideUp 1s ease forwards;
+            animation: inCard 0.6s ease;
+        }
+    }
+
+    @keyframes inUp {
+        from {
+            opacity: 0;
+            transform: translateY(16px);
         }
 
-        .visit_type a {
-            animation: fadeSlideUp 1.1s ease forwards;
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes inCard {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
         }
 
-        /* ================== Icons for Navigation ================== */
-        nav ul li a::before {
-            margin-left: 8px;
-            font-size: 18px;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
-
-        /* ترتيب الأيقونات حسب العنصر */
-        nav ul li:nth-child(1) a::before {
-            content: "🏠";
-        }
-
-        nav ul li:nth-child(2) a::before {
-            content: "👤";
-        }
-
-        nav ul li:nth-child(3) a::before {
-            content: "📅";
-        }
-
-        nav ul li:nth-child(4) a::before {
-            content: "🧾";
-        }
-
-        nav ul li:nth-child(5) a::before {
-            content: "📊";
-        }
-
-        nav ul li:nth-child(6) a::before {
-            content: "🚪";
-        }
-
-        /* ================== Icons for Visit Buttons ================== */
-        #a::before {
-            content: "➕ ";
-        }
-
-        #b::before {
-            content: "📝 ";
-        }
-
-        #c::before {
-            content: "📁 ";
-        }
-
-        /* ================== Hover Enhancements ================== */
-        nav ul li:hover a::before {
-            transform: scale(1.2);
-            display: inline-block;
-            transition: transform 0.3s ease;
-        }
-
-        .visit_type a:hover::before {
-            transform: rotate(-8deg) scale(1.2);
-            display: inline-block;
-            transition: transform 0.3s ease;
-        }
-    </style>
+    }
+</style>
 
 
 <body>

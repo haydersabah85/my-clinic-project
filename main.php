@@ -1,7 +1,10 @@
-<?php
+﻿<?php
 
 include 'config.php';
 include 'auth.php';
+include_once 'clinic_helpers.php';
+
+clinic_ensure_infrastructure($con);
 
 ?>
 <!DOCTYPE html>
@@ -14,6 +17,7 @@ include 'auth.php';
 
     <script src="assets/theme.js" defer></script>
 
+    <link rel="stylesheet" href="assets/dark-mode.css">
 </head>
 <style>
     /* ===== Root Variables ===== */
@@ -349,7 +353,7 @@ include 'auth.php';
                     </thead>
                     <tbody>
                         <?php
-                        $q = mysqli_query($con, "
+$q = mysqli_query($con, "
 SELECT add_patient.*,
 surgery_appointment.status
 FROM add_patient
@@ -359,6 +363,7 @@ ON surgery_appointment.id=(
   WHERE patient_id=add_patient.id
   ORDER BY id DESC LIMIT 1
 )
+WHERE " . clinic_active_patient_where($con, 'add_patient') . "
 ORDER BY add_patient.id ASC
 ");
 
@@ -369,13 +374,13 @@ ORDER BY add_patient.id ASC
                             elseif ($r['status'] == "pending") $color = "orange";
                         ?>
                             <tr>
-                                <td><?= $r['id'] ?></td>
-                                <td><a id="timeline" href="patient_timeline.php?id=<?= $r['id'] ?>" style="color:<?= $color ?>;font-weight:bold"><?= $r['full_name'] ?></a></td>
-                                <td><span style="color:<?= $color ?>; font-weight:bold"><?= $r['notes'] ?></span></td>
-                                <td><?= $r['age'] ?></td>
-                                <td><?= $r['gender'] ?></td>
-                                <td><?= $r['phone_no'] ?></td>
-                                <td><?= $r['address'] ?></td>
+                                <td><?= (int) $r['id'] ?></td>
+                                <td><a id="timeline" href="patient_timeline.php?id=<?= (int) $r['id'] ?>" style="color:<?= $color ?>;font-weight:bold"><?= h($r['full_name']) ?></a></td>
+                                <td><span style="color:<?= $color ?>; font-weight:bold"><?= h($r['notes']) ?></span></td>
+                                <td><?= h($r['age']) ?></td>
+                                <td><?= h($r['gender']) ?></td>
+                                <td><?= h($r['phone_no']) ?></td>
+                                <td><?= h($r['address']) ?></td>
                                 <td><a class="open-btn" href="patient-data.php?id_open=<?= $r['id'] ?>">فتح</a></td>
                                 <td><button class="delete-btn" onclick="confirmDelete(<?= $r['id'] ?>)">حذف</button></td>
                             </tr>

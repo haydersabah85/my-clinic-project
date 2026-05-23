@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include "config.php";
 
 /* ===== SQL: GET CRITICAL PATIENTS ===== */
@@ -59,6 +59,8 @@ body{
 }
 a{color:#2563eb;text-decoration:none}
 </style>
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 
 <body>

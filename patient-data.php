@@ -1,394 +1,394 @@
 <?php
-
 include "config.php";
+include "auth.php";
+include_once "clinic_helpers.php";
 
-include 'auth.php';
+clinic_ensure_infrastructure($con);
 
-if (isset($_GET['id_open'])) {
-    $id = $_GET['id_open'];
-  
-    $select_query = "SELECT * FROM add_patient WHERE id = $id";
-    $result = mysqli_query($con, $select_query);
-    $row = mysqli_fetch_assoc($result);
-}
-?>
-<?php
-include 'config.php';
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-    $patient_id = $id;
-    
-    $select_query = "SELECT * FROM add_patient WHERE id = $id";
-    $result = mysqli_query($con, $select_query);
-    $row = mysqli_fetch_assoc($result);
+$id = (int) ($_GET['id'] ?? $_GET['id_open'] ?? 0);
+if ($id <= 0) {
+    die("لم يتم تحديد المريض");
 }
 
-?>
+$stmt = mysqli_prepare($con, "SELECT * FROM add_patient WHERE id = ? AND " . clinic_active_patient_where($con, 'add_patient'));
+mysqli_stmt_bind_param($stmt, "i", $id);
+mysqli_stmt_execute($stmt);
+$row = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
+if (!$row) {
+    die("المريض غير موجود أو مؤرشف");
+}
+
+$patientId = (int) $row['id'];
+$patientName = $row['full_name'] ?? '';
+?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>بيانات <?php echo htmlspecialchars($row['full_name']); ?> 📁</title>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بيانات <?= h($patientName) ?></title>
+    <link rel="stylesheet" href="assets/dark-mode.css">
     <script src="assets/theme.js" defer></script>
-    
-</head>
-
     <style>
-/*================= DARK THEME =================*/
-body[data-theme="dark"] {
-    background: linear-gradient(135deg, #1e1e1e, #262626);
-    color: #e0e0e0;
-}
-body[data-theme="dark"] .container {
-    background: linear-gradient(135deg, #2c2c2c, #333333);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-}
-body[data-theme="dark"] nav {   
-    background: linear-gradient(135deg, #3a3a3a, #4a4a4a);
-    box-shadow: 0 6px 14px rgba(0, 0,
-    0, 0.5);
-}
-body[data-theme="dark"] nav ul li {
-    background: linear-gradient(135deg, #4a4a4a, #5a5a5a);
-}
-body[data-theme="dark"] nav ul li:hover {
-    background: linear-gradient(135deg, #6a6a6a, #7a7a7a);
-}
-body[data-theme="dark"] nav ul li a {
-    color: #f0f0f0;
-}
-body[data-theme="dark"] .info {
-    background: linear-gradient(135deg, #2e2e2e, #3a3a3a);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
-}
-body[data-theme="dark"] .info p {
-    border-bottom: 1px dashed #555555;
-}
-body[data-theme="dark"] .visit_type a {
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
-}
-body[data-theme="dark"] .visit_type a:hover {
-    opacity: 0.9;
-}
-/*================= END DARK THEME =================*/
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --text: #172033;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --primary: #1d4ed8;
+            --teal: #0f766e;
+            --green: #15803d;
+            --violet: #7c3aed;
+            --amber: #b45309;
+            --danger: #dc2626;
+            --shadow: 0 14px 34px rgba(15, 23, 42, .09);
+        }
 
-
-
-        /* ================== Global ================== */
+        * {
+            box-sizing: border-box;
+        }
 
         body {
-            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
             margin: 0;
-            background: linear-gradient(135deg, #f4f7fb, #eaf1f7);
-            color: #2c3e50;
-        }
-
-        /* ================== Title ================== */
-        h1 {
-            text-align: center;
-            margin: 25px 0;
-            font-size: 32px;
-            color: #8b2e2e;
-            font-weight: 700;
-        }
-
-        /* ================== Container ================== */
-        .container {
-            max-width: 1200px;
-            margin: auto;
-            padding: 25px;
-            background: linear-gradient(135deg, #ffffff, #f8fbff);
-            border-radius: 18px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 22px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-        }
-
-        /* ================== Navigation ================== */
-        nav {
-            flex: 1 1 240px;
-            background: linear-gradient(135deg, #fff3e6, #ffe7cc);
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
-        }
-
-        nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        nav ul li {
-            background: linear-gradient(135deg, #ffe2c6, #ffd1a3);
-            padding: 12px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-
-        nav ul li:hover {
-            background: linear-gradient(135deg, #ffb870, #ffa24d);
-            transform: translateX(-6px);
-        }
-
-        nav ul li a {
-            text-decoration: none;
-            color: #2b2b2b;
-            font-weight: 700;
-            display: block;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        /* ================== Patient Info ================== */
-        .info {
-            flex: 2 1 450px;
-            background: linear-gradient(135deg, #f9fcf8, #f1f6ee);
-            border-radius: 16px;
             padding: 22px;
-            font-size: 18px;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+            font-family: "Cairo", "Segoe UI", Tahoma, Arial, sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(29, 78, 216, .08), transparent 32%),
+                radial-gradient(circle at top left, rgba(15, 118, 110, .07), transparent 28%),
+                var(--bg);
+            color: var(--text);
         }
 
-        .info p {
-            margin: 12px 0;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px dashed #cfd8dc;
-            padding-bottom: 8px;
+        body[data-theme="dark"] {
+            --bg: #07111d;
+            --card: #0f1b2a;
+            --text: #e6edf5;
+            --muted: #9fb0c2;
+            --border: rgba(148, 163, 184, .18);
+            --primary: #60a5fa;
+            --teal: #2dd4bf;
+            --green: #34d399;
+            --violet: #a78bfa;
+            --amber: #fbbf24;
+            --danger: #fb7185;
+            --shadow: 0 18px 42px rgba(0, 0, 0, .28);
         }
 
-        .info span:first-child {
-            font-weight: 700;
-            color: #34495e;
+        .page {
+            max-width: 1180px;
+            margin: 0 auto;
         }
 
-        /* ================== Visit Buttons ================== */
-        .visit_type {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            gap: 18px;
-            margin-top: 25px;
-            flex-wrap: wrap;
-        }
-
-        .visit_type a {
-            padding: 12px 24px;
-            border-radius: 30px;
+        .hero {
+            min-height: 158px;
+            padding: 24px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #1d4ed8, #0f766e);
             color: #fff;
-            text-decoration: none;
-            font-size: 17px;
+            box-shadow: 0 16px 38px rgba(29, 78, 216, .18);
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.25;
+        }
+
+        .hero p {
+            margin: 8px 0 0;
+            color: rgba(255, 255, 255, .86);
             font-weight: 700;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
         }
 
-        .visit_type a:hover {
-            transform: translateY(-4px) scale(1.05);
-            opacity: 0.95;
+        .hero-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
-        /* ألوان طبية هادئة */
-        #a {
-            background: linear-gradient(135deg, #6fbf73, #3fa75a);
+        .hero-actions a,
+        .visit-actions a,
+        .action-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 10px 13px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 900;
+            border: 1px solid transparent;
         }
 
-        #b {
-            background: linear-gradient(135deg, #3fa7d6, #2c82b7);
+        .hero-actions a {
+            color: #fff;
+            background: rgba(255, 255, 255, .16);
+            border-color: rgba(255, 255, 255, .2);
         }
 
-        #c {
-            background: linear-gradient(135deg, #b3396d, #8e2a55);
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
+            gap: 16px;
+            margin-top: 16px;
         }
 
-        /* ================== Responsive ================== */
-        @media (max-width: 992px) {
-            h1 {
-                font-size: 26px;
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        .card-title {
+            margin: 0 0 14px;
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .info-item {
+            min-height: 72px;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(148, 163, 184, .08);
+            border: 1px solid var(--border);
+        }
+
+        .info-item span {
+            display: block;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .info-item strong {
+            color: var(--text);
+            font-size: 16px;
+            word-break: break-word;
+        }
+
+        .info-item.wide {
+            grid-column: 1 / -1;
+        }
+
+        .visit-actions {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .visit-actions a {
+            color: #fff;
+            min-height: 54px;
+        }
+
+        .visit-first {
+            background: linear-gradient(135deg, var(--green), #22c55e);
+        }
+
+        .visit-repeat {
+            background: linear-gradient(135deg, var(--primary), #0ea5e9);
+        }
+
+        .visit-free {
+            background: linear-gradient(135deg, var(--violet), #9333ea);
+        }
+
+        .action-section {
+            margin-top: 16px;
+        }
+
+        .action-section:first-child {
+            margin-top: 0;
+        }
+
+        .action-section h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+            color: var(--muted);
+        }
+
+        .action-list {
+            display: grid;
+            gap: 9px;
+        }
+
+        .action-link {
+            justify-content: space-between;
+            color: var(--text);
+            background: rgba(148, 163, 184, .08);
+            border-color: var(--border);
+        }
+
+        .action-link:hover,
+        .hero-actions a:hover,
+        .visit-actions a:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.02);
+        }
+
+        .action-link.primary {
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary), #0ea5e9);
+            border-color: transparent;
+        }
+
+        .action-link.teal {
+            color: #fff;
+            background: linear-gradient(135deg, var(--teal), #14b8a6);
+            border-color: transparent;
+        }
+
+        .action-link.amber {
+            color: #fff;
+            background: linear-gradient(135deg, var(--amber), #f59e0b);
+            border-color: transparent;
+        }
+
+        .note-box {
+            margin-top: 16px;
+            color: var(--muted);
+            line-height: 1.8;
+        }
+
+        @media (max-width: 900px) {
+            .hero,
+            .content-grid {
+                grid-template-columns: 1fr;
             }
 
-            .info {
-                font-size: 16px;
+            .hero-actions {
+                justify-content: stretch;
             }
 
-            .container {
-                padding: 20px;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px;
-            }
-
-            nav {
-                flex: 1 1 100%;
-            }
-
-            .info {
-                flex: 1 1 100%;
-            }
-
-            nav ul li a {
-                font-size: 15px;
-            }
-
-            .visit_type a {
-                font-size: 15px;
-                padding: 10px 18px;
+            .hero-actions a {
+                flex: 1 1 auto;
             }
         }
 
-        /* ================== Animations ================== */
-        @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(25px);
+        @media (max-width: 640px) {
+            body {
+                padding: 14px;
             }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeSlideRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
+            .hero {
+                padding: 18px;
             }
 
-            to {
-                opacity: 1;
-                transform: translateX(0);
+            .hero h1 {
+                font-size: 24px;
             }
-        }
 
-        /* ================== Entry Animations ================== */
-        .container {
-            animation: fadeSlideUp 0.8s ease forwards;
-        }
-
-        nav {
-            animation: fadeSlideRight 0.9s ease forwards;
-        }
-
-        .info {
-            animation: fadeSlideUp 1s ease forwards;
-        }
-
-        .visit_type a {
-            animation: fadeSlideUp 1.1s ease forwards;
-        }
-
-        /* ================== Icons for Navigation ================== */
-        nav ul li a::before {
-            margin-left: 8px;
-            font-size: 18px;
-        }
-
-        /* ترتيب الأيقونات حسب العنصر */
-        nav ul li:nth-child(1) a::before {
-            content: "🏠";
-        }
-
-        nav ul li:nth-child(2) a::before {
-            content: "👤";
-        }
-
-        nav ul li:nth-child(3) a::before {
-            content: "📅";
-        }
-
-        nav ul li:nth-child(4) a::before {
-            content: "🧾";
-        }
-
-        nav ul li:nth-child(5) a::before {
-            content: "📊";
-        }
-
-        nav ul li:nth-child(6) a::before {
-            content: "🚪";
-        }
-
-        /* ================== Icons for Visit Buttons ================== */
-        #a::before {
-            content: "➕ ";
-        }
-
-        #b::before {
-            content: "📝 ";
-        }
-
-        #c::before {
-            content: "📁 ";
-        }
-
-        /* ================== Hover Enhancements ================== */
-        nav ul li:hover a::before {
-            transform: scale(1.2);
-            display: inline-block;
-            transition: transform 0.3s ease;
-        }
-
-        .visit_type a:hover::before {
-            transform: rotate(-8deg) scale(1.2);
-            display: inline-block;
-            transition: transform 0.3s ease;
+            .info-grid,
+            .visit-actions {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
-
+</head>
 
 <body>
+    <main class="page">
+        <section class="hero">
+            <div>
+                <h1><?= h($patientName) ?></h1>
+                <p>ملف المريض رقم <?= $patientId ?> | <?= h($row['phone_no'] ?? '') ?></p>
+            </div>
+            <div class="hero-actions">
+                <a href="dashboard.php">لوحة التحكم</a>
+                <a href="main.php">كل المرضى</a>
+                <a href="edit-patient.php?id_edit=<?= $patientId ?>">تعديل البيانات</a>
+            </div>
+        </section>
 
-    <h1>بيانات المريض</h1>
+        <section class="card action-section">
+            <h2 class="card-title">إضافة زيارة جديدة</h2>
+            <div class="visit-actions">
+                <a class="visit-first" href="visits2.php?patient_id=<?= $patientId ?>&visit_type=first">زيارة أول مرة</a>
+                <a class="visit-repeat" href="visits2.php?patient_id=<?= $patientId ?>&visit_type=repeat">زيارة متكررة</a>
+                <a class="visit-free" href="visits2.php?patient_id=<?= $patientId ?>&visit_type=free">زيارة مراجعة</a>
+            </div>
+        </section>
 
-    <div class="container">
+        <div class="content-grid">
+            <section class="card">
+                <h2 class="card-title">بيانات المريض</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span>الرقم التسلسلي</span>
+                        <strong><?= $patientId ?></strong>
+                    </div>
+                    <div class="info-item">
+                        <span>العمر</span>
+                        <strong><?= h($row['age'] ?? '') ?></strong>
+                    </div>
+                    <div class="info-item">
+                        <span>الجنس</span>
+                        <strong><?= h($row['gender'] ?? '') ?></strong>
+                    </div>
+                    <div class="info-item">
+                        <span>الموبايل</span>
+                        <strong><?= h($row['phone_no'] ?? '') ?></strong>
+                    </div>
+                    <div class="info-item">
+                        <span>الموبايل البديل</span>
+                        <strong><?= h($row['phone_no_alt'] ?? '') ?></strong>
+                    </div>
+                    <div class="info-item">
+                        <span>العنوان</span>
+                        <strong><?= h($row['address'] ?? '') ?></strong>
+                    </div>
+                    <div class="info-item wide">
+                        <span>الملاحظات</span>
+                        <strong><?= h($row['notes'] ?? '') ?></strong>
+                    </div>
+                </div>
+            </section>
 
+            <aside class="card">
+                <section class="action-section">
+                    <h3>الملف والمتابعة</h3>
+                    <div class="action-list">
+                        <a class="action-link primary" href="patient-file.php?id=<?= $patientId ?>">الملف الكامل <span>فتح</span></a>
+                        <a class="action-link" href="patient_timeline.php?id=<?= $patientId ?>">التسلسل الزمني <span>عرض</span></a>
+                        <a class="action-link teal" href="followup-appointment.php?id=<?= $patientId ?>">موعد مراجعة <span>إضافة</span></a>
+                    </div>
+                </section>
 
+                <section class="action-section">
+                    <h3>الإجراءات الطبية</h3>
+                    <div class="action-list">
+                        <a class="action-link" href="add-va.php?id=<?= $patientId ?>">إضافة فحص النظر <span>VA</span></a>
+                        <a class="action-link amber" href="add-surgery.php?id=<?= $patientId ?>">إضافة عملية <span>جديد</span></a>
+                    </div>
+                </section>
 
-        <!-- Patient Info -->
-        <div class="info">
-            <p><span>الرقم التسلسلي</span><span><?php echo htmlspecialchars($row['id']); ?></span></p>
-            <p><span>الاسم</span><span><?php echo htmlspecialchars($row['full_name']); ?></span></p>
-            <p><span>العمر</span><span><?php echo htmlspecialchars($row['age']); ?></span></p>
-            <p><span>الجنس</span><span><?php echo htmlspecialchars($row['gender']); ?></span></p>
-            <p><span>الموبايل</span><span><?php echo htmlspecialchars($row['phone_no']); ?></span></p>
-            <p><span>الموبايل البديل</span><span><?php echo htmlspecialchars($row['phone_no_alt']); ?></span></p>
-            <p><span>العنوان</span><span><?php echo htmlspecialchars($row['address']); ?></span></p>
+                <section class="action-section">
+                    <h3>الصور</h3>
+                    <div class="action-list">
+                        <a class="action-link" href="add-image.php?id=<?= $patientId ?>">إضافة صور <span>رفع</span></a>
+                        <a class="action-link" href="image-comparison.php?id=<?= $patientId ?>">مقارنة الصور <span>عرض</span></a>
+                    </div>
+                </section>
+            </aside>
         </div>
-
-        <!-- Navigation -->
-        <nav>
-            <ul>
-                <li><a href="dashboard.php">الصفحة الرئيسية</a></li>
-                <li><a href="patient-file.php?id=<?php echo $row['id']; ?>">الزيارات</a></li>
-                <li><a href="add-va.php?id=<?php echo $row['id']; ?>">إضافة فحص النظر</a></li>
-                <li><a href="add-surgery.php?id=<?php echo $row['id']; ?>">إضافة عملية</a></li>
-                <li><a href="add-image.php?id=<?php echo $row['id']; ?>">إضافة صور</a></li>
-                <li><a href="edit-patient.php?id_edit=<?php echo $row['id']; ?>">تعديل البيانات</a></li>
-            </ul>
-        </nav>
-
-        <!-- Visit Types -->
-        <div class="visit_type">
-            <a id="a" href="visits2.php?patient_id=<?php echo $row['id']; ?>&visit_type=first">زيارة أول مرة</a>
-            <a id="b" href="visits2.php?patient_id=<?php echo $row['id']; ?>&visit_type=repeat">زيارة متكررة</a>
-            <a id="c" href="visits2.php?patient_id=<?php echo $row['id']; ?>&visit_type=free">زيارة مراجعة</a>
-        </div>
-
-    </div>
-
+    </main>
 </body>
 
 </html>

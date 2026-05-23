@@ -18,194 +18,223 @@ include "auth.php";
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 
 
-  <script src="assets/js/theme.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.setAttribute("data-theme", "dark");
+      }
+    });
+  </script>
 
 </head>
 
 <style>
-  /* ======= DARK MODE ======= */
+  :root {
+    --bg-main: #f6f6ef;
+    --bg-soft: #fffdf6;
+    --text-main: #1f2d2a;
+    --text-muted: #546764;
+    --card-bg: rgba(255, 255, 255, 0.88);
+    --card-border: rgba(126, 169, 126, 0.25);
+    --nav-bg: rgba(240, 246, 232, 0.8);
+    --input-bg: #fdfef9;
+    --input-border: #c9d8c3;
+    --input-focus: #2f8f63;
+    --title-grad: linear-gradient(135deg, #2b6f6f, #3e9a6d 55%, #d4a84f);
+    --btn-grad: linear-gradient(135deg, #1b8f63, #2eaa76);
+    --btn-grad-hover: linear-gradient(135deg, #157552, #248a62);
+    --shadow-soft: 0 12px 30px rgba(31, 45, 42, 0.12);
+    --shadow-strong: 0 18px 38px rgba(31, 45, 42, 0.2);
+  }
 
   body[data-theme="dark"] {
-    background: #121212;
-    color: #e0e0e0;
+    --bg-main: #0c1716;
+    --bg-soft: #121f1d;
+    --text-main: #dcebe5;
+    --text-muted: #9db5ae;
+    --card-bg: rgba(15, 31, 29, 0.9);
+    --card-border: rgba(110, 157, 141, 0.35);
+    --nav-bg: rgba(18, 35, 33, 0.78);
+    --input-bg: #102421;
+    --input-border: #2e4d47;
+    --input-focus: #47c08d;
+    --title-grad: linear-gradient(135deg, #154141, #1f684f 55%, #987434);
+    --btn-grad: linear-gradient(135deg, #1a9b6b, #35ba84);
+    --btn-grad-hover: linear-gradient(135deg, #16855b, #2aa370);
+    --shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.32);
+    --shadow-strong: 0 22px 46px rgba(0, 0, 0, 0.38);
   }
 
-  body[data-theme="dark"] .add-patient {
-    background: #1e1e1e;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
-  }
-
-  body[data-theme="dark"] header h1 {
-    background-color: #b73232;
-    color: #ffd700;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.7);
-  }
-
-  body[data-theme="dark"] .sidenav a {
-    background: #3b8552;
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
-  }
-
-  body[data-theme="dark"] .sidenav a:hover {
-    background: #2e6b3f;
-  }
-
-  body[data-theme="dark"] .patient-info input,
-  body[data-theme="dark"] .patient-info select,
-  body[data-theme="dark"] .patient-info textarea {
-    background: #2c2c2c;
-    border: 1px solid #555;
-    color: #e0e0e0;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
-  }
-
-  body[data-theme="dark"] .patient-info input:focus,
-  body[data-theme="dark"] .patient-info select:focus,
-  body[data-theme="dark"] .patient-info textarea:focus {
-    border-color: #3b8552;
-    box-shadow: 0 0 5px rgba(59, 133, 82, 0.7);
-  }
-
-  body[data-theme="dark"] #add-patient-btn {
-    background: #3b8552;
-  }
-
-  body[data-theme="dark"] #add-patient-btn:hover {
-    background: #2e6b3f;
-  }
-
-
-
-
-  /* الخط العام */
   body {
+    margin: 0;
     font-family: 'Cairo', sans-serif;
-    margin: 0;
-    background: #f0f4f8;
-    color: #333;
+    color: var(--text-main);
+    background:
+      radial-gradient(circle at 90% 10%, rgba(212, 168, 79, 0.2), transparent 30%),
+      radial-gradient(circle at 10% 0%, rgba(62, 154, 109, 0.18), transparent 28%),
+      linear-gradient(180deg, var(--bg-main), var(--bg-soft));
+    min-height: 100vh;
   }
 
-  /* الرأس */
   header h1 {
-    background-color: #ffd700;
-    color: #b73232;
-    text-align: center;
-    padding: 20px 0;
     margin: 0;
-    font-size: 30px;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-    border-bottom-left-radius: 15px;
-    border-bottom-right-radius: 15px;
+    padding: 22px 18px;
+    font-size: clamp(22px, 4vw, 34px);
+    text-align: center;
+    color: #fefefe;
+    background: var(--title-grad);
+    border-bottom-left-radius: 24px;
+    border-bottom-right-radius: 24px;
+    box-shadow: var(--shadow-strong);
+    letter-spacing: 0.3px;
   }
 
-  /* القائمة العلوية */
   .sidenav {
+    max-width: 1100px;
+    margin: 26px auto 0;
+    padding: 10px;
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
-    margin: 20px;
+    flex-wrap: wrap;
+    background: var(--nav-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(8px);
   }
 
   .sidenav a {
-    background: #4aa96c;
-    color: white;
     text-decoration: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-weight: bold;
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
+    color: var(--text-main);
+    font-weight: 700;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.5);
+    transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   }
 
   .sidenav a:hover {
-    background: #3b8552;
-    transform: scale(1.05);
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.84);
+    border-color: rgba(62, 154, 109, 0.35);
   }
 
-  /* العنوان الفرعي */
   h2 {
     text-align: center;
-    color: #b73232;
-    margin-top: 30px;
-    margin-bottom: 20px;
-    font-size: 26px;
+    margin: 34px 0 18px;
+    color: var(--text-main);
+    font-size: clamp(24px, 3.6vw, 31px);
   }
 
-  /* النموذج */
   .add-patient {
-    background: #ffffff;
-    max-width: 700px;
-    margin: 0 auto 50px auto;
-    padding: 30px 25px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    max-width: 860px;
+    margin: 0 auto 48px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 20px;
+    box-shadow: var(--shadow-strong);
+    backdrop-filter: blur(6px);
   }
 
-  /* حقول النموذج */
   .patient-info {
     display: flex;
     flex-direction: column;
+    gap: 8px;
+  }
+
+  .patient-info:last-of-type {
+    grid-column: 1 / -1;
   }
 
   .patient-info label {
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: #4a4a4a;
-
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 14px;
   }
 
   .patient-info input,
   .patient-info select,
   .patient-info textarea {
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-    width: 95%;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-main);
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 15px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  }
+
+  .patient-info textarea {
+    min-height: 100px;
     resize: vertical;
-    transition: all 0.3s ease;
   }
 
   .patient-info input:focus,
   .patient-info select:focus,
   .patient-info textarea:focus {
-    border-color: #4aa96c;
-    box-shadow: 0 0 5px rgba(74, 169, 108, 0.5);
     outline: none;
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 4px rgba(47, 143, 99, 0.15);
+    transform: translateY(-1px);
   }
 
-  .patient-info textarea {
-    min-height: 80px;
-  }
-
-  /* زر الإضافة */
   #add-patient-btn {
-    background: #4aa96c;
-    color: white;
+    grid-column: 1 / -1;
+    margin-top: 8px;
     border: none;
-    padding: 15px;
+    border-radius: 14px;
+    padding: 14px;
     font-size: 18px;
-    font-weight: bold;
-    border-radius: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    background: var(--btn-grad);
     cursor: pointer;
-    transition: all 0.3s ease;
+    box-shadow: 0 12px 24px rgba(27, 143, 99, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   }
 
   #add-patient-btn:hover {
-    background: #3b8552;
-    transform: scale(1.05);
+    transform: translateY(-2px);
+    background: var(--btn-grad-hover);
+    box-shadow: 0 16px 28px rgba(27, 143, 99, 0.32);
   }
 
-  /* Responsive */
-  @media (max-width: 600px) {
+  @media (max-width: 760px) {
+    .add-patient {
+      grid-template-columns: 1fr;
+      margin: 0 12px 34px;
+      padding: 18px;
+      border-radius: 18px;
+    }
+
+    .patient-info:last-of-type {
+      grid-column: auto;
+    }
+
     .sidenav {
-      flex-direction: column;
-      align-items: center;
+      margin: 18px 10px 0;
+      border-radius: 14px;
+    }
+
+    .sidenav a {
+      width: calc(50% - 10px);
+      text-align: center;
+      padding: 9px 10px;
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .sidenav a {
+      width: 100%;
     }
   }
 </style>

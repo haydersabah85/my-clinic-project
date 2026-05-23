@@ -1,4 +1,4 @@
-  
+﻿  
   <?php
   include "config.php";
   ?>
@@ -9,7 +9,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-  </head>
+      <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
+</head>
 
 <style>
 
@@ -105,6 +107,7 @@
             </div>
             <div class="menu-group">
                 <span>📅 المواعيد</span>
+                <a href="work-queue.php">قائمة عمل اليوم</a>
                 <a href="import_expected.php">استيراد المواعيد</a>
                 <a href="expected_appointments.php">المواعيد المتوقعة</a>
                 <a href="visits.php">زيارات اليوم</a>
@@ -114,11 +117,16 @@
             <div class="menu-group">
                 <span>👤 المرضى</span>
                 <a href="add-patient.php">إضافة مريض</a>
+                <a href="main.php">كل المرضى</a>
+                <a href="archived-patients.php">أرشيف المرضى</a>
+                <a href="data-quality.php">جودة البيانات</a>
                 <a href="confirmed-list.php">قوائم العمليات</a>
             </div>
 
             <div class="menu-group">
                 <span>⚙️ النظام</span>
+                <a href="treatment-templates.php">قوالب العلاج</a>
+                <a href="audit-log.php">سجل العمليات</a>
                 <a href="settings.php">الإعدادات</a>
                 <a href="logout.php" class="danger">تسجيل الخروج</a>
             </div>

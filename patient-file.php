@@ -102,8 +102,29 @@ if (isset($_GET['patient_id'])) {
 
     /* Dark Mode */
     body[data-theme="dark"] {
-        background: linear-gradient(135deg, #0f172a, #1e293b);
-        color: #f8fafc;
+        --primary: #60a5fa;
+        --primary-dark: #93c5fd;
+        --secondary: #38bdf8;
+        --success: #34d399;
+        --warning: #fbbf24;
+        --danger: #fb7185;
+        --purple: #c4b5fd;
+
+        --bg: #07111d;
+        --card: #0f1b2a;
+        --text: #e6edf5;
+        --muted: #9fb0c2;
+        --border: rgba(148, 163, 184, 0.18);
+
+        --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.24);
+        --shadow-md: 0 18px 45px rgba(0, 0, 0, 0.32);
+        --shadow-lg: 0 24px 65px rgba(0, 0, 0, 0.42);
+
+        background:
+            radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 34%),
+            radial-gradient(circle at top left, rgba(20, 184, 166, 0.12), transparent 30%),
+            linear-gradient(180deg, #07111d, #0b1220 58%, #08111d);
+        color: var(--text);
     }
 
     /* ==================================================
@@ -117,8 +138,17 @@ if (isset($_GET['patient_id'])) {
     /* ==================================================
    HERO HEADER
 ================================================== */
+    header {
+        max-width: 1800px;
+        margin: 0 auto 24px;
+        display: flex;
+        align-items: stretch;
+        gap: 14px;
+    }
+
     header h1 {
-        margin: 0 0 24px;
+        flex: 1;
+        margin: 0;
         padding: 24px 32px;
         border-radius: 28px;
         background: linear-gradient(135deg, #1d4ed8, #2563eb, #0ea5e9);
@@ -355,6 +385,17 @@ if (isset($_GET['patient_id'])) {
             font-size: 24px;
             padding: 18px;
             border-radius: 20px;
+        }
+
+        header {
+            gap: 10px;
+        }
+
+        .header-theme-toggle {
+            width: 56px;
+            min-width: 56px;
+            border-radius: 18px;
+            font-size: 20px;
         }
 
         .patient_info {
@@ -890,6 +931,182 @@ if (isset($_GET['patient_id'])) {
         font-weight: 700;
         text-decoration: none;
     }
+
+    .theme-toggle {
+        border: 0;
+        font-family: 'Cairo', sans-serif;
+    }
+
+    .header-theme-toggle {
+        width: 72px;
+        min-width: 72px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #0ea5e9, #2563eb);
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: var(--shadow-md);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .header-theme-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    body[data-theme="dark"] header h1 {
+        background: linear-gradient(135deg, #0f2d5c, #155e9f, #0f766e);
+        box-shadow: 0 22px 55px rgba(0, 0, 0, 0.36);
+        border: 1px solid rgba(147, 197, 253, 0.22);
+    }
+
+    body[data-theme="dark"] .header-theme-toggle {
+        background: linear-gradient(135deg, #075985, #0f766e);
+        border: 1px solid rgba(147, 197, 253, 0.22);
+        box-shadow: 0 22px 55px rgba(0, 0, 0, 0.32);
+    }
+
+    body[data-theme="dark"] .patient_info,
+    body[data-theme="dark"] .nav,
+    body[data-theme="dark"] .previous_visits,
+    body[data-theme="dark"] .previous_va,
+    body[data-theme="dark"] .previous_surgeries,
+    body[data-theme="dark"] .previous_lasers,
+    body[data-theme="dark"] .previous_injections,
+    body[data-theme="dark"] .previous_medicines,
+    body[data-theme="dark"] .patient_visits,
+    body[data-theme="dark"] .stat-card {
+        background: linear-gradient(145deg, rgba(15, 27, 42, 0.96), rgba(11, 18, 32, 0.96));
+        border-color: rgba(148, 163, 184, 0.18);
+        box-shadow: var(--shadow-md);
+    }
+
+    body[data-theme="dark"] .patient_info,
+    body[data-theme="dark"] .nav {
+        backdrop-filter: blur(14px);
+    }
+
+    body[data-theme="dark"] .patient_info p {
+        background: rgba(15, 23, 42, 0.72);
+        border-color: rgba(147, 197, 253, 0.16);
+        color: var(--text);
+    }
+
+    body[data-theme="dark"] .patient_info span:first-child {
+        color: #a8bdd1;
+    }
+
+    body[data-theme="dark"] .patient_info span:last-child {
+        color: #d8b4fe !important;
+    }
+
+    body[data-theme="dark"] .section-title {
+        color: #93c5fd;
+    }
+
+    body[data-theme="dark"] .stat-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    body[data-theme="dark"] .stat-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 4px;
+        background: linear-gradient(90deg, #60a5fa, #2dd4bf);
+    }
+
+    body[data-theme="dark"] .stat-card:hover {
+        box-shadow: var(--shadow-lg);
+    }
+
+    body[data-theme="dark"] .stat-value {
+        color: #93c5fd;
+        text-shadow: 0 0 18px rgba(147, 197, 253, 0.22);
+    }
+
+    body[data-theme="dark"] .stat-label,
+    body[data-theme="dark"] .prescription-diagnosis {
+        color: #a8bdd1;
+    }
+
+    body[data-theme="dark"] th {
+        background: linear-gradient(135deg, #1d4ed8, #075985);
+        color: #ffffff;
+    }
+
+    body[data-theme="dark"] td {
+        border-bottom-color: rgba(148, 163, 184, 0.14);
+        color: #dce7f3;
+    }
+
+    body[data-theme="dark"] tbody tr:hover {
+        background: rgba(96, 165, 250, 0.12);
+    }
+
+    body[data-theme="dark"] #notes,
+    body[data-theme="dark"] .modal-content input[type="date"],
+    body[data-theme="dark"] .modal-content input[type="text"] {
+        background: rgba(15, 23, 42, 0.82);
+        color: var(--text);
+        border-color: rgba(147, 197, 253, 0.18);
+    }
+
+    body[data-theme="dark"] #notes:focus,
+    body[data-theme="dark"] .modal-content input:focus {
+        background: #0f1b2a;
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.14);
+    }
+
+    body[data-theme="dark"] #notes::placeholder,
+    body[data-theme="dark"] .modal-content input::placeholder {
+        color: #71849a;
+    }
+
+    body[data-theme="dark"] .prescription-card {
+        background: rgba(15, 23, 42, 0.72);
+        border-color: rgba(147, 197, 253, 0.16);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    body[data-theme="dark"] .prescription-date {
+        color: #93c5fd;
+    }
+
+    body[data-theme="dark"] .prescription-list {
+        color: #dce7f3;
+    }
+
+    body[data-theme="dark"] .links a {
+        background: linear-gradient(135deg, #0f766e, #0e7490);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+    }
+
+    body[data-theme="dark"] .modal {
+        background: rgba(2, 6, 23, 0.72);
+    }
+
+    body[data-theme="dark"] .modal-content {
+        background: #0f1b2a;
+        border-color: rgba(147, 197, 253, 0.2);
+        color: var(--text);
+        box-shadow: var(--shadow-lg);
+    }
+
+    body[data-theme="dark"] .modal-content h3,
+    body[data-theme="dark"] .modal-content label {
+        color: var(--text);
+    }
+
+    body[data-theme="dark"] .icon-btn::after,
+    body[data-theme="dark"] .visit-note::after,
+    body[data-theme="dark"] .surgery-notes::after {
+        background: #020617;
+        border: 1px solid rgba(147, 197, 253, 0.2);
+    }
 </style>
 
 
@@ -897,6 +1114,7 @@ if (isset($_GET['patient_id'])) {
 
 <header>
     <h1> ملف المريض: <?php echo htmlspecialchars($row['full_name']); ?></h1>
+    <button class="theme-toggle header-theme-toggle" id="themeToggle" type="button" title="تبديل المظهر">🌙</button>
 </header>
 
 
@@ -1341,6 +1559,7 @@ LIMIT 20
                                 echo "</ul>";
                                 echo "<div class='prescription-footer'>";
                                 echo "<a class='view-prescription-btn' href='view_prescription.php?id={$last_prescription_id}'>📄 عرض الوصفة</a>";
+                                echo "<a class='edit-prescription-btn' href='edit-prescription.php?id={$last_prescription_id}' style='margin-left: 10px; background: linear-gradient(135deg, #059669, #047857);'>✏️ تعديل الوصفة</a>";
                                 echo "</div>";
                                 echo "</div>";
                             }
@@ -1400,6 +1619,7 @@ LIMIT 20
                     echo "</ul>";
                     echo "<div class='prescription-footer'>";
                     echo "<a class='view-prescription-btn' href='view_prescription.php?id={$last_prescription_id}'>📄 عرض الوصفة</a>";
+                    echo "<a class='edit-prescription-btn' href='edit-prescription.php?id={$last_prescription_id}' style='margin-left: 10px; background: linear-gradient(135deg, #059669, #047857);'>✏️ تعديل الوصفة</a>";
                     echo "</div>";
                     echo "</div>";
                 } else {

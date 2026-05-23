@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include 'config.php';
 
 include 'auth.php';
@@ -25,6 +25,7 @@ if (isset($_GET['id'])) {
 
     <link rel="stylesheet" href="assets/style.css" />
     <script src="assets/theme.js" defer></script>
+    <link rel="stylesheet" href="assets/dark-mode.css">
 </head>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');

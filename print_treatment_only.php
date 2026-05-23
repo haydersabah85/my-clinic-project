@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include 'config.php';
 
 $id = $_GET['id'];
@@ -72,9 +72,13 @@ while ($m = mysqli_fetch_assoc($q)) {
         /* كل دواء */
         .medicine {
             margin-bottom: 6mm;
-            color: black;
+            color: #6f198c;
         }
 
+        center {
+            font-size: 22px;
+            color: #333;
+        }
         /* زر الطباعة */
         .print-btn {
             position: fixed;
@@ -94,6 +98,8 @@ while ($m = mysqli_fetch_assoc($q)) {
             }
         }
     </style>
+    <link rel="stylesheet" href="assets/dark-mode.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 
 <body>
