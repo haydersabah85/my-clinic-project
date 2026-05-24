@@ -6,8 +6,8 @@ include 'auth.php';
 
 $visit_id = $_POST['id'];
 $visit_uuid = bin2hex(random_bytes(16));
-$notes = $_POST['notes'];
-$patient_id = $_GET['id'];
+$notes = mysqli_real_escape_string($con, $_POST['notes'] ?? '');
+$patient_id = (int)$_GET['id'];
 $visit_date = date('Y-m-d');  // Use current date
 // 🔥 جلب UUID الخاص بالمريض
 $getPatient = mysqli_query($con, "

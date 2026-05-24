@@ -2,6 +2,10 @@
 include 'config.php';
 
 include 'auth.php';
+include_once 'clinic_helpers.php';
+
+clinic_ensure_column($con, 'va', 'iop_od', 'VARCHAR(50) NULL');
+clinic_ensure_column($con, 'va', 'iop_os', 'VARCHAR(50) NULL');
 
 if (isset($_GET['id'])) {
   $id = $_GET['id'];
@@ -282,6 +286,114 @@ if (isset($_GET['id'])) {
       font-size: 24px;
     }
   }
+
+  body {
+    background: #f4f7fb;
+    color: #172033;
+  }
+
+  h1 {
+    color: #172033;
+    text-shadow: none;
+  }
+
+  .patient-info {
+    max-width: 1120px;
+    border: 1px solid #dbe7ef;
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  }
+
+  .add-va {
+    max-width: 1120px;
+    border: 1px solid #dbe7ef;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.1);
+    padding: 24px;
+  }
+
+  .ou {
+    gap: 16px;
+  }
+
+  .od,
+  .os {
+    border: 1px solid #dbe7ef;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: none;
+  }
+
+  .od {
+    border-top: 5px solid #2563eb;
+  }
+
+  .os {
+    border-top: 5px solid #0f766e;
+  }
+
+  .od:hover,
+  .os:hover {
+    transform: none;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  }
+
+  h3 {
+    background: transparent;
+    color: #172033;
+    border-bottom: 1px solid #edf2f7;
+    border-radius: 0;
+    padding: 0 0 12px;
+  }
+
+  .od-info,
+  .os-info {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .od-info label,
+  .os-info label {
+    color: #64748b;
+    font-size: 14px;
+  }
+
+  .od-info input,
+  .os-info input {
+    width: 100%;
+    border: 1px solid #dbe7ef;
+    border-radius: 10px;
+    background: #f8fafc;
+    padding: 10px 12px;
+  }
+
+  .od-info input:focus,
+  .os-info input:focus {
+    border-color: #0f766e;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
+  }
+
+  #submit_bt {
+    float: none;
+    display: block;
+    width: 180px;
+    height: 48px;
+    margin: 22px 0 0 auto;
+    border-radius: 12px;
+    background: #0f766e;
+    box-shadow: 0 12px 22px rgba(15, 118, 110, 0.2);
+  }
+
+  @media (max-width: 768px) {
+    .od-info,
+    .os-info {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 
 <body>
@@ -318,6 +430,11 @@ if (isset($_GET['id'])) {
         </div>
 
         <div class="od-info">
+          <label for="iop_od">IOP:</label>
+          <input type="text" inputmode="decimal" id="iop_od" name="iop_od" placeholder="mmHg" />
+        </div>
+
+        <div class="od-info">
           <label for="old_glasses_od">Old Glasses:</label>
           <input type="text" id="old_glasses_od" name="old_glasses_od" />
         </div>
@@ -338,6 +455,11 @@ if (isset($_GET['id'])) {
         <div class="os-info">
           <label for="bcva_os">BCVA:</label>
           <input type="text" id="bcva_os" name="bcva_os" />
+        </div>
+
+        <div class="os-info">
+          <label for="iop_os">IOP:</label>
+          <input type="text" inputmode="decimal" id="iop_os" name="iop_os" placeholder="mmHg" />
         </div>
 
         <div class="os-info">

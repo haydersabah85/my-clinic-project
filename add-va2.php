@@ -1,6 +1,10 @@
 <?php
 include 'config.php';
 include 'auth.php';
+include_once 'clinic_helpers.php';
+
+clinic_ensure_column($con, 'va', 'iop_od', 'VARCHAR(50) NULL');
+clinic_ensure_column($con, 'va', 'iop_os', 'VARCHAR(50) NULL');
 
 if (isset($_POST['submit_bt'])) {
 
@@ -14,6 +18,9 @@ if (isset($_POST['submit_bt'])) {
 
     $bcva_od = mysqli_real_escape_string($con, $_POST['bcva_od'] ?? '');
     $bcva_os = mysqli_real_escape_string($con, $_POST['bcva_os'] ?? '');
+
+    $iop_od = mysqli_real_escape_string($con, $_POST['iop_od'] ?? '');
+    $iop_os = mysqli_real_escape_string($con, $_POST['iop_os'] ?? '');
 
     $old_glasses_od = mysqli_real_escape_string($con, $_POST['old_glasses_od'] ?? '');
     $old_glasses_os = mysqli_real_escape_string($con, $_POST['old_glasses_os'] ?? '');
@@ -70,7 +77,7 @@ if (isset($_POST['submit_bt'])) {
     if ($check_result && mysqli_num_rows($check_result) > 0) {
 
         echo "<script>alert('تم إجراء فحص النظر لهذا المريض في نفس اليوم بالفعل.');</script>";
-        echo "<script>window.location.href = 'patient-data.php?id=" . $patient_id . "';</script>";
+        echo "<script>window.location.href = 'patient-file.php?id=" . $patient_id . "';</script>";
         exit;
     }
 
@@ -86,6 +93,8 @@ if (isset($_POST['submit_bt'])) {
             va_os,
             bcva_od,
             bcva_os,
+            iop_od,
+            iop_os,
             old_glasses_od,
             old_glasses_os,
             ref_od,
@@ -102,6 +111,8 @@ if (isset($_POST['submit_bt'])) {
             '$va_os',
             '$bcva_od',
             '$bcva_os',
+            '$iop_od',
+            '$iop_os',
             '$old_glasses_od',
             '$old_glasses_os',
             '$ref_od',
@@ -120,7 +131,7 @@ if (isset($_POST['submit_bt'])) {
     if ($result) {
 
         echo "<script>alert('تم إضافة فحص النظر بنجاح.');</script>";
-        echo "<script>window.location.href = 'patient-data.php?id=" . $patient_id . "';</script>";
+        echo "<script>window.location.href = 'patient-file.php?id=" . $patient_id . "';</script>";
         exit;
 
     } else {

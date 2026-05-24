@@ -2,18 +2,24 @@
 include 'config.php';
 
 include 'auth.php';
+include_once 'clinic_helpers.php';
+
+clinic_ensure_column($con, 'va', 'iop_od', 'VARCHAR(50) NULL');
+clinic_ensure_column($con, 'va', 'iop_os', 'VARCHAR(50) NULL');
 
 if (isset($_POST['update_va'])) {
-   $va_id = $_GET['id_update'];
+   $va_id = (int)$_GET['id_update'];
    $patient_id = intval($_POST['patient_id']);
-   $va_od = $_POST['va_od'];
-   $va_os = $_POST['va_os'];
-   $bcva_od = $_POST['bcva_od'];
-   $bcva_os = $_POST['bcva_os'];
-   $old_glasses_od = $_POST['old_glasses_od'];
-   $old_glasses_os = $_POST['old_glasses_os'];
-   $ref_od = $_POST['ref_od'];
-   $ref_os = $_POST['ref_os'];
+   $va_od = mysqli_real_escape_string($con, $_POST['va_od'] ?? '');
+   $va_os = mysqli_real_escape_string($con, $_POST['va_os'] ?? '');
+   $bcva_od = mysqli_real_escape_string($con, $_POST['bcva_od'] ?? '');
+   $bcva_os = mysqli_real_escape_string($con, $_POST['bcva_os'] ?? '');
+   $iop_od = mysqli_real_escape_string($con, $_POST['iop_od'] ?? '');
+   $iop_os = mysqli_real_escape_string($con, $_POST['iop_os'] ?? '');
+   $old_glasses_od = mysqli_real_escape_string($con, $_POST['old_glasses_od'] ?? '');
+   $old_glasses_os = mysqli_real_escape_string($con, $_POST['old_glasses_os'] ?? '');
+   $ref_od = mysqli_real_escape_string($con, $_POST['ref_od'] ?? '');
+   $ref_os = mysqli_real_escape_string($con, $_POST['ref_os'] ?? '');
    $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
 
    $getPatient = mysqli_query($con, "
@@ -31,6 +37,8 @@ $patient_uuid = $patientData['uuid'];
       va_os='$va_os', 
       bcva_od='$bcva_od', 
       bcva_os='$bcva_os', 
+      iop_od='$iop_od',
+      iop_os='$iop_os',
       old_glasses_od='$old_glasses_od', 
       old_glasses_os='$old_glasses_os', 
       ref_od='$ref_od', 
