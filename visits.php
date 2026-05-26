@@ -319,7 +319,7 @@ while ($row = mysqli_fetch_assoc($result)) {
             border-radius: 16px;
             box-shadow: var(--shadow);
             overflow: auto;
-            max-height: calc(180vh - 162px);
+            max-height: calc(150vh - 162px);
             transition: box-shadow 0.2s ease;
             backdrop-filter: blur(8px);
         }
