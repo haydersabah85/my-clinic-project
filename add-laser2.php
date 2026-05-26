@@ -7,6 +7,8 @@ include 'auth.php';
 if (isset($_POST['laser_btn'])) {
 
     $patient_id = intval($_POST['id']);
+    $appointment_id = isset($_POST['appointment_id']) ? intval($_POST['appointment_id']) : 0;
+    $appointment_date = $_POST['appointment_date'] ?? '';
     $eye = $_POST['eye'];
     $laser_type = $_POST['laser_type'];
     $notes = $_POST['notes'];
@@ -30,9 +32,14 @@ if (isset($_POST['laser_btn'])) {
 
     $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
 
-    $update_query = "UPDATE laser_appointment SET status = 'done', updated_at = NOW() $syncPart WHERE patient_id = '$patient_id' AND date = '$date'";
+    if ($appointment_id > 0) {
+        $update_query = "UPDATE laser_appointment SET status = 'done', updated_at = NOW() $syncPart WHERE id = '$appointment_id' AND patient_id = '$patient_id'";
+    } else {
+        $update_query = "UPDATE laser_appointment SET status = 'done', updated_at = NOW() $syncPart WHERE patient_id = '$patient_id' AND date = '$date'";
+    }
     mysqli_query($con, $update_query);
 
-    header("Location: operation-by-date.php?date=" . urlencode($date));
+    $redirect_date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $appointment_date) ? $appointment_date : $date;
+    header("Location: operation-by-date.php?date=" . urlencode($redirect_date));
     exit();
 }

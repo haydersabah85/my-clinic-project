@@ -174,7 +174,9 @@ while ($row = mysqli_fetch_assoc($result)) {
             grid-template-columns: 0 minmax(0, 1fr);
             gap: 18px;
             min-height: calc(100vh - 162px);
+            align-items: stretch;
             transition: grid-template-columns 0.28s ease;
+            height: fit-content;
         }
 
         .container.sidebar-open {
@@ -188,6 +190,7 @@ while ($row = mysqli_fetch_assoc($result)) {
             box-shadow: var(--shadow);
             padding: 14px;
             overflow-y: auto;
+            max-height: calc(180vh - 162px);
             transition: opacity 0.24s ease, transform 0.24s ease;
             backdrop-filter: blur(8px);
         }
@@ -237,7 +240,8 @@ while ($row = mysqli_fetch_assoc($result)) {
 
         .main-content {
             min-width: 0;
-            overflow: hidden;
+            min-height: 100%;
+            overflow: visible;
             transition: transform 0.28s ease;
         }
 
@@ -315,7 +319,8 @@ while ($row = mysqli_fetch_assoc($result)) {
             border-radius: 16px;
             box-shadow: var(--shadow);
             overflow: auto;
-            max-height: calc(100vh - 320px);
+            max-height: calc(180vh - 162px);
+            transition: box-shadow 0.2s ease;
             backdrop-filter: blur(8px);
         }
 
@@ -455,7 +460,7 @@ while ($row = mysqli_fetch_assoc($result)) {
             }
 
             .table-responsive {
-                max-height: 560px;
+                max-height: none;
             }
         }
 

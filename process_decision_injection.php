@@ -4,7 +4,9 @@ include 'config.php';
 include 'auth.php';
 
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
+    $id = (int) $_GET['id'];
+    $appointment_id = isset($_GET['appointment_id']) ? (int) $_GET['appointment_id'] : 0;
+    $appointment_date = $_GET['appointment_date'] ?? '';
     
 
 } else {
@@ -55,16 +57,20 @@ button{
     <h3>هل حضر المريض؟</h3>
 
      <!-- إبر -->
-    <form action="add-injection.php?id=<?php echo $id; ?>" method="get">
+    <form action="add-injection.php" method="get">
         <input type="hidden" name="id" value="<?php echo $id; ?>">
+        <input type="hidden" name="appointment_id" value="<?php echo $appointment_id; ?>">
+        <input type="hidden" name="appointment_date" value="<?php echo htmlspecialchars($appointment_date, ENT_QUOTES, 'UTF-8'); ?>">
         <button class="done">💉 تم إعطاء الإبرة</button>
     </form>
 
 
     
     <!-- لم يحضر -->
-    <form action="discharge_injection.php?id=<?php echo $id; ?>" method="post">
+    <form action="discharge_injection.php" method="post">
         <input type="hidden" name="id" value="<?php echo $id; ?>">
+        <input type="hidden" name="appointment_id" value="<?php echo $appointment_id; ?>">
+        <input type="hidden" name="appointment_date" value="<?php echo htmlspecialchars($appointment_date, ENT_QUOTES, 'UTF-8'); ?>">
         <button class="dis" name="dis_btn">✖ لم يحضر المريض</button>
     </form>
 </div>

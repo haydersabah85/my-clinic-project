@@ -459,97 +459,214 @@ if (isset($_GET['patient_id'])) {
     }
 
     /* الخلفية */
-.modal{
-    display:none;
-    position:fixed;
-    z-index:1000;
-    left:0;
-    top:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.45);
-}
-
-/* الصندوق */
-.modal-content{
-    background:#fff;
-    width:350px;
-    padding:25px;
-    border-radius:12px;
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    box-shadow:0 10px 25px rgba(0,0,0,0.2);
-    animation:pop 0.25s ease;
-}
-
-/* حركة الظهور */
-@keyframes pop{
-    from{
-        transform:translate(-50%,-60%) scale(0.9);
-        opacity:0;
-    }
-    to{
-        transform:translate(-50%,-50%) scale(1);
-        opacity:1;
-    }
-}
-
-/* زر الاغلاق */
-.close-btn{
-    float:left;
-    font-size:22px;
-    cursor:pointer;
-    color:#999;
-}
-
-/* الحقول */
-.modal input{
-    width:100%;
-    padding:8px;
-    margin-top:5px;
-    margin-bottom:15px;
-    border:1px solid #ddd;
-    border-radius:6px;
-}
-
-/* زر الحفظ */
-.modal button{
-    width:100%;
-    padding:10px;
-    border:none;
-    background:#28a745;
-    color:white;
-    border-radius:6px;
-    font-size:15px;
-    cursor:pointer;
-}
-
-.modal button:hover{
-    background:#23913c;
-}
-
-@media (max-width: 400px) {
-    .modal-content {    
-        width: 90%;
-    }
-}
-@media (max-width: 600px) {
-    .previous_visits,
-    .previous_va,
-    .previous_surgeries,
-    .previous_lasers,
-    .previous_injections {
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
         width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.45);
     }
-}
-@media (max-width:1200px) {
-    .nav {
-        gap: 30px;
-    }
-}
 
+    /* الصندوق */
+    .modal-content {
+        background: #fff;
+        width: 350px;
+        padding: 25px;
+        border-radius: 12px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        animation: pop 0.25s ease;
+    }
+
+    /* حركة الظهور */
+    @keyframes pop {
+        from {
+            transform: translate(-50%, -60%) scale(0.9);
+            opacity: 0;
+        }
+
+        to {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+    }
+
+    /* زر الاغلاق */
+    .close-btn {
+        float: left;
+        font-size: 22px;
+        cursor: pointer;
+        color: #999;
+    }
+
+    /* الحقول */
+    .modal input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+    }
+
+    /* زر الحفظ */
+    .modal button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        background: #28a745;
+        color: white;
+        border-radius: 6px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    .modal button:hover {
+        background: #23913c;
+    }
+
+    @media (max-width: 400px) {
+        .modal-content {
+            width: 90%;
+        }
+    }
+
+    @media (max-width: 600px) {
+
+        .previous_visits,
+        .previous_va,
+        .previous_surgeries,
+        .previous_lasers,
+        .previous_injections {
+            width: 100%;
+        }
+    }
+
+    @media (max-width:1200px) {
+        .nav {
+            gap: 30px;
+        }
+    }
+
+    .app-sidebar-toggle {
+        position: fixed;
+        top: 14px;
+        right: 14px;
+        z-index: 1300;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+        font-weight: 800;
+        font-family: 'Cairo', sans-serif;
+        color: #fff;
+        background: linear-gradient(135deg, #1d4ed8, #0f766e);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+        cursor: pointer;
+    }
+
+    .app-sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 286px;
+        max-width: 88vw;
+        height: 100vh;
+        background: #ffffff;
+        border-left: 1px solid rgba(148, 163, 184, 0.3);
+        box-shadow: -18px 0 42px rgba(15, 23, 42, 0.24);
+        padding: 20px 15px;
+        overflow-y: auto;
+        transform: translateX(102%);
+        transition: transform 0.24s ease;
+        z-index: 1250;
+    }
+
+    .app-sidebar.is-open {
+        transform: translateX(0);
+    }
+
+    .app-sidebar h3 {
+        margin: 0 0 16px;
+        color: #1d4ed8;
+        font-size: 21px;
+    }
+
+    .app-sidebar .menu-group {
+        margin-bottom: 14px;
+    }
+
+    .app-sidebar .menu-group span {
+        display: block;
+        margin-bottom: 7px;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    .app-sidebar .menu-group a {
+        display: block;
+        margin-bottom: 6px;
+        padding: 9px 11px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #172033;
+        border: 1px solid transparent;
+        background: rgba(148, 163, 184, 0.09);
+        font-weight: 800;
+        transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .app-sidebar .menu-group a:hover {
+        border-color: rgba(37, 99, 235, 0.35);
+        background: rgba(37, 99, 235, 0.11);
+        transform: translateX(-2px);
+    }
+
+    .app-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.36);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        z-index: 1200;
+    }
+
+    .app-sidebar-backdrop.is-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    body[data-theme="dark"] .app-sidebar {
+        background: #0f1b2a;
+        border-left-color: rgba(147, 197, 253, 0.2);
+        box-shadow: -18px 0 40px rgba(0, 0, 0, 0.45);
+    }
+
+    body[data-theme="dark"] .app-sidebar h3 {
+        color: #60a5fa;
+    }
+
+    body[data-theme="dark"] .app-sidebar .menu-group span {
+        color: #9fb0c2;
+    }
+
+    body[data-theme="dark"] .app-sidebar .menu-group a {
+        background: rgba(15, 27, 42, 0.92);
+        color: #e6edf5;
+    }
+
+    body[data-theme="dark"] .app-sidebar .menu-group a:hover {
+        border-color: rgba(96, 165, 250, 0.38);
+        background: rgba(30, 58, 95, 0.58);
+    }
 </style>
 
 
@@ -600,7 +717,7 @@ if (isset($_GET['patient_id'])) {
 
         <a href="#" class="icon-btn followup-btn"
             data-title="إضافة متابعة"
-           onclick="openFollowup(event)">
+            onclick="openFollowup(event)">
             📌
         </a>
 
@@ -635,6 +752,34 @@ if (isset($_GET['patient_id'])) {
                     </tr>
                 </thead>
                 <tbody>
+                    <button type="button" class="app-sidebar-toggle" id="appSidebarToggle" aria-controls="appSidebar" aria-expanded="false">➡️ القائمة</button>
+
+                    <aside class="app-sidebar" id="appSidebar" aria-label="القائمة الجانبية">
+                        <h3>القائمة</h3>
+                        <div class="menu-group">
+                            <a href="dashboard.php">📊 لوحة التحكم</a>
+                        </div>
+                        <div class="menu-group">
+                            <span>👤 المرضى</span>
+                            <a href="add-patient.php">➕ إضافة مريض</a>
+                            <a href="main.php">👥 كل المرضى</a>
+                            <a href="patient-data.php?id_open=<?= $id ?>">📁 بيانات المريض</a>
+                        </div>
+                        <div class="menu-group">
+                            <span>📅 المواعيد</span>
+                            <a href="visits.php">زيارات اليوم</a>
+                            <a href="followup-appointment.php?id=<?= $id ?>">موعد مراجعة</a>
+                            <a href="operation-by-date.php">مواعيد العمليات</a>
+                        </div>
+                        <div class="menu-group">
+                            <span>⚙️ النظام</span>
+                            <a href="reports.php">التقارير</a>
+                            <a href="settings.php">الإعدادات</a>
+                            <a href="logout.php">تسجيل الخروج</a>
+                        </div>
+                    </aside>
+                    <div class="app-sidebar-backdrop" id="appSidebarBackdrop"></div>
+
                     <!-- بيانات الزيارات السابقة ستُضاف هنا -->
 
                     <?php
@@ -904,56 +1049,84 @@ if (isset($_GET['patient_id'])) {
         };
     </script>
 
-<div id="followupModal" class="modal">
+    <div id="followupModal" class="modal">
 
-    <div class="modal-content">
+        <div class="modal-content">
 
-        <span class="close-btn" onclick="closeFollowup()">×</span>
+            <span class="close-btn" onclick="closeFollowup()">×</span>
 
-        <h3>📅 تحديد موعد المراجعة</h3>
+            <h3>📅 تحديد موعد المراجعة</h3>
 
-        <form method="POST" action="save_followup.php?id=<?php echo $row['id']; ?>">
+            <form method="POST" action="save_followup.php?id=<?php echo $row['id']; ?>">
 
-            <input type="hidden" name="patient_id" value="<?php echo $row['id']; ?>">
+                <input type="hidden" name="patient_id" value="<?php echo $row['id']; ?>">
 
-            <label>تاريخ المراجعة</label>
-            <input type="date" name="followup_date" required>
+                <label>تاريخ المراجعة</label>
+                <input type="date" name="followup_date" required>
 
-            <label>سبب المراجعة</label>
-            <input type="text" name="followup_reason" placeholder="مثال: مراجعة ضغط العين">
+                <label>سبب المراجعة</label>
+                <input type="text" name="followup_reason" placeholder="مثال: مراجعة ضغط العين">
 
-            <button type="submit">💾 حفظ المتابعة</button>
+                <button type="submit">💾 حفظ المتابعة</button>
 
-        </form>
+            </form>
+
+        </div>
 
     </div>
 
-</div>
+    <script>
+        function openFollowup(e) {
+            e.preventDefault();
+            document.getElementById("followupModal").style.display = "block";
+        }
 
-<script>
+        function closeFollowup() {
+            document.getElementById("followupModal").style.display = "none";
+        }
 
-function openFollowup(e){
-    e.preventDefault();
-    document.getElementById("followupModal").style.display = "block";
-}
+        /* اغلاق عند الضغط خارج الصندوق */
 
-function closeFollowup(){
-    document.getElementById("followupModal").style.display = "none";
-}
+        window.onclick = function(event) {
 
-/* اغلاق عند الضغط خارج الصندوق */
+            let modal = document.getElementById("followupModal");
 
-window.onclick = function(event){
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
 
-    let modal = document.getElementById("followupModal");
+        }
+    </script>
 
-    if(event.target == modal){
-        modal.style.display = "none";
-    }
+    <script>
+        (function() {
+            const sidebar = document.getElementById('appSidebar');
+            const toggle = document.getElementById('appSidebarToggle');
+            const backdrop = document.getElementById('appSidebarBackdrop');
+            if (!sidebar || !toggle || !backdrop) return;
 
-}
+            function setSidebar(open, saveState) {
+                sidebar.classList.toggle('is-open', open);
+                backdrop.classList.toggle('is-open', open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                toggle.textContent = open ? '⬅️ إخفاء القائمة' : '➡️ القائمة';
+                if (saveState) {
+                    localStorage.setItem('clinicSidebarState', open ? 'show' : 'hidden');
+                }
+            }
 
-</script>
+            const saved = localStorage.getItem('clinicSidebarState');
+            setSidebar(saved === 'show', false);
+
+            toggle.addEventListener('click', function() {
+                setSidebar(!sidebar.classList.contains('is-open'), true);
+            });
+
+            backdrop.addEventListener('click', function() {
+                setSidebar(false, true);
+            });
+        })();
+    </script>
 
 </body>
 <div class="links">

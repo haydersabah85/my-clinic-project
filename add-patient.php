@@ -237,10 +237,143 @@ include "auth.php";
       width: 100%;
     }
   }
+
+  .app-sidebar-toggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 1300;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #1b8f63, #2eaa76);
+    box-shadow: 0 10px 20px rgba(27, 143, 99, 0.28);
+    cursor: pointer;
+  }
+
+  .app-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 280px;
+    max-width: 88vw;
+    height: 100vh;
+    background: var(--card-bg);
+    border-left: 1px solid var(--card-border);
+    box-shadow: -16px 0 36px rgba(31, 45, 42, 0.24);
+    padding: 20px 16px;
+    overflow-y: auto;
+    transform: translateX(102%);
+    transition: transform 0.24s ease;
+    z-index: 1250;
+    backdrop-filter: blur(8px);
+  }
+
+  .app-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .app-sidebar h3 {
+    margin: 0 0 16px;
+    color: var(--text-main);
+    font-size: 22px;
+  }
+
+  .app-sidebar .menu-group {
+    margin-bottom: 14px;
+  }
+
+  .app-sidebar .menu-group span {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+
+  .app-sidebar .menu-group a {
+    display: block;
+    margin-bottom: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.58);
+    border: 1px solid transparent;
+    box-shadow: none;
+  }
+
+  .app-sidebar .menu-group a:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(62, 154, 109, 0.3);
+    transform: translateY(-1px);
+  }
+
+  body[data-theme="dark"] .app-sidebar {
+    box-shadow: -16px 0 36px rgba(0, 0, 0, 0.45);
+  }
+
+  body[data-theme="dark"] .app-sidebar .menu-group a {
+    background: rgba(16, 36, 33, 0.92);
+    color: var(--text-main);
+  }
+
+  body[data-theme="dark"] .app-sidebar .menu-group a:hover {
+    background: rgba(25, 53, 48, 0.96);
+    border-color: rgba(71, 192, 141, 0.35);
+  }
+
+  .app-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.36);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1200;
+  }
+
+  .app-sidebar-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
 </style>
 
 
 <body>
+  <button type="button" class="app-sidebar-toggle" id="appSidebarToggle" aria-controls="appSidebar" aria-expanded="false">➡️ القائمة</button>
+
+  <aside class="app-sidebar" id="appSidebar" aria-label="القائمة الجانبية">
+    <h3>القائمة</h3>
+    <div class="menu-group">
+      <a href="dashboard.php">📊 لوحة التحكم</a>
+    </div>
+    <div class="menu-group">
+      <span>👤 المرضى</span>
+      <a href="add-patient.php">➕ إضافة مريض</a>
+      <a href="main.php">👥 كل المرضى</a>
+      <a href="followups.php">🔄 المتابعة</a>
+    </div>
+    <div class="menu-group">
+      <span>📅 المواعيد</span>
+      <a href="visits.php">زيارات اليوم</a>
+      <a href="work-queue.php">قائمة عمل اليوم</a>
+      <a href="expected_appointments.php">المواعيد المتوقعة</a>
+      <a href="operation-by-date.php">مواعيد العمليات</a>
+    </div>
+    <div class="menu-group">
+      <span>⚙️ النظام</span>
+      <a href="reports.php">التقارير</a>
+      <a href="settings.php">الإعدادات</a>
+      <a href="logout.php">تسجيل الخروج</a>
+    </div>
+  </aside>
+  <div class="app-sidebar-backdrop" id="appSidebarBackdrop"></div>
+
   <header>
     <h1>عيادة الدكتور حيدر صباح الربيعي</h1>
   </header>
@@ -304,6 +437,36 @@ include "auth.php";
 
     <button id="add-patient-btn" type="submit" name="submit"> 🧑‍⚕️ إضافة المريض</button>
   </form>
+
+  <script>
+    (function() {
+      const sidebar = document.getElementById('appSidebar');
+      const toggle = document.getElementById('appSidebarToggle');
+      const backdrop = document.getElementById('appSidebarBackdrop');
+      if (!sidebar || !toggle || !backdrop) return;
+
+      function setSidebar(open, saveState) {
+        sidebar.classList.toggle('is-open', open);
+        backdrop.classList.toggle('is-open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggle.textContent = open ? '⬅️ إخفاء القائمة' : '➡️ القائمة';
+        if (saveState) {
+          localStorage.setItem('clinicSidebarState', open ? 'show' : 'hidden');
+        }
+      }
+
+      const saved = localStorage.getItem('clinicSidebarState');
+      setSidebar(saved === 'show', false);
+
+      toggle.addEventListener('click', function() {
+        setSidebar(!sidebar.classList.contains('is-open'), true);
+      });
+
+      backdrop.addEventListener('click', function() {
+        setSidebar(false, true);
+      });
+    })();
+  </script>
 </body>
 
 </html>

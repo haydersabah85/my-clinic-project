@@ -134,7 +134,11 @@ function render_operation_column(string $title, string $kind, array $rows, strin
         if (!$confirmed) {
             echo "<a class='action confirm' href='confirm-attendance.php?id=" . h($row['id']) . "&date=" . h($date) . "'>Confirm</a>";
         }
-        echo "<a class='action done' href='" . h($row['_decision']) . "?id=" . h($row['patient_id']) . "'>Add result</a>";
+        echo "<a class='action done' href='" . h($row['_decision'])
+            . "?id=" . h($row['patient_id'])
+            . "&appointment_id=" . h($row['id'])
+            . "&appointment_date=" . h($date)
+            . "'>Add result</a>";
         echo "<a class='action edit' href='" . h($row['_edit']) . "?id=" . h($row['id']) . "'>Edit</a>";
         echo "<a class='action delete' onclick=\"return confirm('Delete this appointment?')\" href='" . h($row['_delete']) . "?id=" . h($row['id']) . "'>Delete</a>";
         echo "</div>";

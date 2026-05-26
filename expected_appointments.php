@@ -121,7 +121,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     min-width: 850px;
-    direction: ltr;
+    direction: rtl;
 }
 
 th,
