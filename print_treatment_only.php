@@ -1,38 +1,52 @@
 ﻿<?php
 include 'config.php';
+include_once 'clinic_helpers.php';
 
-$id = $_GET['id'];
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$id) {
+    http_response_code(400);
+    die('Invalid prescription id.');
+}
 
-$p = mysqli_fetch_assoc(mysqli_query($con, "
-SELECT p.*, pa.full_name as patient_name, pa.age as age
-FROM prescriptions p
-JOIN add_patient pa ON p.patient_id = pa.id
-WHERE p.id = $id
-"));
-
-$items = mysqli_query($con, "
-SELECT pi.*
-FROM prescription_items pi
-JOIN medicines m ON pi.medicine_id = m.id
-WHERE pi.prescription_id = $id
+$stmt = $con->prepare("
+    SELECT p.*, pa.full_name AS patient_name, pa.age AS age
+    FROM prescriptions p
+    JOIN add_patient pa ON p.patient_id = pa.id
+    WHERE p.id = ?
+    LIMIT 1
 ");
+$stmt->bind_param('i', $id);
+$stmt->execute();
+$p = $stmt->get_result()->fetch_assoc();
+
+if (!$p) {
+    http_response_code(404);
+    die('Prescription not found.');
+}
+
+$itemsStmt = $con->prepare("
+    SELECT pi.*
+    FROM prescription_items pi
+    JOIN medicines m ON pi.medicine_id = m.id
+    WHERE pi.prescription_id = ?
+");
+$itemsStmt->bind_param('i', $id);
+$itemsStmt->execute();
+$items = $itemsStmt->get_result();
 
 $medicine_names = [];
 $q = mysqli_query($con, "SELECT id, medicine_name, medicine_form FROM medicines");
 while ($m = mysqli_fetch_assoc($q)) {
     $medicine_names[$m['id']] = $m['medicine_name'] . "  " . $m['medicine_form'];
 }
-
 ?>
 
-
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 
 <head>
     <meta charset="UTF-8">
     <title>Treatment Only</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
@@ -41,45 +55,63 @@ while ($m = mysqli_fetch_assoc($q)) {
             margin: 0;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Cairo', sans-serif;
             direction: rtl;
             margin: 0;
+            color: #172033;
+            background: #f3f6fb;
         }
 
-        /* ===== الصفحة ===== */
         .page {
-            width: 145mm;
+            width: 148mm;
             height: 210mm;
             position: relative;
+            margin: 0 auto;
+            background: #fff;
+            overflow: hidden;
         }
 
-        /* ===== منطقة الكتابة فقط ===== */
-        /* عدل top حسب مكان مربع Rx في الورقة الجاهزة */
         .rx-area {
             direction: ltr;
             position: absolute;
             top: 90mm;
-            /* 👈 عدل هذا الرقم لو احتجت */
-            right: 20mm;
-            /* مسافة من اليمين */
-            left: 20mm;
-            /* مسافة من اليسار */
-            font-size: 18px;
-            line-height: 2.2;
+            right: 13mm;
+            left: 17mm;
+            font-size: 17px;
+            line-height: 2;
         }
 
-        /* كل دواء */
+        .diagnosis {
+            text-align: center;
+            font-size: 21px;
+            font-weight: bold;
+            color: #63089c;
+            margin-bottom: 8mm;
+        }
+
         .medicine {
             margin-bottom: 6mm;
-            color: rgb(24, 10, 226);
+            color: #f21818;
+            font-weight: bold;
+            page-break-inside: avoid;
         }
 
-        center {
-            font-size: 22px;
-            color: #333;
+        .medicine strong {
+            color: rgb(20, 69, 232);   
+            margin-right: 10px;
         }
-        /* زر الطباعة */
+
+        .medicine-part {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
         .print-btn {
             position: fixed;
             top: 10px;
@@ -90,49 +122,60 @@ while ($m = mysqli_fetch_assoc($q)) {
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            z-index: 2;
+        }
+
+        @media screen {
+            body {
+                padding: 14px;
+            }
+
+            .page {
+                box-shadow: 0 16px 50px rgba(15, 23, 42, 0.18);
+            }
         }
 
         @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .page {
+                margin: 0;
+                box-shadow: none;
+            }
+
             .print-btn {
                 display: none;
             }
         }
     </style>
-    <link rel="stylesheet" href="assets/dark-mode.css">
-    <script src="assets/theme.js" defer></script>
 </head>
 
 <body>
-
-    <button onclick="window.print()" class="print-btn">🖨 طباعة</button>
+    <button onclick="window.print()" class="print-btn">طباعة</button>
 
     <div class="page">
-
         <div class="rx-area">
-           <center><?php echo $p['diagnosis']; ?></center> 
+            <div class="diagnosis"><?php echo h($p['diagnosis']); ?></div>
 
-             
-             <br>
             <?php while ($row = mysqli_fetch_assoc($items)) { ?>
                 <div class="medicine">
-                    <b><?php echo $medicine_names[$row['medicine_id']]; ?></b>
-                    <?php echo $row['dose']; ?> -
-                    <?php echo $row['frequency']; ?> - - 
-                    (<?php echo $row['duration']; ?>)
-                    <?php echo $row['instructions']; ?>
-                    <?php if ($row['eye'] == 'right') echo " (العين اليمنى)"; ?>
-                    <?php if ($row['eye'] == 'left') echo " (العين اليسرى)"; ?>
-                    <?php if ($row['eye'] == 'both') echo " (العينين)"; ?>
-                    
-                    <br>
-                <?php } ?>
+                    <strong><?php echo h($medicine_names[$row['medicine_id']] ?? ''); ?></strong>
+                    <span class="medicine-part"><?php echo h($row['dose']); ?></span>
+                    <span class="medicine-part"><?php echo h($row['frequency']); ?></span>
+                    <span class="medicine-part"><?php echo h($row['duration']); ?></span>
+                    <span class="medicine-part"><?php echo h($row['instructions']); ?></span>
+                    <span class="medicine-part"> 
+                        <?php if ($row['eye'] === 'right') echo " (العين اليمنى)"; ?>
+                        <?php if ($row['eye'] === 'left') echo " (العين اليسرى)"; ?>
+                        <?php if ($row['eye'] === 'both') echo " (العينين)"; ?>
+                    </span>
                 </div>
-           
-
+            <?php } ?>
         </div>
-
     </div>
-
 </body>
 
 </html>

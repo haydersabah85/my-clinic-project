@@ -8,3 +8,6 @@ vendor/
 backups/
 
 uploads/
+
+# Local database backups (do not publish)
+db_backups/

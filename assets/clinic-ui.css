@@ -1,0 +1,262 @@
+/*
+  Shared clinic UI foundation.
+  Include gradually on pages that need consistent buttons, forms, tables, cards, and alerts.
+*/
+
+:root {
+  --clinic-bg: #f4f7fb;
+  --clinic-panel: #ffffff;
+  --clinic-panel-soft: #f8fafc;
+  --clinic-text: #172033;
+  --clinic-muted: #64748b;
+  --clinic-border: #dbe7ef;
+  --clinic-primary: #2563eb;
+  --clinic-primary-hover: #1d4ed8;
+  --clinic-success: #047857;
+  --clinic-success-hover: #065f46;
+  --clinic-warning: #d97706;
+  --clinic-danger: #dc2626;
+  --clinic-danger-hover: #b91c1c;
+  --clinic-radius: 8px;
+  --clinic-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme="dark"],
+body.dark {
+  --clinic-bg: #07111d;
+  --clinic-panel: #101c2d;
+  --clinic-panel-soft: #0c1625;
+  --clinic-text: #e6edf5;
+  --clinic-muted: #a8bdd1;
+  --clinic-border: rgba(148, 163, 184, 0.2);
+  --clinic-shadow: 0 20px 45px rgba(0, 0, 0, 0.32);
+}
+
+.clinic-page {
+  min-height: 100vh;
+  background: var(--clinic-bg);
+  color: var(--clinic-text);
+}
+
+.clinic-container {
+  width: min(1280px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.clinic-panel {
+  background: var(--clinic-panel);
+  border: 1px solid var(--clinic-border);
+  border-radius: var(--clinic-radius);
+  box-shadow: var(--clinic-shadow);
+  padding: 18px;
+}
+
+.clinic-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.clinic-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.clinic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--clinic-radius);
+  padding: 8px 14px;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clinic-btn:hover {
+  transform: translateY(-1px);
+}
+
+.clinic-btn-primary {
+  background: var(--clinic-primary);
+  color: #fff;
+}
+
+.clinic-btn-primary:hover {
+  background: var(--clinic-primary-hover);
+}
+
+.clinic-btn-success {
+  background: var(--clinic-success);
+  color: #fff;
+}
+
+.clinic-btn-success:hover {
+  background: var(--clinic-success-hover);
+}
+
+.clinic-btn-warning {
+  background: var(--clinic-warning);
+  color: #111827;
+}
+
+.clinic-btn-danger {
+  background: var(--clinic-danger);
+  color: #fff;
+}
+
+.clinic-btn-danger:hover {
+  background: var(--clinic-danger-hover);
+}
+
+.clinic-btn-muted {
+  background: var(--clinic-panel-soft);
+  color: var(--clinic-text);
+  border-color: var(--clinic-border);
+}
+
+.clinic-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.clinic-field label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--clinic-muted);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.clinic-input,
+.clinic-select,
+.clinic-textarea {
+  width: 100%;
+  border: 1px solid var(--clinic-border);
+  border-radius: var(--clinic-radius);
+  background: var(--clinic-panel);
+  color: var(--clinic-text);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.clinic-input:focus,
+.clinic-select:focus,
+.clinic-textarea:focus {
+  outline: none;
+  border-color: var(--clinic-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+}
+
+.clinic-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--clinic-border);
+  border-radius: var(--clinic-radius);
+  background: var(--clinic-panel);
+}
+
+.clinic-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.clinic-table th,
+.clinic-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--clinic-border);
+  text-align: start;
+  vertical-align: middle;
+}
+
+.clinic-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--clinic-primary);
+  color: #fff;
+  font-weight: 900;
+}
+
+.clinic-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.07);
+}
+
+.clinic-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 900;
+  background: var(--clinic-panel-soft);
+  color: var(--clinic-text);
+  border: 1px solid var(--clinic-border);
+}
+
+.clinic-badge-success {
+  background: rgba(4, 120, 87, 0.12);
+  color: var(--clinic-success);
+}
+
+.clinic-badge-warning {
+  background: rgba(217, 119, 6, 0.13);
+  color: var(--clinic-warning);
+}
+
+.clinic-badge-danger {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--clinic-danger);
+}
+
+.clinic-flash {
+  border-radius: var(--clinic-radius);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--clinic-border);
+  background: var(--clinic-panel-soft);
+  color: var(--clinic-text);
+  font-weight: 800;
+}
+
+.clinic-flash-success {
+  border-color: rgba(4, 120, 87, 0.28);
+  background: rgba(4, 120, 87, 0.1);
+}
+
+.clinic-flash-danger {
+  border-color: rgba(220, 38, 38, 0.28);
+  background: rgba(220, 38, 38, 0.1);
+}
+
+@media (max-width: 700px) {
+  .clinic-container {
+    width: min(100% - 20px, 1280px);
+  }
+
+  .clinic-panel {
+    padding: 14px;
+  }
+
+  .clinic-btn {
+    width: 100%;
+  }
+}
+
+@media print {
+  .clinic-no-print {
+    display: none !important;
+  }
+}
+

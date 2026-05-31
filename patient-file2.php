@@ -2,16 +2,17 @@
 include 'config.php';
 
 include 'auth.php';
+include_once 'clinic_helpers.php';
 
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
+    $id = (int) $_GET['id'];
     $select_query = "SELECT * FROM add_patient WHERE id = $id";
     $result = mysqli_query($con, $select_query);
     $row = mysqli_fetch_assoc($result);
 }
 
 if (isset($_GET['id_open'])) {
-    $id_open = $_GET['id_open'];
+    $id_open = (int) $_GET['id_open'];
     //جلب بيانات المريض والزيارات السابقة وفحص النظر//
     $select_query = "SELECT * FROM add_patient WHERE id = $id_open";
 
@@ -22,7 +23,7 @@ if (isset($_GET['id_open'])) {
 
 // جلب البيانات عند الضغط على critical patients
 if (isset($_GET['patient_id'])) {
-    $id_edit = $_GET['patient_id'];
+    $id_edit = (int) $_GET['patient_id'];
 
     $select_query = "SELECT * FROM add_patient WHERE id = $id_edit";
 
@@ -30,23 +31,28 @@ if (isset($_GET['patient_id'])) {
     $row = mysqli_fetch_assoc($result);
 }
 
+if (empty($row)) {
+    http_response_code(404);
+    die('Patient not found.');
+}
+
+$id = (int) $row['id'];
+
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="rtl">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📁 <?php echo $row['full_name']; ?></title>
+    <title>ملف <?php echo h($row['full_name']); ?></title>
     <link rel="stylesheet" href="assets/dark-mode.css">
-</head>
-
-<script src="assets/theme.js" defer></script>
+    <script src="assets/theme.js" defer></script>
 
 
 
-<style>
+    <style>
     /* ====== الخط والخلفية العامة ====== */
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
 
@@ -75,6 +81,7 @@ if (isset($_GET['patient_id'])) {
         direction: rtl;
         margin: 20px;
         background: linear-gradient(135deg, #f4f7fb, #eef2f6);
+        color: #172033;
     }
 
     /* ====== الهيدر ====== */
@@ -90,9 +97,9 @@ if (isset($_GET['patient_id'])) {
     .patient_info {
         background: #ffffff;
         padding: 18px 20px;
-        width: fit-content;
+        width: min(1120px, 100%);
         margin: 0 auto 20px;
-        border-radius: 14px;
+        border-radius: 8px;
         box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
         display: flex;
         flex-wrap: wrap;
@@ -111,6 +118,11 @@ if (isset($_GET['patient_id'])) {
         color: #34495e;
     }
 
+    .patient_info p span:last-child {
+        color: #7c1d8f;
+        font-weight: 800;
+    }
+
     /* ====== الأزرار العامة ====== */
 
 
@@ -126,6 +138,9 @@ if (isset($_GET['patient_id'])) {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         transition: all 0.3s ease;
         font-family: 'Cairo', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
 
     }
 
@@ -150,7 +165,7 @@ if (isset($_GET['patient_id'])) {
     .previous_data {
         background: #fff;
         padding: 22px;
-        border-radius: 16px;
+        border-radius: 8px;
         box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
         display: flex;
         flex-wrap: wrap;
@@ -161,8 +176,8 @@ if (isset($_GET['patient_id'])) {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 18px;
-        height: 18px;
+        width: 36px;
+        height: 36px;
         border-radius: 30%;
         text-decoration: none;
         font-size: 17px;
@@ -179,12 +194,14 @@ if (isset($_GET['patient_id'])) {
         width: 58%;
         max-height: 320px;
         overflow-y: auto;
+        overflow-x: auto;
     }
 
     .previous_va {
         width: 40%;
         max-height: 320px;
         overflow-y: auto;
+        overflow-x: auto;
     }
 
     /* ====== بقية الجداول ====== */
@@ -194,6 +211,7 @@ if (isset($_GET['patient_id'])) {
         width: 49%;
         max-height: 300px;
         overflow-y: auto;
+        overflow-x: auto;
     }
 
     /* ====== الجداول ====== */
@@ -201,9 +219,10 @@ if (isset($_GET['patient_id'])) {
         width: 100%;
         border-collapse: collapse;
         background: #fdfefe;
-        border-radius: 12px;
+        border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        min-width: 620px;
     }
 
     th {
@@ -211,6 +230,9 @@ if (isset($_GET['patient_id'])) {
         color: #fff;
         font-size: 14px;
         padding: 10px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
     }
 
     td {
@@ -538,6 +560,9 @@ if (isset($_GET['patient_id'])) {
     }
 
     @media (max-width: 600px) {
+        body {
+            margin: 10px;
+        }
 
         .previous_visits,
         .previous_va,
@@ -545,6 +570,11 @@ if (isset($_GET['patient_id'])) {
         .previous_lasers,
         .previous_injections {
             width: 100%;
+        }
+
+        .nav {
+            gap: 12px;
+            flex-wrap: wrap;
         }
     }
 
@@ -668,37 +698,33 @@ if (isset($_GET['patient_id'])) {
         background: rgba(30, 58, 95, 0.58);
     }
 </style>
-
-
-
-
-<header>
-    <h1> ملف المريض: <?php echo htmlspecialchars($row['full_name']); ?></h1>
-</header>
-
+</head>
 
 <body>
+    <header>
+        <h1> ملف المريض: <?php echo h($row['full_name']); ?></h1>
+    </header>
 
 
-    <div class="patient_info"></span>
+    <div class="patient_info">
 
         <p><span>ID:</span>
-            <span style="color:darkmagenta; font-weight: bold; "><?php echo htmlspecialchars($row['id']); ?></span>
+            <span><?php echo h($row['id']); ?></span>
         </p>
 
         <p><span>الاسم:</span>
-            <span style="color:darkmagenta; font-weight: bold; "><?php echo htmlspecialchars($row['full_name']); ?></span>
+            <span><?php echo h($row['full_name']); ?></span>
         </p>
 
         <p><span>العمر:</span>
-            <span style="color:darkmagenta; font-weight: bold; "><?php echo htmlspecialchars($row['age']); ?></span>
+            <span><?php echo h($row['age']); ?></span>
         </p>
 
         <p><span>رقم الموبايل:</span>
-            <span style="color:darkmagenta; font-weight: bold; "><?php echo htmlspecialchars($row['phone_no']); ?></span>
+            <span><?php echo h($row['phone_no']); ?></span>
         </p>
-        <a href="edit-patient.php?id_edit=<?php echo $row['id']; ?>">تعديل البيانات</a>
-        <a href="patient-data.php?id_open=<?php echo $row['id']; ?>"
+        <a href="edit-patient.php?id_edit=<?php echo h($row['id']); ?>">تعديل البيانات</a>
+        <a href="patient-data.php?id_open=<?php echo h($row['id']); ?>"
             style="background: linear-gradient(135deg, #e85a27, #bb4c18); 
         color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none;">📁 بيانات المريض</a>
     </div>
@@ -731,7 +757,7 @@ if (isset($_GET['patient_id'])) {
             data-title="الصفحة الرئيسية">
             🏠 </a>
 
-        <a href="treatment.php?patient_id=<?php echo $row['id']; ?>"
+        <a href="treatment.php?patient_id=<?php echo h($row['id']); ?>"
             class="icon-btn recipe-btn"
             data-title="وصفة العلاج">
             💊
@@ -784,8 +810,7 @@ if (isset($_GET['patient_id'])) {
 
                     <?php
                     include 'config.php';
-                    if (isset($_GET['id'])) {
-                        $id = $_GET['id'];
+                    if ($id) {
 
                         $select_query = "SELECT * FROM patient_visits WHERE patient_id = $id ORDER BY date DESC";
                         $result = mysqli_query($con, $select_query);
@@ -840,8 +865,7 @@ if (isset($_GET['patient_id'])) {
 
                     <?php
                     include 'config.php';
-                    if (isset($_GET['id'])) {
-                        $id = $_GET['id'];
+                    if ($id) {
                         $select_query = "SELECT * FROM va WHERE patient_id = $id ORDER BY exam_date DESC";
                         $result = mysqli_query($con, $select_query);
                         while ($va_row = mysqli_fetch_assoc($result)) {
@@ -886,8 +910,7 @@ if (isset($_GET['patient_id'])) {
 
                     <?php
                     include 'config.php';
-                    if (isset($_GET['id'])) {
-                        $id = $_GET['id'];
+                    if ($id) {
                         $select_query = "SELECT * FROM surgery
                         WHERE patient_id = $id ORDER BY date DESC";
                         $result = mysqli_query($con, $select_query);
@@ -938,8 +961,7 @@ if (isset($_GET['patient_id'])) {
 
                     <?php
                     include 'config.php';
-                    if (isset($_GET['id'])) {
-                        $id = $_GET['id'];
+                    if ($id) {
                         $select_query = "SELECT * FROM laser WHERE patient_id = $id ORDER BY date DESC";
                         $result = mysqli_query($con, $select_query);
                         while ($laser_row = mysqli_fetch_assoc($result)) {
@@ -980,8 +1002,7 @@ if (isset($_GET['patient_id'])) {
 
                     <?php
                     include 'config.php';
-                    if (isset($_GET['id'])) {
-                        $id = $_GET['id'];
+                    if ($id) {
                         $select_query = "
                         SELECT * FROM injection WHERE patient_id = $id ORDER BY date DESC";
                         $result = mysqli_query($con, $select_query);
@@ -1009,7 +1030,7 @@ if (isset($_GET['patient_id'])) {
 
         <div class="patient_visits">
 
-            <form action="patient-visits.php?id=<?php echo $row['id'] ?>" method="POST">
+            <form action="patient-visits.php?id=<?php echo h($row['id']); ?>" method="POST">
                 <input type="hidden" id="id" name="id">
                 <textarea spellcheck="false" id="notes" name="notes" rows="4" cols="43" placeholder="اكتب ملاحظات الزيارة هنا..."></textarea>
 
@@ -1057,9 +1078,9 @@ if (isset($_GET['patient_id'])) {
 
             <h3>📅 تحديد موعد المراجعة</h3>
 
-            <form method="POST" action="save_followup.php?id=<?php echo $row['id']; ?>">
+            <form method="POST" action="save_followup.php?id=<?php echo h($row['id']); ?>">
 
-                <input type="hidden" name="patient_id" value="<?php echo $row['id']; ?>">
+                <input type="hidden" name="patient_id" value="<?php echo h($row['id']); ?>">
 
                 <label>تاريخ المراجعة</label>
                 <input type="date" name="followup_date" required>
@@ -1128,14 +1149,14 @@ if (isset($_GET['patient_id'])) {
         })();
     </script>
 
-</body>
 <div class="links">
-    <a href="surgery-appointment.php?id=<?php echo htmlspecialchars($row['id']); ?>">موعد عملية</a>
-    <a href="laser-appointment.php?id=<?php echo htmlspecialchars($row['id']); ?>">موعد ليزر</a>
-    <a href="injection-appointment.php?id=<?php echo htmlspecialchars($row['id']); ?>">موعد حقن</a>
-    <a href="add-va.php?id=<?php echo htmlspecialchars($row['id']); ?>">اضافة فحص النظر</a>
-    <a href="show-image.php?id=<?php echo htmlspecialchars($row['id']); ?>"> عرض الصور</a>
-    <a href="patient_reports.php?id=<?php echo htmlspecialchars($row['id']); ?>">التقارير الطبية</a>
+    <a href="surgery-appointment.php?id=<?php echo h($row['id']); ?>">موعد عملية</a>
+    <a href="laser-appointment.php?id=<?php echo h($row['id']); ?>">موعد ليزر</a>
+    <a href="injection-appointment.php?id=<?php echo h($row['id']); ?>">موعد حقن</a>
+    <a href="add-va.php?id=<?php echo h($row['id']); ?>">اضافة فحص النظر</a>
+    <a href="show-image.php?id=<?php echo h($row['id']); ?>"> عرض الصور</a>
+    <a href="patient_reports.php?id=<?php echo h($row['id']); ?>">التقارير الطبية</a>
 </div>
 
+</body>
 </html>

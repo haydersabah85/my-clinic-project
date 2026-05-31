@@ -15,7 +15,13 @@ $stmt = mysqli_prepare($con, "
         v.visit_id,
         p.id AS patient_id,
         p.full_name,
-        p.age
+        p.age,
+        (
+            SELECT MAX(v2.visit_date)
+            FROM visits v2
+            WHERE v2.patient_id = v.patient_id
+            AND v2.visit_date < v.visit_date
+        ) AS last_visit_date
     FROM visits v
     INNER JOIN add_patient p ON v.patient_id = p.id
     WHERE v.visit_date = ?
@@ -40,14 +46,6 @@ while ($row = mysqli_fetch_assoc($result)) {
     }
     // جلب تاريخ آخر زيارة للمريض
 
-    $last_visit_date_query = "SELECT visit_date FROM visits WHERE patient_id = {$row['patient_id']} AND visit_date < '{$row['visit_date']}' ORDER BY visit_date DESC LIMIT 1";
-    $last_visit_date_result = mysqli_query($con, $last_visit_date_query);
-    if ($last_visit_date_result && mysqli_num_rows($last_visit_date_result) > 0) {
-        $last_visit_date_row = mysqli_fetch_assoc($last_visit_date_result);
-        $row['last_visit_date'] = $last_visit_date_row['visit_date'];
-    } else {
-        $row['last_visit_date'] = null;
-    }
     $visits[] = $row;
 }
 ?>
@@ -367,15 +365,15 @@ while ($row = mysqli_fetch_assoc($result)) {
         }
 
         .first {
-            background: linear-gradient(120deg, #2c8c77, #3eb39a);
+            background: linear-gradient(120deg, #2f8d6b, #45ac84);
         }
 
         .repeat {
-            background: linear-gradient(120deg, #5566a8, #7286d8);
+            background: linear-gradient(120deg, #2d5eb3, #3d7de0);
         }
 
         .free {
-            background: linear-gradient(120deg, #c58c41, #dfab68);
+            background: linear-gradient(120deg, #b0602c, #d5823c);
         }
 
         .status-done {

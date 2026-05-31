@@ -207,7 +207,7 @@ $patientName = $row['full_name'] ?? '';
         }
 
         .visit-free {
-            background: linear-gradient(135deg, var(--violet), #9333ea);
+            background: linear-gradient(120deg, #b0602c, #d5823c);
         }
 
         .action-section {
