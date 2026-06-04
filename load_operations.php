@@ -385,18 +385,18 @@ $summary = [
     }
 
     .eye-od {
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #ffffff;
     }
 
     .eye-os {
-        background: #ccfbf1;
-        color: #0f766e;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff;
     }
 
     .eye-ou {
-        background: #fef3c7;
-        color: #92400e;
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: #ffffff;
     }
 
     .op-note {

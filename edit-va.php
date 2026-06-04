@@ -360,7 +360,7 @@ h3 {
 </style>
 
 <body>
-  <h1>اضافة فحص النظر</h1>
+  <h1>تعديل فحص النظر</h1>
 
   <div class="patient-info">
     <p><span>الرقم التسلسلي:</span>

@@ -353,7 +353,7 @@ if (!function_exists('pf_format_visit_note')) {
         }
 
         /* Tooltips */
-        .icon-btn::after {
+        .icon-btn[data-title]::after {
             content: attr(data-title);
             position: absolute;
             bottom: 120%;
@@ -370,7 +370,7 @@ if (!function_exists('pf_format_visit_note')) {
             transition: opacity .2s ease;
         }
 
-        .icon-btn:hover::after {
+        .icon-btn[data-title]:hover::after {
             opacity: 1;
         }
 
@@ -1104,6 +1104,38 @@ if (!function_exists('pf_format_visit_note')) {
             background: #2563eb;
         }
 
+        .encounter-actions .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 18px;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+
+        .encounter-actions .icon-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.04);
+        }
+
+        .encounter-actions .edit-icon {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+
+        .encounter-actions .delete-icon {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+        }
+
+        .encounter-actions .add-note-btn {
+            background: linear-gradient(135deg, #0f766e, #14b8a6);
+        }
+
         @media (max-width: 1100px) {
             .encounter-body {
                 grid-template-columns: 1fr;
@@ -1442,11 +1474,11 @@ if (!function_exists('pf_format_visit_note')) {
         }
 
         .eye-od {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            background: linear-gradient(135deg, #10b981, #059669);
         }
 
         .eye-os {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
         }
 
         .eye-ou {
@@ -2147,9 +2179,13 @@ if (!function_exists('pf_format_visit_note')) {
                                     echo "<a class='text-action' href='edit-va.php?id_edit=" . h($vaForDate[0]['va_id']) . "'>تعديل VA</a>";
                                 }
                                 foreach ($visitsForDate as $visit_row) {
-                                    echo "<button type='button' class='icon-btn edit-icon edit-btn' data-note='" . h($visit_row['notes']) . "' data-id='" . h($visit_row['id']) . "' title='تعديل الملاحظة'>✏️</button>";
-                                    echo "<a class='icon-btn delete-icon' href='delete-visit.php?id_delete=" . h($visit_row['id']) . "' onclick=\"return confirm('هل تريد حذف ملاحظة الزيارة؟');\" title='حذف الملاحظة'>🗑️</a>";
+                                    echo "<button type='button' class='icon-btn edit-icon edit-btn' data-note='" . h($visit_row['notes']) . "' data-id='" . h($visit_row['id']) . "' data-title='تعديل الزيارة'>✏️</button>";
+                                    echo "<a class='icon-btn delete-icon' href='delete-visit.php?id_delete=" . h($visit_row['id']) . "' onclick=\"return confirm('هل تريد حذف الزيارة؟');\" data-title='حذف الزيارة'>🗑️</a>";
                                 }
+                                if (empty($visitsForDate)) {
+                                    echo "<button type='button' class='icon-btn add-note-btn' data-date='" . h($visitDate) . "' data-title='إضافة ملاحظة زيارة'>📝</button>";
+                                }
+
                                 echo "</div>";
                                 echo "</div>";
 
@@ -2292,6 +2328,7 @@ if (!function_exists('pf_format_visit_note')) {
                 <h3 class="section-title">📝 إضافة أو تعديل زيارة</h3>
                 <form action="patient-visits.php?id=<?php echo $id ?>" method="POST">
                     <input type="hidden" id="id" name="id">
+                    <input type="hidden" id="visit_date" name="visit_date">
                     <textarea spellcheck="false" id="notes" name="notes" rows="4" cols="43" placeholder="اكتب ملاحظات الزيارة هنا..."></textarea>
 
                     <button type="submit" id="add_visit" name="add_visit"> 📝 إضافة زيارة</button>
@@ -2478,12 +2515,14 @@ LIMIT 20
 
                     const notesField = document.getElementById('notes');
                     const visitIdField = document.getElementById('id');
+                    const visitDateField = document.getElementById('visit_date');
                     const submitBtn = document.getElementById('add_visit');
 
                     if (!notesField || !visitIdField || !submitBtn) return;
 
                     notesField.value = notes;
                     visitIdField.value = visitId;
+                    if (visitDateField) visitDateField.value = '';
                     submitBtn.innerText = 'تحديث الزيارة';
 
                     notesField.scrollIntoView({
@@ -2499,15 +2538,44 @@ LIMIT 20
 
                 });
             });
+
+            document.querySelectorAll('.add-note-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const visitDate = this.dataset.date;
+
+                    const notesField = document.getElementById('notes');
+                    const visitIdField = document.getElementById('id');
+                    const visitDateField = document.getElementById('visit_date');
+                    const submitBtn = document.getElementById('add_visit');
+
+                    if (!notesField || !visitIdField || !visitDateField || !submitBtn) return;
+
+                    notesField.value = '';
+                    visitIdField.value = '';
+                    visitDateField.value = visitDate;
+                    submitBtn.innerText = 'إضافة زيارة بتاريخ ' + visitDate;
+
+                    notesField.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+
+                    setTimeout(() => {
+                        notesField.focus();
+                    }, 220);
+                });
+            });
         </script>
 
         <script>
             window.onload = function() {
                 const notes = document.getElementById('notes');
                 const visitId = document.getElementById('id');
+                const visitDate = document.getElementById('visit_date');
 
                 if (notes) notes.value = '';
                 if (visitId) visitId.value = '';
+                if (visitDate) visitDate.value = '';
 
                 const btn = document.getElementById('add_visit');
                 if (btn) btn.innerText = ' 📝 إضافة زيارة';

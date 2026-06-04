@@ -299,13 +299,89 @@ $pendingCount = max(0, $totalCount - (int)$summary['confirmed_count']);
     }
 
     body[data-theme="dark"] {
-        --bg: #08111d;
-        --panel: #0f1b2a;
-        --panel-soft: #111f31;
-        --text: #e6edf5;
-        --muted: #9fb0c2;
-        --border: rgba(148, 163, 184, 0.18);
-        --shadow: 0 18px 45px rgba(0, 0, 0, 0.32);
+        --bg: #0f1412;
+        --panel: #17211d;
+        --panel-soft: #111a17;
+        --text: #edf4ef;
+        --muted: #a8b8af;
+        --border: rgba(167, 190, 177, 0.2);
+        --teal: #5fd1b7;
+        --blue: #79a8ff;
+        --shadow: 0 18px 45px rgba(0, 0, 0, 0.38);
+    }
+
+    body[data-theme="dark"] .summary-card,
+    body[data-theme="dark"] .control-panel,
+    body[data-theme="dark"] .day-head,
+    body[data-theme="dark"] .op-column {
+        background: rgba(23, 33, 29, 0.94) !important;
+        border-color: rgba(167, 190, 177, 0.2) !important;
+        box-shadow: var(--shadow);
+    }
+
+    body[data-theme="dark"] .summary-card {
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+    }
+
+    body[data-theme="dark"] .date-btn,
+    body[data-theme="dark"] .search-box,
+    body[data-theme="dark"] .status-filters,
+    body[data-theme="dark"] .op-meta div,
+    body[data-theme="dark"] .op-type-head {
+        background: rgba(17, 26, 23, 0.96) !important;
+        border-color: rgba(167, 190, 177, 0.18) !important;
+        color: var(--text);
+    }
+
+    body[data-theme="dark"] .date-btn.active,
+    body[data-theme="dark"] .date-btn:hover,
+    body[data-theme="dark"] .status-filter.active {
+        background: rgba(95, 209, 183, 0.16) !important;
+        border-color: rgba(95, 209, 183, 0.44) !important;
+        color: #dffbf4;
+        box-shadow: 0 10px 24px rgba(12, 68, 57, 0.28);
+    }
+
+    body[data-theme="dark"] .status-filter {
+        color: var(--muted);
+    }
+
+    body[data-theme="dark"] .op-card,
+    body[data-theme="dark"] .empty-column,
+    body[data-theme="dark"] .loading-state {
+        background: rgba(10, 17, 15, 0.76) !important;
+        border-color: rgba(167, 190, 177, 0.17) !important;
+    }
+
+    body[data-theme="dark"] .serial,
+    body[data-theme="dark"] .op-type-head span {
+        background: rgba(121, 168, 255, 0.16);
+        color: #b9d0ff;
+    }
+
+    body[data-theme="dark"] .status.confirmed {
+        background: rgba(52, 211, 153, 0.16);
+        color: #8df0c9;
+    }
+
+    body[data-theme="dark"] .status.waiting {
+        background: rgba(251, 191, 36, 0.16);
+        color: #f8d984;
+    }
+
+    body[data-theme="dark"] .eye-od {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #ffffff;
+    }
+
+    body[data-theme="dark"] .eye-os {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff;
+    }
+
+    body[data-theme="dark"] .eye-ou {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: #ffffff;
     }
 
     @media print {

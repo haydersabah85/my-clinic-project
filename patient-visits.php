@@ -8,7 +8,8 @@ $visit_id = $_POST['id'];
 $visit_uuid = bin2hex(random_bytes(16));
 $notes = mysqli_real_escape_string($con, $_POST['notes'] ?? '');
 $patient_id = (int)$_GET['id'];
-$visit_date = date('Y-m-d');  // Use current date
+$posted_visit_date = $_POST['visit_date'] ?? '';
+$visit_date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $posted_visit_date) ? $posted_visit_date : date('Y-m-d');
 // 🔥 جلب UUID الخاص بالمريض
 $getPatient = mysqli_query($con, "
     SELECT uuid

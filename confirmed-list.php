@@ -324,7 +324,7 @@ foreach ($operationConfig as $kind => $config) {
 
         .sections-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: 1fr;
             gap: 14px;
             align-items: start;
         }
@@ -462,23 +462,23 @@ foreach ($operationConfig as $kind => $config) {
         }
 
         .eye-badge {
-            background: #e2e8f0;
-            color: #334155;
+            background: linear-gradient(135deg, #64748b, #475569);
+            color: #ffffff;
         }
 
         .eye-od {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
         }
 
         .eye-os {
-            background: #ccfbf1;
-            color: #0f766e;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #ffffff;
         }
 
         .eye-ou {
-            background: #fef3c7;
-            color: #92400e;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: #ffffff;
         }
 
         .cancel-btn {
@@ -501,13 +501,55 @@ foreach ($operationConfig as $kind => $config) {
         }
 
         body[data-theme="dark"] {
-            --bg: #0f172a;
-            --panel: #142033;
-            --panel-soft: #111827;
-            --text: #e5edf6;
-            --muted: #a9b7c9;
-            --border: rgba(148, 163, 184, 0.22);
-            --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+            --bg: #0f1412;
+            --panel: #17211d;
+            --panel-soft: #111a17;
+            --text: #edf4ef;
+            --muted: #a8b8af;
+            --border: rgba(167, 190, 177, 0.2);
+            --blue: #79a8ff;
+            --green: #34d399;
+            --red: #ef6666;
+            --shadow: 0 18px 45px rgba(0, 0, 0, 0.38);
+        }
+
+        body[data-theme="dark"] .control-panel,
+        body[data-theme="dark"] .summary-card,
+        body[data-theme="dark"] .confirmed-section,
+        body[data-theme="dark"] .type-group {
+            background: rgba(23, 33, 29, 0.94);
+            border-color: rgba(167, 190, 177, 0.2);
+            box-shadow: var(--shadow);
+        }
+
+        body[data-theme="dark"] input[type="date"],
+        body[data-theme="dark"] .type-head,
+        body[data-theme="dark"] .empty-state {
+            background: rgba(17, 26, 23, 0.96);
+            border-color: rgba(167, 190, 177, 0.18);
+            color: var(--text);
+        }
+
+        body[data-theme="dark"] th {
+            background: rgba(10, 17, 15, 0.86);
+            color: var(--muted);
+        }
+
+        body[data-theme="dark"] td {
+            border-bottom-color: rgba(167, 190, 177, 0.16);
+        }
+
+        body[data-theme="dark"] tbody tr:hover {
+            background: rgba(95, 209, 183, 0.08);
+        }
+
+        body[data-theme="dark"] .serial {
+            background: rgba(121, 168, 255, 0.16);
+            color: #b9d0ff;
+        }
+
+        body[data-theme="dark"] .notes {
+            color: var(--muted);
         }
 
         @media (max-width: 1250px) {

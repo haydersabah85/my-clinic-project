@@ -5,6 +5,12 @@ include 'config.php';
 $today = date('Y-m-d');
 $stats = ['total' => 0, 'free' => 0, 'done' => 0, 'pending' => 0];
 $last_visit_date = null;
+$status_filter = $_GET['status'] ?? 'all';
+$allowed_status_filters = ['all', 'pending', 'done'];
+
+if (!in_array($status_filter, $allowed_status_filters, true)) {
+    $status_filter = 'all';
+}
 
 $stmt = mysqli_prepare($con, "
     SELECT
@@ -44,9 +50,13 @@ while ($row = mysqli_fetch_assoc($result)) {
     } else {
         $stats['pending']++;
     }
-    // جلب تاريخ آخر زيارة للمريض
-
-    $visits[] = $row;
+    if (
+        $status_filter === 'all' ||
+        ($status_filter === 'done' && $row['is_done']) ||
+        ($status_filter === 'pending' && !$row['is_done'])
+    ) {
+        $visits[] = $row;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -65,25 +75,30 @@ while ($row = mysqli_fetch_assoc($result)) {
 
     <style>
         :root {
-            --bg-main: #f7f3eb;
-            --bg-alt: #efe6d7;
-            --ink: #243022;
-            --muted: #66756a;
-            --panel: rgba(255, 252, 246, 0.9);
-            --panel-border: rgba(163, 141, 102, 0.26);
-            --head: #23443b;
-            --accent: #c58c41;
-            --accent-2: #2c8c77;
-            --danger: #b85a54;
-            --ok: #3f8d63;
-            --shadow: 0 16px 34px rgba(54, 49, 35, 0.12);
-            --shadow-strong: 0 26px 52px rgba(54, 49, 35, 0.18);
+            --bg-main: #f6f7f4;
+            --bg-alt: #e9eee8;
+            --surface: #fffefa;
+            --surface-soft: #f9f6ef;
+            --ink: #1f2c25;
+            --muted: #6a756f;
+            --panel: rgba(255, 254, 250, 0.94);
+            --panel-border: rgba(48, 75, 65, 0.13);
+            --head: #183c34;
+            --accent: #b88a44;
+            --accent-2: #277968;
+            --danger: #b75a52;
+            --warning: #c6813a;
+            --ok: #357f5a;
+            --shadow: 0 10px 26px rgba(31, 44, 37, 0.1);
+            --shadow-strong: 0 18px 42px rgba(31, 44, 37, 0.16);
         }
 
         body[data-theme="dark"],
         body.dark {
             --bg-main: #101713;
             --bg-alt: #17231d;
+            --surface: #162019;
+            --surface-soft: #1d2a22;
             --ink: #e7efe7;
             --muted: #9ab0a4;
             --panel: rgba(20, 30, 25, 0.9);
@@ -106,23 +121,20 @@ while ($row = mysqli_fetch_assoc($result)) {
             direction: rtl;
             color: var(--ink);
             font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
-            background:
-                radial-gradient(circle at 88% 8%, rgba(197, 140, 65, 0.18), transparent 28%),
-                radial-gradient(circle at 10% 0%, rgba(44, 140, 119, 0.16), transparent 25%),
-                linear-gradient(180deg, var(--bg-main), var(--bg-alt));
+            background: linear-gradient(180deg, var(--bg-main) 0%, var(--bg-alt) 100%);
             min-height: 100vh;
         }
 
         h1 {
             margin: 0;
-            padding: 20px 16px;
+            padding: 18px 16px;
             text-align: center;
-            font-size: clamp(24px, 4vw, 34px);
+            font-size: clamp(23px, 4vw, 32px);
             font-weight: 800;
             color: #ffffff;
-            background: linear-gradient(120deg, #23443b, #3a665b 55%, #c58c41);
+            background: linear-gradient(120deg, #183c34, #277968 72%, #b88a44);
             border-bottom: 1px solid rgba(255, 255, 255, 0.25);
-            letter-spacing: 0.4px;
+            letter-spacing: 0;
             box-shadow: var(--shadow-strong);
         }
 
@@ -139,10 +151,10 @@ while ($row = mysqli_fetch_assoc($result)) {
         .toggle-sidebar,
         .theme-toggle {
             border: 1px solid rgba(35, 68, 59, 0.2);
-            border-radius: 12px;
+            border-radius: 8px;
             min-height: 42px;
             padding: 10px 16px;
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--panel);
             color: #23443b;
             font-size: 15px;
             font-weight: 800;
@@ -155,7 +167,7 @@ while ($row = mysqli_fetch_assoc($result)) {
         .theme-toggle:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-strong);
-            background: rgba(255, 255, 255, 0.96);
+            background: var(--surface);
         }
 
         .theme-toggle {
@@ -184,7 +196,7 @@ while ($row = mysqli_fetch_assoc($result)) {
         .sidebar {
             background: var(--panel);
             border: 1px solid var(--panel-border);
-            border-radius: 18px;
+            border-radius: 8px;
             box-shadow: var(--shadow);
             padding: 14px;
             overflow-y: auto;
@@ -223,7 +235,7 @@ while ($row = mysqli_fetch_assoc($result)) {
             text-decoration: none;
             color: var(--ink);
             border: 1px solid transparent;
-            border-radius: 11px;
+            border-radius: 8px;
             padding: 9px 11px;
             margin-bottom: 6px;
             font-weight: 700;
@@ -249,31 +261,86 @@ while ($row = mysqli_fetch_assoc($result)) {
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
-            gap: 14px;
-            margin-bottom: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .card {
-            background: var(--panel);
+            background: var(--surface);
             border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            padding: 14px;
-            text-align: center;
+            border-radius: 8px;
+            padding: 14px 15px;
+            text-align: right;
             box-shadow: var(--shadow);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             backdrop-filter: blur(8px);
+            display: grid;
+            grid-template-columns: 44px minmax(0, 1fr);
+            align-items: center;
+            gap: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset-inline-start: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent-2);
+        }
+
+        .card.free-card::before {
+            background: var(--accent);
+        }
+
+        .card.pending-card::before {
+            background: var(--danger);
+        }
+
+        .card.done-card::before {
+            background: var(--ok);
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(39, 121, 104, 0.12);
+            color: var(--accent-2);
+            font-size: 18px;
+        }
+
+        .free-card .card-icon {
+            background: rgba(184, 138, 68, 0.14);
+            color: var(--accent);
+        }
+
+        .pending-card .card-icon {
+            background: rgba(183, 90, 82, 0.14);
+            color: var(--danger);
+        }
+
+        .done-card .card-icon {
+            background: rgba(53, 127, 90, 0.14);
+            color: var(--ok);
         }
 
         .card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             box-shadow: var(--shadow-strong);
         }
 
         .card .num {
-            font-size: 33px;
+            font-size: 30px;
             font-weight: 800;
-            color: #23443b;
+            color: var(--head);
             line-height: 1;
         }
 
@@ -284,21 +351,35 @@ while ($row = mysqli_fetch_assoc($result)) {
             font-weight: 700;
         }
 
-        .search-box {
+        .visit-tools {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
             margin-bottom: 12px;
+            flex-wrap: wrap;
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .search-box {
+            flex: 1 1 320px;
         }
 
         .search-box input {
             width: min(100%, 580px);
             border: 1px solid var(--panel-border);
-            background: var(--panel);
+            background: var(--surface);
             color: var(--ink);
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 11px 13px;
             font-size: 15px;
             font-weight: 600;
             outline: none;
-            box-shadow: var(--shadow);
+            box-shadow: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -311,10 +392,49 @@ while ($row = mysqli_fetch_assoc($result)) {
             box-shadow: 0 0 0 4px rgba(44, 140, 119, 0.16);
         }
 
+        .status-filters {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 3px;
+            border-radius: 8px;
+            background: var(--surface-soft);
+        }
+
+        .status-filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 42px;
+            padding: 9px 13px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--ink);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 800;
+            box-shadow: none;
+            transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .status-filter:hover,
+        .status-filter.active {
+            transform: translateY(-1px);
+            border-color: rgba(44, 140, 119, 0.45);
+            background: rgba(44, 140, 119, 0.12);
+        }
+
+        .status-filter.active {
+            color: #ffffff;
+            background: linear-gradient(120deg, #23443b, #2c8c77);
+        }
+
         .table-responsive {
             background: var(--panel);
             border: 1px solid var(--panel-border);
-            border-radius: 16px;
+            border-radius: 8px;
             box-shadow: var(--shadow);
             overflow: auto;
             max-height: calc(150vh - 162px);
@@ -333,35 +453,35 @@ while ($row = mysqli_fetch_assoc($result)) {
             position: sticky;
             top: 0;
             z-index: 2;
-            background: linear-gradient(120deg, #23443b, #3a665b 58%, #c58c41);
+            background: #183c34;
             color: #ffffff;
             font-size: 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.26);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
         }
 
         th,
         td {
-            padding: 12px 10px;
+            padding: 13px 11px;
             text-align: center;
-            border-bottom: 1px solid rgba(106, 114, 130, 0.24);
+            border-bottom: 1px solid rgba(106, 114, 130, 0.16);
         }
 
         tbody tr:nth-child(even) {
-            background: rgba(197, 140, 65, 0.05);
+            background: rgba(39, 121, 104, 0.035);
         }
 
         tbody tr:hover {
-            background: rgba(44, 140, 119, 0.12);
+            background: rgba(39, 121, 104, 0.1);
         }
 
         .badge {
             display: inline-block;
             padding: 6px 13px;
-            border-radius: 999px;
+            border-radius: 8px;
             font-size: 12px;
             font-weight: 800;
             color: #ffffff;
-            letter-spacing: 0.2px;
+            letter-spacing: 0;
         }
 
         .first {
@@ -408,7 +528,7 @@ while ($row = mysqli_fetch_assoc($result)) {
             width: 34px;
             height: 34px;
             margin: 0 2px;
-            border-radius: 10px;
+            border-radius: 8px;
             color: #ffffff;
             text-decoration: none;
             border: 1px solid rgba(255, 255, 255, 0.24);
@@ -540,27 +660,56 @@ while ($row = mysqli_fetch_assoc($result)) {
         <div class="main-content">
 
             <div class="stats">
-                <div class="card">
-                    <div class="num"><?= $stats['total'] ?></div>
-                    <div class="label">إجمالي الزيارات</div>
+                <div class="card total-card">
+                    <div class="card-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                    <div>
+                        <div class="num"><?= $stats['total'] ?></div>
+                        <div class="label">إجمالي الزيارات</div>
+                    </div>
                 </div>
-                <div class="card">
-                    <div class="num"><?= $stats['free'] ?></div>
-                    <div class="label">زيارة مجانية</div>
+                <div class="card free-card">
+                    <div class="card-icon"><i class="fa-solid fa-rotate-left"></i></div>
+                    <div>
+                        <div class="num"><?= $stats['free'] ?></div>
+                        <div class="label">زيارة مراجعة</div>
+                    </div>
                 </div>
-                <div class="card">
-                    <div class="num"><?= $stats['pending'] ?></div>
-                    <div class="label">قيد الانتظار ⏳</div>
+                <div class="card pending-card">
+                    <div class="card-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                    <div>
+                        <div class="num"><?= $stats['pending'] ?></div>
+                        <div class="label">قيد الانتظار</div>
+                    </div>
                 </div>
-                <div class="card">
-                    <div class="num"><?= $stats['done'] ?></div>
-                    <div class="label">تمت المعاينة ✅</div>
+                <div class="card done-card">
+                    <div class="card-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    <div>
+                        <div class="num"><?= $stats['done'] ?></div>
+                        <div class="label">تمت المعاينة</div>
+                    </div>
                 </div>
 
             </div>
 
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 ابحث باسم المريض أو نوع الزيارة أو الرقم التسلسلي...">
+            <div class="visit-tools">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 ابحث باسم المريض أو نوع الزيارة أو الرقم التسلسلي...">
+                </div>
+
+                <div class="status-filters" aria-label="فلترة حالة الزيارة">
+                    <a class="status-filter <?= $status_filter === 'all' ? 'active' : '' ?>" href="visits.php">
+                        <i class="fa-solid fa-list"></i>
+                        الكل
+                    </a>
+                    <a class="status-filter <?= $status_filter === 'pending' ? 'active' : '' ?>" href="visits.php?status=pending">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                        قيد الانتظار
+                    </a>
+                    <a class="status-filter <?= $status_filter === 'done' ? 'active' : '' ?>" href="visits.php?status=done">
+                        <i class="fa-solid fa-circle-check"></i>
+                        تمت المعاينة
+                    </a>
+                </div>
             </div>
 
             <div class="table-responsive">
@@ -579,7 +728,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <tbody>
                         <?php if (empty($visits)): ?>
                             <tr>
-                                <td colspan="7" class="empty">لا توجد زيارات اليوم</td>
+                                <td colspan="7" class="empty">لا توجد زيارات مطابقة لهذا الفلتر</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($visits as $row): ?>
@@ -638,16 +787,13 @@ while ($row = mysqli_fetch_assoc($result)) {
                                     </td>
                                     <td>
                                         <?php
-                                        $visit_id = $row['visit_id'];
-                                        $is_done_query = "SELECT is_done FROM visits WHERE visit_id = $visit_id";
-                                        $is_done_result = mysqli_query($con, $is_done_query);
-                                        $is_done_row = mysqli_fetch_assoc($is_done_result);
-                                        if ($is_done_row['is_done'] == 1) {
+                                        if ($row['is_done'] == 1) {
                                             echo '<span class="badge status-done">تمت المعاينة</span>';
                                         } else {
                                             echo '<span class="badge status-pending">قيد الانتظار</span>';
                                         }
                                         ?>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
