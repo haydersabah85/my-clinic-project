@@ -6,6 +6,7 @@ include_once 'clinic_helpers.php';
 
 clinic_ensure_column($con, 'va', 'iop_od', 'VARCHAR(50) NULL');
 clinic_ensure_column($con, 'va', 'iop_os', 'VARCHAR(50) NULL');
+clinic_ensure_retina_drawings($con);
 
 $row = null;
 $id = (int)($_GET['id'] ?? $_GET['id_open'] ?? $_GET['patient_id'] ?? 0);
@@ -334,6 +335,11 @@ if (!function_exists('pf_format_visit_note')) {
 
         .visits-icon {
             background: linear-gradient(135deg, #a855f7, #7e22ce);
+            color: #fff;
+        }
+
+        .retina-icon {
+            background: linear-gradient(135deg, #0f766e, #0891b2);
             color: #fff;
         }
 
@@ -1136,6 +1142,44 @@ if (!function_exists('pf_format_visit_note')) {
             background: linear-gradient(135deg, #0f766e, #14b8a6);
         }
 
+        .encounter-actions .retina-action {
+            background: linear-gradient(135deg, #0891b2, #0f766e);
+        }
+
+        .retina-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .retina-preview {
+            display: block;
+            background: #ffffff;
+            border: 1px solid #dbeafe;
+            border-radius: 14px;
+            padding: 10px;
+            color: #0f172a;
+            text-decoration: none;
+        }
+
+        .retina-preview img {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: contain;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .retina-preview span {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 900;
+            color: #0f766e;
+        }
+
         @media (max-width: 1100px) {
             .encounter-body {
                 grid-template-columns: 1fr;
@@ -1651,6 +1695,17 @@ if (!function_exists('pf_format_visit_note')) {
             border-top-color: rgba(148, 163, 184, 0.25);
         }
 
+        body[data-theme="dark"] .retina-preview {
+            background: rgba(15, 23, 42, 0.82);
+            border-color: rgba(147, 197, 253, 0.18);
+            color: #dce7f3;
+        }
+
+        body[data-theme="dark"] .retina-preview img {
+            background: rgba(2, 6, 23, 0.45);
+            border-color: rgba(147, 197, 253, 0.18);
+        }
+
         body[data-theme="dark"] .encounter-actions {
             border-top-color: rgba(148, 163, 184, 0.18);
         }
@@ -1994,6 +2049,11 @@ if (!function_exists('pf_format_visit_note')) {
                 data-title="زيارات اليوم">
                 🏥 </a>
 
+            <a href="retina-chart.php?patient_id=<?php echo $row['id']; ?>"
+                class="icon-btn retina-icon"
+                data-title="رسم الشبكية">
+                ◎ </a>
+
             <a href="dashboard.php"
                 class="icon-btn home-icon"
                 data-title="الصفحة الرئيسية">
@@ -2013,6 +2073,7 @@ if (!function_exists('pf_format_visit_note')) {
         $surgery_count = mysqli_num_rows(mysqli_query($con, "SELECT id FROM surgery WHERE patient_id = $id"));
         $laser_count = mysqli_num_rows(mysqli_query($con, "SELECT id FROM laser WHERE patient_id = $id"));
         $injection_count = mysqli_num_rows(mysqli_query($con, "SELECT id FROM injection WHERE patient_id = $id"));
+        $retina_count = mysqli_num_rows(mysqli_query($con, "SELECT id FROM retina_drawings WHERE patient_id = $id"));
         ?>
 
         <div class="stats-grid">
@@ -2045,6 +2106,12 @@ if (!function_exists('pf_format_visit_note')) {
                 <span class="stat-value"><?= $injection_count ?></span>
                 <span class="stat-label">الحقن</span>
             </div>
+
+            <div class="stat-card">
+                <span class="stat-icon">◎</span>
+                <span class="stat-value"><?= $retina_count ?></span>
+                <span class="stat-label">رسومات الشبكية</span>
+            </div>
         </div>
         <div class="previous_data">
             <div class="previous_visits">
@@ -2064,6 +2131,7 @@ if (!function_exists('pf_format_visit_note')) {
                             $id = (int)$id;
                             $visitRows = [];
                             $vaRowsByDate = [];
+                            $retinaRowsByDate = [];
                             $dates = [];
 
                             $visitsResult = mysqli_query($con, "SELECT * FROM patient_visits WHERE patient_id = $id ORDER BY date DESC, id DESC");
@@ -2078,13 +2146,20 @@ if (!function_exists('pf_format_visit_note')) {
                                 $dates[$va_row['exam_date']] = true;
                             }
 
+                            $retinaResult = mysqli_query($con, "SELECT id, eye, drawing_date, title, notes, drawing_image FROM retina_drawings WHERE patient_id = $id ORDER BY drawing_date DESC, id DESC");
+                            while ($retina_row = mysqli_fetch_assoc($retinaResult)) {
+                                $retinaRowsByDate[$retina_row['drawing_date']][] = $retina_row;
+                                $dates[$retina_row['drawing_date']] = true;
+                            }
+
                             $dateKeys = array_keys($dates);
                             rsort($dateKeys);
                             $withVaCount = 0;
                             $withoutVaCount = 0;
+                            $withRetinaCount = 0;
 
                             if (empty($dateKeys)) {
-                                echo "<p class='empty-state'>لا توجد زيارات أو فحوصات نظر مسجلة حتى الآن</p>";
+                                echo "<p class='empty-state'>لا توجد زيارات أو فحوصات نظر أو رسومات شبكية مسجلة حتى الآن</p>";
                             } else {
                                 foreach ($dateKeys as $timelineDate) {
                                     if (!empty($vaRowsByDate[$timelineDate])) {
@@ -2092,14 +2167,18 @@ if (!function_exists('pf_format_visit_note')) {
                                     } else {
                                         $withoutVaCount++;
                                     }
+                                    if (!empty($retinaRowsByDate[$timelineDate])) {
+                                        $withRetinaCount++;
+                                    }
                                 }
-                                echo "<p class='timeline-summary'>إجمالي الأيام المسجلة: " . count($dateKeys) . " | مع VA: " . $withVaCount . " | تحتاج VA: " . $withoutVaCount . "</p>";
+                                echo "<p class='timeline-summary'>إجمالي الأيام المسجلة: " . count($dateKeys) . " | مع VA: " . $withVaCount . " | رسومات شبكية: " . $withRetinaCount . " | تحتاج VA: " . $withoutVaCount . "</p>";
                             }
 
                             $cardIndex = 0;
                             foreach ($dateKeys as $visitDate) {
                                 $visitsForDate = $visitRows[$visitDate] ?? [];
                                 $vaForDate = $vaRowsByDate[$visitDate] ?? [];
+                                $retinaForDate = $retinaRowsByDate[$visitDate] ?? [];
                                 $hasVa = !empty($vaForDate);
                                 $cardClass = $hasVa ? 'encounter-card with-va' : 'encounter-card no-va';
                                 $statusClass = $hasVa ? 'encounter-status' : 'encounter-status missing';
@@ -2172,9 +2251,34 @@ if (!function_exists('pf_format_visit_note')) {
                                     echo "<p class='empty-state'>لا يوجد فحص VA / IOP مرتبط بهذا التاريخ</p>";
                                 }
                                 echo "</section>";
+
+                                echo "<section class='clinical-note'>";
+                                echo "<h4>رسم الشبكية</h4>";
+                                if (!empty($retinaForDate)) {
+                                    echo "<div class='retina-preview-grid'>";
+                                    foreach ($retinaForDate as $retina_row) {
+                                        $retinaTitle = trim((string)($retina_row['title'] ?? ''));
+                                        $label = ($retinaTitle !== '' ? $retinaTitle : 'Retina chart') . " - " . h($retina_row['eye']);
+                                        echo "<a class='retina-preview' href='retina-chart.php?patient_id=" . h($id) . "&drawing_id=" . h($retina_row['id']) . "'>";
+                                        if (!empty($retina_row['drawing_image'])) {
+                                            echo "<img src='" . h($retina_row['drawing_image']) . "' alt='Retina drawing'>";
+                                        }
+                                        echo "<span>" . h($label) . "</span>";
+                                        if (!empty($retina_row['notes'])) {
+                                            echo "<p>" . nl2br(h($retina_row['notes'])) . "</p>";
+                                        }
+                                        echo "</a>";
+                                    }
+                                    echo "</div>";
+                                } else {
+                                    echo "<p class='empty-state'>لا يوجد رسم شبكية مرتبط بهذا التاريخ</p>";
+                                }
+                                echo "</section>";
+
                                 echo "</div>";
                                 echo "<div class='encounter-actions'>";
                                 echo "<a class='text-action secondary' href='add-va.php?id=" . h($id) . "'>إضافة VA / IOP</a>";
+                                echo "<a class='icon-btn retina-action' href='retina-chart.php?patient_id=" . h($id) . "&date=" . h($visitDate) . "' data-title='رسم الشبكية'>◎</a>";
                                 if (!empty($vaForDate)) {
                                     echo "<a class='text-action' href='edit-va.php?id_edit=" . h($vaForDate[0]['va_id']) . "'>تعديل VA</a>";
                                 }
