@@ -192,17 +192,26 @@ $isOnlineWriteLocked = clinic_is_online_write_locked($con, (bool) $IS_LOCAL);
     <div>
         <a id="main" href="dashboard.php">الصفحة الرئيسية</a>
         <a id="restore" href="restore.php">Restore</a>
-        <a id="backup" href="backup_and_upload.php">Backup Online</a>
-        <form method="post">
-            <button name="manual_backup"
-                onclick="return confirm('هل تريد إنشاء نسخة احتياطية الآن؟')">
-                Backup</button>
-        </form>
+        <?php if ($IS_LOCAL): ?>
+            <a id="backup" href="backup_and_upload.php">Backup Online</a>
+            <form method="post">
+                <button name="manual_backup"
+                    onclick="return confirm('هل تريد إنشاء نسخة احتياطية الآن؟')">
+                    Backup</button>
+            </form>
+        <?php else: ?>
+            <p style="color:#b30000;font-weight:700;max-width:520px;line-height:1.8;">
+                على النسخة السحابية: تم تعطيل أزرار النسخ المحلي والرفع إلى السحابة.
+                هذه العملية يجب أن تتم من سيرفر العيادة المحلي فقط.
+            </p>
+        <?php endif; ?>
 
         <?php
-        include "config_backup.php";
+        if ($IS_LOCAL) {
+            include "config_backup.php";
+        }
 
-        if (isset($_POST['manual_backup'])) {
+        if ($IS_LOCAL && isset($_POST['manual_backup'])) {
 
             $date = date("Y-m-d_H-i-s");
             $file = $BACKUP_PATH . "/manual_backup_$date.sql";

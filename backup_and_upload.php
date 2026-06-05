@@ -1,8 +1,17 @@
 <?php
-
-use PhpOffice\PhpSpreadsheet\Shared\OLE\PPS\Root;
-
 include 'config.php';
+include 'auth.php';
+include 'admin-only.php';
+
+if (!$IS_LOCAL) {
+    http_response_code(403);
+    echo "<html lang='ar' dir='rtl'><meta charset='utf-8'><body style='font-family:Tahoma,Arial,sans-serif;padding:24px'>";
+    echo "<h3>غير متاح على النسخة السحابية</h3>";
+    echo "<p>زر Backup Online يجب تشغيله من السيرفر المحلي في العيادة فقط.</p>";
+    echo "<a href='settings.php'>العودة إلى الإعدادات</a>";
+    echo "</body></html>";
+    exit;
+}
 
 echo "<h2>رفع قاعدة البيانات إلى السحابة</h2>";
 
@@ -102,4 +111,3 @@ if (file_exists($backupFile)) {
 }
 
 echo "<br><h3>✅ Database upload completed successfully.</h3>";
-?>
