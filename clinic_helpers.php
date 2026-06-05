@@ -207,10 +207,32 @@ function clinic_enforce_runtime_write_policy(mysqli $con, bool $isLocal): void
     echo "<html lang='ar' dir='rtl'><meta charset='utf-8'><body style='font-family:Tahoma,Arial,sans-serif;padding:24px'>";
     echo "<h3>وضع الحماية مفعل</h3>";
     echo "<p>النسخة السحابية في وضع قراءة فقط مؤقتا لتجنب تضارب البيانات أثناء الطوارئ.</p>";
-    echo "<p>يمكنك إعادة تفعيل الكتابة من صفحة الإعدادات بواسطة حساب المدير.</p>";
+    echo "<p>يمكنك إعادة تفعيل الكتابة من صفحة الإعدادات بواسطة حساب المدير الرئيسي فقط.</p>";
     echo "<a href='dashboard.php'>العودة إلى الرئيسية</a>";
     echo "</body></html>";
     exit;
+}
+
+function clinic_write_lock_owner_user_id(mysqli $con): int
+{
+    $ownerId = (int) clinic_get_app_setting($con, 'online_write_lock_owner_user_id', '1');
+    return $ownerId > 0 ? $ownerId : 1;
+}
+
+function clinic_can_manage_online_write_lock(mysqli $con): bool
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    $currentUserId = (int) ($_SESSION['user_id'] ?? 0);
+    $currentRole = $_SESSION['role'] ?? '';
+
+    if ($currentUserId <= 0 || $currentRole !== 'admin') {
+        return false;
+    }
+
+    return $currentUserId === clinic_write_lock_owner_user_id($con);
 }
 
 function clinic_ensure_retina_drawings(mysqli $con): void

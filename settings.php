@@ -8,13 +8,18 @@ clinic_ensure_infrastructure($con);
 clinic_ensure_runtime_controls($con);
 
 $modeMessage = '';
+$canManageWriteLock = clinic_can_manage_online_write_lock($con);
 
 if (isset($_POST['save_runtime_mode'])) {
-    $writeEnabled = isset($_POST['online_write_enabled']) ? '0' : '1';
-    if (clinic_set_app_setting($con, 'online_write_lock', $writeEnabled)) {
-        $modeMessage = "<p style='color:green'>✔ تم تحديث وضع الكتابة بنجاح</p>";
+    if (!$canManageWriteLock) {
+        $modeMessage = "<p style='color:red'>❌ هذا الخيار متاح فقط لحساب المدير الرئيسي</p>";
     } else {
-        $modeMessage = "<p style='color:red'>❌ فشل تحديث وضع الكتابة</p>";
+        $writeEnabled = isset($_POST['online_write_enabled']) ? '0' : '1';
+        if (clinic_set_app_setting($con, 'online_write_lock', $writeEnabled)) {
+            $modeMessage = "<p style='color:green'>✔ تم تحديث وضع الكتابة بنجاح</p>";
+        } else {
+            $modeMessage = "<p style='color:red'>❌ فشل تحديث وضع الكتابة</p>";
+        }
     }
 }
 
@@ -230,13 +235,17 @@ $isOnlineWriteLocked = clinic_is_online_write_locked($con, (bool) $IS_LOCAL);
                 عند انقطاع الإنترنت في العيادة: اقفل الكتابة على النسخة السحابية لتجنب تضارب البيانات، واعمل محليا.
                 بعد رجوع الإنترنت ورفع البيانات: أعد تفعيل الكتابة السحابية.
             </div>
-            <form class="runtime-form" method="post">
-                <label>
-                    <input type="checkbox" name="online_write_enabled" value="1" <?php echo $isOnlineWriteLocked ? '' : 'checked'; ?>>
-                    السماح بالكتابة على النسخة السحابية
-                </label>
-                <button type="submit" name="save_runtime_mode" onclick="return confirm('تأكيد تحديث وضع الكتابة السحابية؟')">حفظ وضع التشغيل</button>
-            </form>
+            <?php if ($canManageWriteLock): ?>
+                <form class="runtime-form" method="post">
+                    <label>
+                        <input type="checkbox" name="online_write_enabled" value="1" <?php echo $isOnlineWriteLocked ? '' : 'checked'; ?>>
+                        السماح بالكتابة على النسخة السحابية
+                    </label>
+                    <button type="submit" name="save_runtime_mode" onclick="return confirm('تأكيد تحديث وضع الكتابة السحابية؟')">حفظ وضع التشغيل</button>
+                </form>
+            <?php else: ?>
+                <p style="color:#b30000;font-weight:700;margin:6px 0 0;">هذا التحكم محصور بحساب المدير الرئيسي فقط.</p>
+            <?php endif; ?>
         </section>
 
 
