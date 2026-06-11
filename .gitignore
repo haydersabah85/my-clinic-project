@@ -7,7 +7,8 @@ node_modules/
 vendor/
 backups/
 
-uploads/
+uploads/*
+!uploads/.gitkeep
 
 # Local database backups (do not publish)
 db_backups/

@@ -64,4 +64,21 @@ if (!function_exists('clinic_connect_from_profiles')) {
     }
 }
 
+if (!function_exists('clinic_ensure_uploads_dir')) {
+    function clinic_ensure_uploads_dir(): void
+    {
+        $uploadsDir = __DIR__ . '/uploads';
+
+        if (is_dir($uploadsDir)) {
+            return;
+        }
+
+        if (!@mkdir($uploadsDir, 0755, true) && !is_dir($uploadsDir)) {
+            error_log('Clinic warning: failed to create uploads directory at ' . $uploadsDir);
+        }
+    }
+}
+
+clinic_ensure_uploads_dir();
+
 return clinic_connect_from_profiles($localDb ?? [], $onlineDb ?? []);
