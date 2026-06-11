@@ -3,6 +3,7 @@
 include 'config.php';
 
 include 'auth.php';
+include_once 'clinic_helpers.php';
 
 function redirect_with_alert($message, $url)
 {
@@ -97,7 +98,12 @@ if (!move_uploaded_file($file['tmp_name'], $target_file)) {
     redirect_with_alert('عذراً، حدث خطأ أثناء حفظ الصورة على الخادم.', 'add-image.php?id=' . $patient_id);
 }
 
-$stmt = $con->prepare("INSERT INTO patient_images (patient_id, image_path, notes) VALUES (?, ?, ?)");
+$hasUpdatedAt = clinic_column_exists($con, 'patient_images', 'updated_at');
+$insertSql = $hasUpdatedAt
+    ? "INSERT INTO patient_images (patient_id, image_path, notes, updated_at) VALUES (?, ?, ?, NOW())"
+    : "INSERT INTO patient_images (patient_id, image_path, notes) VALUES (?, ?, ?)";
+
+$stmt = $con->prepare($insertSql);
 if (!$stmt) {
     @unlink($target_file);
     redirect_with_alert('تعذر حفظ بيانات الصورة في قاعدة البيانات.', 'add-image.php?id=' . $patient_id);

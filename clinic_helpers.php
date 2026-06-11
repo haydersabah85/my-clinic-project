@@ -329,6 +329,23 @@ function clinic_ensure_retina_drawings(mysqli $con): void
     ");
 }
 
+    function clinic_ensure_patient_images_sync_support(mysqli $con): void
+    {
+        if (!clinic_table_exists($con, 'patient_images')) {
+            return;
+        }
+
+        clinic_ensure_column($con, 'patient_images', 'sync_status', 'TINYINT(1) NOT NULL DEFAULT 0');
+        clinic_ensure_column($con, 'patient_images', 'updated_at', 'DATETIME NULL');
+
+        // Keep updated_at usable for sync ordering even on old schemas.
+        if (clinic_column_exists($con, 'patient_images', 'uploaded_at')) {
+            mysqli_query($con, "UPDATE `patient_images` SET `updated_at` = `uploaded_at` WHERE `updated_at` IS NULL");
+        } elseif (clinic_column_exists($con, 'patient_images', 'date_added')) {
+            mysqli_query($con, "UPDATE `patient_images` SET `updated_at` = `date_added` WHERE `updated_at` IS NULL");
+        }
+    }
+
 function clinic_current_user(): string
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {

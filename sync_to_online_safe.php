@@ -17,6 +17,7 @@ if (!$IS_LOCAL) {
 set_time_limit(0);
 clinic_ensure_runtime_controls($con);
 clinic_ensure_sync_conflicts($con);
+clinic_ensure_patient_images_sync_support($con);
 
 ob_start();
 include 'online-config.php';
@@ -25,6 +26,8 @@ ob_end_clean();
 if (!isset($online) || !($online instanceof mysqli)) {
     die('Online connection is not available.');
 }
+
+clinic_ensure_patient_images_sync_support($online);
 
 function safe_sync_table_exists(mysqli $db, string $table): bool
 {
@@ -223,6 +226,7 @@ function safe_sync_push_table(mysqli $localDb, mysqli $onlineDb, string $table, 
 $tables = [
     ['name' => 'add_patient', 'pk' => 'id'],
     ['name' => 'patient_visits', 'pk' => 'id'],
+    ['name' => 'patient_images', 'pk' => 'id'],
     ['name' => 'surgery_appointment', 'pk' => 'id'],
     ['name' => 'laser_appointment', 'pk' => 'id'],
     ['name' => 'injection_appointment', 'pk' => 'id'],
