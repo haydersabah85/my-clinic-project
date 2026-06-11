@@ -1,6 +1,9 @@
 <?php
 include 'auth.php';
 include 'config.php';
+include_once 'clinic_helpers.php';
+
+clinic_ensure_runtime_controls($con);
 
 $today = date('Y-m-d');
 $stats = ['total' => 0, 'free' => 0, 'done' => 0, 'pending' => 0];
@@ -58,6 +61,17 @@ while ($row = mysqli_fetch_assoc($result)) {
         $visits[] = $row;
     }
 }
+
+$nextPatientAlert = null;
+$nextPatientRaw = clinic_get_app_setting($con, 'doctor_next_patient_alert', '');
+if ($nextPatientRaw) {
+    $decodedAlert = json_decode($nextPatientRaw, true);
+    if (is_array($decodedAlert) && !empty($decodedAlert['patient_id']) && !empty($decodedAlert['full_name'])) {
+        $nextPatientAlert = $decodedAlert;
+    }
+}
+
+$nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -511,6 +525,103 @@ while ($row = mysqli_fetch_assoc($result)) {
             transition: color 0.2s ease;
         }
 
+        .next-patient-banner {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: linear-gradient(120deg, #fff7ed, #ffedd5);
+            border: 1px solid #fdba74;
+            color: #7c2d12;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-weight: 800;
+        }
+
+        .next-patient-banner .banner-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .next-patient-banner .banner-actions a {
+            text-decoration: none;
+            background: #b45309;
+            color: #fff;
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 13px;
+        }
+
+        .name-link.next-patient-name {
+            color: #b45309;
+            font-weight: 900;
+            text-shadow: 0 0 4px rgba(180, 83, 9, 0.4), 0 0 12px rgba(180, 83, 9, 0.38);
+            animation: nextPatientPulse 1s infinite ease-in-out;
+        }
+
+        .notify-next {
+            background: linear-gradient(135deg, #b45309, #d97706);
+            border-color: rgba(255, 214, 170, 0.55);
+        }
+
+        .notify-next.is-active {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            border-color: rgba(255, 237, 213, 0.95);
+            box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.24), 0 12px 26px rgba(180, 83, 9, 0.38);
+        }
+
+        .actions a i {
+            line-height: 1;
+        }
+
+        .actions .notify-next i {
+            animation: notifyBell 1.6s ease-in-out infinite;
+            transform-origin: top center;
+        }
+
+        @keyframes notifyBell {
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+
+            20% {
+                transform: rotate(-10deg);
+            }
+
+            40% {
+                transform: rotate(9deg);
+            }
+
+            60% {
+                transform: rotate(-6deg);
+            }
+
+            80% {
+                transform: rotate(5deg);
+            }
+        }
+
+        @keyframes nextPatientPulse {
+            0% {
+                opacity: 0.55;
+                text-shadow: 0 0 2px rgba(180, 83, 9, 0.32), 0 0 6px rgba(180, 83, 9, 0.3);
+            }
+
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 7px rgba(180, 83, 9, 0.75), 0 0 18px rgba(180, 83, 9, 0.65);
+            }
+
+            100% {
+                opacity: 0.55;
+                text-shadow: 0 0 2px rgba(180, 83, 9, 0.32), 0 0 6px rgba(180, 83, 9, 0.3);
+            }
+        }
+
         .name-link:hover {
             color: #c58c41;
         }
@@ -521,35 +632,70 @@ while ($row = mysqli_fetch_assoc($result)) {
             font-weight: 700;
         }
 
+        .actions {
+            white-space: nowrap;
+        }
+
         .actions a {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 34px;
-            height: 34px;
-            margin: 0 2px;
-            border-radius: 8px;
+            position: relative;
+            width: 38px;
+            height: 38px;
+            margin: 0 3px;
+            border-radius: 12px;
             color: #ffffff;
             text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.24);
-            transition: transform 0.2s ease, filter 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.22);
+            transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+            font-size: 15px;
         }
 
         .actions a:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.05);
+            transform: translateY(-2px) scale(1.04);
+            filter: brightness(1.06);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.3);
+        }
+
+        .actions a:active {
+            transform: translateY(0) scale(0.97);
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.22);
+        }
+
+        .actions a::after {
+            content: attr(data-label);
+            position: absolute;
+            inset-inline-start: 50%;
+            transform: translateX(-50%);
+            top: -34px;
+            background: rgba(17, 24, 39, 0.92);
+            color: #fff;
+            font-size: 11px;
+            padding: 5px 8px;
+            border-radius: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.16s ease;
+            z-index: 8;
+        }
+
+        .actions a:hover::after {
+            opacity: 1;
         }
 
         .enter {
-            background: #3f8d63;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
         }
 
         .edit {
-            background: #2b6d7a;
+            background: linear-gradient(135deg, #0f766e, #0d9488);
         }
 
         .delete {
-            background: #b85a54;
+            background: linear-gradient(135deg, #b91c1c, #dc2626);
         }
 
         .empty {
@@ -692,6 +838,21 @@ while ($row = mysqli_fetch_assoc($result)) {
             </div>
 
             <div class="visit-tools">
+                <?php if ($nextPatientAlert): ?>
+                    <div class="next-patient-banner">
+                        <div>
+                            المريض القادم الآن:
+                            <strong><?= htmlspecialchars($nextPatientAlert['full_name']) ?></strong>
+                            | القسم: <?= htmlspecialchars($nextPatientAlert['queue'] ?? 'زيارات اليوم') ?>
+                            | الوقت: <?= htmlspecialchars($nextPatientAlert['notified_at'] ?? '-') ?>
+                        </div>
+                        <div class="banner-actions">
+                            <a href="patient-file.php?id=<?= (int) $nextPatientAlert['patient_id'] ?>">فتح الملف</a>
+                            <a href="notify-next-patient.php?action=clear&back=visits.php?status=<?= urlencode($status_filter) ?>">تم الاستدعاء</a>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="🔍 ابحث باسم المريض أو نوع الزيارة أو الرقم التسلسلي...">
                 </div>
@@ -751,10 +912,10 @@ while ($row = mysqli_fetch_assoc($result)) {
                                         $visit_class = '';
                                 }
                                 ?>
-                                <tr>
+                                <tr data-patient-id="<?= (int) $row['patient_id'] ?>">
                                     <td><?= $row['daily_serial'] ?></td>
                                     <td>
-                                        <a class="name-link" href="patient-file.php?id=<?= $row['patient_id'] ?>">
+                                        <a class="name-link <?= ((int) $row['patient_id'] === $nextPatientId) ? 'next-patient-name' : '' ?>" href="patient-file.php?id=<?= $row['patient_id'] ?>">
                                             <?= htmlspecialchars($row['full_name']) ?>
                                         </a>
                                     </td>
@@ -773,16 +934,20 @@ while ($row = mysqli_fetch_assoc($result)) {
                                     </td>
                                     <td><span class="badge <?= $visit_class ?>"><?= $visit_text ?></span></td>
                                     <td class="actions">
-                                        <a class="enter" title="دخول الملف" href="patient-file.php?id=<?= $row['patient_id'] ?>">
-                                            <i class="fa-solid fa-folder-open"></i>
+                                        <a class="enter" data-label="فتح الملف" title="فتح الملف" href="patient-file.php?id=<?= $row['patient_id'] ?>">
+                                            <i class="fa-solid fa-notes-medical"></i>
                                         </a>
-                                        <a class="edit" title="تعديل الزيارة" href="edit-visit.php?id_edit=<?= $row['visit_id'] ?>">
-                                            <i class="fa-solid fa-user-pen"></i>
+                                        <a class="edit" data-label="تعديل الزيارة" title="تعديل الزيارة" href="edit-visit.php?id_edit=<?= $row['visit_id'] ?>">
+                                            <i class="fa-solid fa-pen-to-square"></i>
                                         </a>
-                                        <a class="delete" title="حذف الزيارة"
+                                        <a class="delete" data-label="حذف الزيارة" title="حذف الزيارة"
                                             href="delete-visits.php?id_delete=<?= $row['visit_id'] ?>"
                                             onclick="return confirm('هل أنت متأكد من حذف هذه الزيارة؟');">
                                             <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                        <a class="notify-next <?= ((int) $row['patient_id'] === $nextPatientId) ? 'is-active' : '' ?>" data-label="تنبيه الطبيب" title="تنبيه الطبيب بالمريض القادم"
+                                            href="notify-next-patient.php?action=set&patient_id=<?= (int) $row['patient_id'] ?>&queue=<?= urlencode('زيارات اليوم') ?>&meta=<?= urlencode('التسلسل: ' . ((string) ($row['daily_serial'] ?? '-'))) ?>&back=<?= urlencode('visits.php?status=' . $status_filter) ?>">
+                                            <i class="fa-solid fa-bell-concierge"></i>
                                         </a>
                                     </td>
                                     <td>

@@ -6,6 +6,16 @@ include_once "clinic_helpers.php";
 
 clinic_ensure_infrastructure($con);
 clinic_ensure_sync_conflicts($con);
+clinic_ensure_runtime_controls($con);
+
+$nextPatientAlert = null;
+$nextPatientRaw = clinic_get_app_setting($con, 'doctor_next_patient_alert', '');
+if ($nextPatientRaw) {
+  $decodedNextPatient = json_decode($nextPatientRaw, true);
+  if (is_array($decodedNextPatient) && !empty($decodedNextPatient['patient_id']) && !empty($decodedNextPatient['full_name'])) {
+    $nextPatientAlert = $decodedNextPatient;
+  }
+}
 
 
 /* ===== إحصائيات ===== */
@@ -880,6 +890,51 @@ if ($openSyncConflicts > 0) {
     text-decoration: underline;
   }
 
+  .next-patient-panel {
+    margin: 16px 0;
+    background: linear-gradient(120deg, #fff7ed, #ffedd5);
+    border: 1px solid #fdba74;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+  }
+
+  .next-patient-title {
+    font-weight: 900;
+    color: #9a3412;
+    margin-bottom: 4px;
+  }
+
+  .next-patient-meta {
+    color: #7c2d12;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .next-patient-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .next-patient-actions a {
+    text-decoration: none;
+    color: #fff;
+    background: #c2410c;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-weight: 800;
+  }
+
+  .next-patient-actions .open {
+    background: #2563eb;
+  }
+
   /* ===== زر الحالات الحرجة ===== */
   .danger-card {
     display: inline-flex;
@@ -1240,12 +1295,37 @@ if ($openSyncConflicts > 0) {
 
       </section>
 
+      <?php if ($nextPatientAlert): ?>
+        <section class="next-patient-panel" id="nextPatientPanel">
+          <div>
+            <div class="next-patient-title">المريض القادم للطبيب</div>
+            <div class="next-patient-meta">
+              <?= h($nextPatientAlert['full_name']) ?>
+              | القسم: <?= h($nextPatientAlert['queue'] ?? 'العيادة') ?>
+              <?php if (!empty($nextPatientAlert['meta'])): ?>
+                | تفاصيل: <?= h($nextPatientAlert['meta']) ?>
+              <?php endif; ?>
+              | أرسلها: <?= h($nextPatientAlert['notified_by'] ?? '-') ?>
+              | الوقت: <?= h($nextPatientAlert['notified_at'] ?? '-') ?>
+            </div>
+          </div>
+          <div class="next-patient-actions">
+            <a class="open" href="patient-data.php?id=<?= (int) $nextPatientAlert['patient_id'] ?>">فتح ملف المريض</a>
+            <a href="notify-next-patient.php?action=clear&back=dashboard.php">تم استدعاؤه / مسح التنبيه</a>
+          </div>
+        </section>
+      <?php endif; ?>
+
     </main>
 
   </div>
 
 
   <script>
+    setInterval(() => {
+      window.location.reload();
+    }, 30000);
+
     const dashboardCharts = {
       dailyVisits: {
         labels: <?= json_encode($dailyVisitLabels, JSON_UNESCAPED_UNICODE) ?>,
