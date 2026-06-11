@@ -104,6 +104,78 @@ function clinic_ensure_runtime_controls(mysqli $con): void
     ");
 }
 
+function clinic_ensure_sync_conflicts(mysqli $con): void
+{
+    mysqli_query($con, "
+        CREATE TABLE IF NOT EXISTS sync_conflicts (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            table_name VARCHAR(120) NOT NULL,
+            record_key VARCHAR(120) NOT NULL,
+            direction VARCHAR(40) NOT NULL,
+            resolution_status VARCHAR(30) NOT NULL DEFAULT 'open',
+            local_updated_at DATETIME NULL,
+            online_updated_at DATETIME NULL,
+            local_snapshot LONGTEXT NULL,
+            online_snapshot LONGTEXT NULL,
+            note TEXT NULL,
+            resolved_by VARCHAR(120) NULL,
+            resolved_at DATETIME NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_sync_conflicts_status (resolution_status),
+            INDEX idx_sync_conflicts_table_key (table_name, record_key)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
+    clinic_ensure_column($con, 'sync_conflicts', 'resolved_by', 'VARCHAR(120) NULL');
+    clinic_ensure_column($con, 'sync_conflicts', 'resolved_at', 'DATETIME NULL');
+}
+
+function clinic_log_sync_conflict(
+    mysqli $con,
+    string $table,
+    string $recordKey,
+    string $direction,
+    ?string $localUpdatedAt,
+    ?string $onlineUpdatedAt,
+    $localSnapshot,
+    $onlineSnapshot,
+    ?string $note = null
+): void {
+    clinic_ensure_sync_conflicts($con);
+
+    $localJson = is_string($localSnapshot) || $localSnapshot === null
+        ? $localSnapshot
+        : json_encode($localSnapshot, JSON_UNESCAPED_UNICODE);
+    $onlineJson = is_string($onlineSnapshot) || $onlineSnapshot === null
+        ? $onlineSnapshot
+        : json_encode($onlineSnapshot, JSON_UNESCAPED_UNICODE);
+
+    $stmt = mysqli_prepare($con, "
+        INSERT INTO sync_conflicts
+        (table_name, record_key, direction, local_updated_at, online_updated_at, local_snapshot, online_snapshot, note)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+
+    if (!$stmt) {
+        return;
+    }
+
+    mysqli_stmt_bind_param(
+        $stmt,
+        'ssssssss',
+        $table,
+        $recordKey,
+        $direction,
+        $localUpdatedAt,
+        $onlineUpdatedAt,
+        $localJson,
+        $onlineJson,
+        $note
+    );
+
+    @mysqli_stmt_execute($stmt);
+}
+
 function clinic_get_app_setting(mysqli $con, string $key, ?string $default = null): ?string
 {
     clinic_ensure_runtime_controls($con);

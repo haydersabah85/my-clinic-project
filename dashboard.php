@@ -5,6 +5,7 @@ include "auth.php";
 include_once "clinic_helpers.php";
 
 clinic_ensure_infrastructure($con);
+clinic_ensure_sync_conflicts($con);
 
 
 /* ===== إحصائيات ===== */
@@ -225,6 +226,14 @@ $soon = mysqli_num_rows(mysqli_query($con, "
 "));
 if ($soon > 0) // قريبة
   $alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات خلال 5 أيام</div>";
+
+$openSyncConflicts = 0;
+$openSyncConflictsRow = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM sync_conflicts WHERE resolution_status = 'open'"));
+$openSyncConflicts = (int) ($openSyncConflictsRow['total'] ?? 0);
+
+if ($openSyncConflicts > 0) {
+  $alerts[] = "<div class='alert alert-danger'>⛔ يوجد $openSyncConflicts تعارض مزامنة مفتوح - <a href='sync_conflicts.php'>إدارة التعارضات</a></div>";
+}
 
 ?>
 <!DOCTYPE html>
@@ -865,6 +874,12 @@ if ($soon > 0) // قريبة
     font-size: 18px;
   }
 
+  .alert a {
+    color: inherit;
+    font-weight: 800;
+    text-decoration: underline;
+  }
+
   /* ===== زر الحالات الحرجة ===== */
   .danger-card {
     display: inline-flex;
@@ -1307,16 +1322,30 @@ if ($soon > 0) // قريبة
       if (showEmpty(canvasId, emptyId, values)) return;
 
       const canvas = document.getElementById(canvasId);
-      const { ctx, width, height } = setupCanvas(canvas);
+      const {
+        ctx,
+        width,
+        height
+      } = setupCanvas(canvas);
       const max = Math.max(...values, 1);
-      const padding = { top: 22, right: 22, bottom: 42, left: 38 };
+      const padding = {
+        top: 22,
+        right: 22,
+        bottom: 42,
+        left: 38
+      };
       const chartWidth = width - padding.left - padding.right;
       const chartHeight = height - padding.top - padding.bottom;
       const textColor = chartTextColor();
       const points = values.map((value, index) => {
         const x = padding.left + (labels.length === 1 ? chartWidth / 2 : (chartWidth / (labels.length - 1)) * index);
         const y = padding.top + chartHeight - (Number(value) / max) * chartHeight;
-        return { x, y, value: Number(value), label: labels[index] };
+        return {
+          x,
+          y,
+          value: Number(value),
+          label: labels[index]
+        };
       });
 
       ctx.clearRect(0, 0, width, height);
@@ -1379,11 +1408,20 @@ if ($soon > 0) // قريبة
       if (showEmpty(canvasId, emptyId, values)) return;
 
       const canvas = document.getElementById(canvasId);
-      const { ctx, width, height } = setupCanvas(canvas);
+      const {
+        ctx,
+        width,
+        height
+      } = setupCanvas(canvas);
       const max = Math.max(...values, 1);
       const textColor = chartTextColor();
       const rows = labels.length;
-      const padding = { top: 12, right: 46, bottom: 12, left: 130 };
+      const padding = {
+        top: 12,
+        right: 46,
+        bottom: 12,
+        left: 130
+      };
       const rowHeight = Math.min(34, (height - padding.top - padding.bottom) / Math.max(rows, 1));
       const barMaxWidth = width - padding.left - padding.right;
 
