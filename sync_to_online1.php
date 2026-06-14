@@ -1,10 +1,16 @@
 <?php
+// Legacy endpoint kept for backward compatibility only.
+// Route all usage to the maintained safe sync flow.
+header('Location: sync_to_online_safe.php?legacy=1', true, 302);
+exit;
+
 include 'config.php';
 
 $secret = "MY_SECRET_KEY";
 
 // ================== FUNCTION ==================
-function syncTable($con, $url, $dataKey, $tableName) {
+function syncTable($con, $url, $dataKey, $tableName)
+{
 
     echo "<b>=== Sync $tableName ===</b><br>";
 
@@ -23,10 +29,10 @@ function syncTable($con, $url, $dataKey, $tableName) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-curl_setopt($ch, CURLOPT_TIMEOUT, 120);
-curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 300);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+    curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 300);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json'
@@ -67,12 +73,12 @@ curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
     $responseData = json_decode($response, true);
 
-   if (!$responseData || $responseData['status'] !== 'success') {
-    echo "<pre>";
-    echo htmlspecialchars($response);
-    echo "</pre><br><br>";
-    return;
-}
+    if (!$responseData || $responseData['status'] !== 'success') {
+        echo "<pre>";
+        echo htmlspecialchars($response);
+        echo "</pre><br><br>";
+        return;
+    }
 
     // ✅ تحديث sync_status
     $ids = array_column($dataKey['data'], 'id');
@@ -356,5 +362,3 @@ syncTable(
     ["key" => "va_records", "data" => $vaRecords],
     "va"
 );
-
-?>

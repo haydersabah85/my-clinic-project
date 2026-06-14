@@ -17,6 +17,7 @@ if (!$IS_LOCAL) {
 clinic_ensure_runtime_controls($con);
 clinic_ensure_patient_images_sync_support($con);
 set_time_limit(0);
+$forceFullPull = isset($_GET['full']) && $_GET['full'] === '1';
 
 ob_start();
 include 'online-config.php';
@@ -77,12 +78,14 @@ function sync_pull_table(
     mysqli $onlineDb,
     string $table,
     string $primaryKey,
-    int $batchSize = 300
+    int $batchSize = 5000,
+    bool $forceFullPull = false
 ): array {
     $status = [
         'table' => $table,
         'pulled' => 0,
         'applied' => 0,
+        'skipped_fk' => 0,  // ✅ عد السجلات المتخطاة بسبب FK
         'skipped' => false,
         'message' => '',
     ];
@@ -107,16 +110,27 @@ function sync_pull_table(
     }
 
     $settingKey = 'sync_pull_last_' . $table;
+    $cursorKey = 'sync_pull_last_pk_' . $table;
     $lastSync = clinic_get_app_setting($localDb, $settingKey, '1970-01-01 00:00:00');
     if (!$lastSync) {
         $lastSync = '1970-01-01 00:00:00';
+    }
+    $lastPk = (int) clinic_get_app_setting($localDb, $cursorKey, '0');
+
+    if ($forceFullPull) {
+        $lastSync = '1970-01-01 00:00:00';
+        $lastPk = 0;
     }
 
     $selectedColumnsSql = implode(', ', array_map(static function ($col) {
         return "`$col`";
     }, $commonColumns));
 
-    $selectSql = "SELECT $selectedColumnsSql FROM `$table` WHERE `updated_at` > ? ORDER BY `updated_at` ASC, `$primaryKey` ASC LIMIT $batchSize";
+    $selectSql = "SELECT $selectedColumnsSql
+        FROM `$table`
+        WHERE (`updated_at` > ?) OR (`updated_at` = ? AND `$primaryKey` > ?)
+        ORDER BY `updated_at` ASC, `$primaryKey` ASC
+        LIMIT $batchSize";
     $selectStmt = mysqli_prepare($onlineDb, $selectSql);
 
     if (!$selectStmt) {
@@ -125,7 +139,7 @@ function sync_pull_table(
         return $status;
     }
 
-    mysqli_stmt_bind_param($selectStmt, 's', $lastSync);
+    mysqli_stmt_bind_param($selectStmt, 'ssi', $lastSync, $lastSync, $lastPk);
     mysqli_stmt_execute($selectStmt);
     $result = mysqli_stmt_get_result($selectStmt);
 
@@ -172,10 +186,61 @@ function sync_pull_table(
     mysqli_begin_transaction($localDb);
 
     $maxUpdatedAt = $lastSync;
+    $maxPkAtMaxUpdatedAt = $lastPk;
     $syncedIds = [];
+    $skippedFkCount = 0;  // ✅ عداد السجلات المتخطاة
 
     try {
         foreach ($rows as $row) {
+            if (isset($row['updated_at'], $row[$primaryKey])) {
+                $rowUpdatedAt = (string) $row['updated_at'];
+                $rowPk = (int) $row[$primaryKey];
+
+                if ($rowUpdatedAt > $maxUpdatedAt) {
+                    $maxUpdatedAt = $rowUpdatedAt;
+                    $maxPkAtMaxUpdatedAt = $rowPk;
+                } elseif ($rowUpdatedAt === $maxUpdatedAt && $rowPk > $maxPkAtMaxUpdatedAt) {
+                    $maxPkAtMaxUpdatedAt = $rowPk;
+                }
+            }
+
+            // ✅ التحقق من Foreign Keys قبل الإدراج
+            // للجداول التي تحتوي على patient_id
+            if (in_array($table, ['patient_visits', 'prescriptions', 'surgery_appointment', 'laser_appointment', 'injection_appointment', 'surgery', 'laser', 'injection', 'va', 'followups', 'visits'], true)) {
+                if (isset($row['patient_id'])) {
+                    $patientId = (int)$row['patient_id'];
+                    $checkPatient = mysqli_query($localDb, "SELECT 1 FROM `add_patient` WHERE `id` = $patientId LIMIT 1");
+                    if (!$checkPatient || mysqli_num_rows($checkPatient) === 0) {
+                        // تخطي السجل - المريض غير موجود في المحلي
+                        $skippedFkCount++;
+                        error_log("⚠️ [{$table}] تخطي سجل - patient_id: $patientId غير موجود في المحلي");
+                        continue;
+                    }
+                }
+            }
+
+            // ✅ التحقق من prescription_id إذا كان موجوداً
+            if ($table === 'prescription_items' && isset($row['prescription_id'])) {
+                $prescriptionId = (int)$row['prescription_id'];
+                $checkPrescription = mysqli_query($localDb, "SELECT 1 FROM `prescriptions` WHERE `id` = $prescriptionId LIMIT 1");
+                if (!$checkPrescription || mysqli_num_rows($checkPrescription) === 0) {
+                    $skippedFkCount++;
+                    error_log("⚠️ [{$table}] تخطي سجل - prescription_id: $prescriptionId غير موجود في المحلي");
+                    continue;
+                }
+            }
+
+            // ✅ التحقق من visit_id إذا كان موجوداً
+            if ($table === 'prescriptions' && isset($row['visit_id']) && (int)$row['visit_id'] > 0) {
+                $visitId = (int)$row['visit_id'];
+                $checkVisit = mysqli_query($localDb, "SELECT 1 FROM `visits` WHERE `visit_id` = $visitId LIMIT 1");
+                if (!$checkVisit || mysqli_num_rows($checkVisit) === 0) {
+                    $skippedFkCount++;
+                    error_log("⚠️ [{$table}] تخطي سجل - visit_id: $visitId غير موجود في المحلي");
+                    continue;
+                }
+            }
+
             $values = [];
             foreach ($commonColumns as $col) {
                 $values[] = isset($row[$col]) ? (string) $row[$col] : null;
@@ -186,14 +251,20 @@ function sync_pull_table(
             $ok = mysqli_stmt_execute($upsertStmt);
 
             if (!$ok) {
-                throw new RuntimeException(mysqli_error($localDb));
+                $error = mysqli_error($localDb);
+
+                // ✅ التحقق من أخطاء Foreign Key والتعامل معها (آخر حد للفشل)
+                if (strpos($error, 'FOREIGN KEY') !== false || strpos($error, 'foreign key') !== false) {
+                    // تخطي السجل بدلاً من إيقاف العملية
+                    $skippedFkCount++;
+                    error_log("⚠️ [{$table}] تخطي سجل بسبب Foreign Key: " . $error);
+                    continue;
+                }
+
+                throw new RuntimeException($error);
             }
 
             $status['applied']++;
-
-            if (isset($row['updated_at']) && $row['updated_at'] > $maxUpdatedAt) {
-                $maxUpdatedAt = $row['updated_at'];
-            }
 
             if (isset($row[$primaryKey]) && $row[$primaryKey] !== '') {
                 $syncedIds[] = (int) $row[$primaryKey];
@@ -206,11 +277,20 @@ function sync_pull_table(
         }
 
         clinic_set_app_setting($localDb, $settingKey, $maxUpdatedAt);
+        clinic_set_app_setting($localDb, $cursorKey, (string) $maxPkAtMaxUpdatedAt);
         mysqli_commit($localDb);
-        $status['message'] = 'Pulled and applied successfully';
+
+        // ✅ رسالة محسّنة تتضمن عدد السجلات المتخطاة
+        if ($skippedFkCount > 0) {
+            $pct = round(($skippedFkCount / $status['pulled']) * 100);
+            $status['message'] = "نجح جزئياً: {$status['applied']} مطبق، {$skippedFkCount} متخطي ({$pct}%) - أب غير موجود";
+            $status['skipped_fk'] = $skippedFkCount;
+        } else {
+            $status['message'] = 'نجح تماماً ✓';
+        }
     } catch (Throwable $e) {
         mysqli_rollback($localDb);
-        $status['message'] = 'Failed: ' . $e->getMessage();
+        $status['message'] = 'فشل: ' . $e->getMessage();
     }
 
     return $status;
@@ -239,7 +319,7 @@ $totalPulled = 0;
 $totalApplied = 0;
 
 foreach ($tables as $entry) {
-    $result = sync_pull_table($con, $online, $entry['name'], $entry['pk']);
+    $result = sync_pull_table($con, $online, $entry['name'], $entry['pk'], 5000, $forceFullPull);
     $results[] = $result;
     $totalPulled += $result['pulled'];
     $totalApplied += $result['applied'];
@@ -362,14 +442,26 @@ clinic_audit(
                     <tr>
                         <td><?php echo h($row['table']); ?></td>
                         <td><?php echo (int) $row['pulled']; ?></td>
-                        <td><?php echo (int) $row['applied']; ?></td>
+                        <td>
+                            <?php
+                            $applied = (int) $row['applied'];
+                            $skippedFk = isset($row['skipped_fk']) ? (int) $row['skipped_fk'] : 0;
+                            $total = $applied + $skippedFk;
+                            echo "$applied";
+                            if ($skippedFk > 0) {
+                                echo " <span style='color:#a15c00;'>(⚠️ $skippedFk متخطي)</span>";
+                            }
+                            ?>
+                        </td>
                         <td>
                             <?php if ($row['skipped']): ?>
                                 <span class="skip">تخطي</span>
-                            <?php elseif ($row['pulled'] > 0 && $row['applied'] === $row['pulled']): ?>
-                                <span class="ok">نجاح</span>
+                            <?php elseif ($row['pulled'] > 0 && $applied === $row['pulled']): ?>
+                                <span class="ok">✓ نجاح</span>
+                            <?php elseif ($applied > 0): ?>
+                                <span class="warn">⚠️ جزئي</span>
                             <?php else: ?>
-                                <span class="warn">تحقق</span>
+                                <span class="skip">-</span>
                             <?php endif; ?>
                         </td>
                         <td><?php echo h($row['message']); ?></td>

@@ -368,6 +368,7 @@ if ($IS_LOCAL) {
                         <?php if ($IS_LOCAL): ?>
                             <a class="btn-link btn-conflicts" href="sync_conflicts.php">Manage Conflicts</a>
                             <a class="btn-link btn-pull" href="sync_from_online.php" onclick="return confirm('سيتم سحب أحدث بيانات السحابة إلى المحلي. المتابعة؟')">Sync From Online</a>
+                            <a class="btn-link btn-pull" href="sync_from_online.php?full=1" onclick="return confirm('سيتم تنفيذ سحب كامل من السحابة (Full Pull) وقد يستغرق وقتا اطول. المتابعة؟')">Sync From Online (Full)</a>
 
                             <form method="post" style="margin:0;">
                                 <button class="btn-submit btn-manual" name="manual_backup" onclick="return confirm('هل تريد إنشاء نسخة احتياطية الآن؟')">Backup Local Now</button>

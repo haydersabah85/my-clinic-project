@@ -92,58 +92,72 @@ function render_operation_column(string $title, string $kind, array $rows, strin
 
     echo "<div class='op-type-groups'>";
     foreach ($groups as $groupName => $groupRows) {
+        usort($groupRows, static function (array $a, array $b): int {
+            $aSerial = isset($a['serial_no']) ? (int)$a['serial_no'] : 0;
+            $bSerial = isset($b['serial_no']) ? (int)$b['serial_no'] : 0;
+            if ($aSerial === $bSerial) {
+                return ((int)$a['id']) <=> ((int)$b['id']);
+            }
+            return $aSerial <=> $bSerial;
+        });
+
         echo "<section class='op-type-group'>";
         echo "<div class='op-type-head'><strong>" . h($groupName) . "</strong><span>" . count($groupRows) . "</span></div>";
         echo "<div class='op-list'>";
 
-    foreach ($groupRows as $row) {
-        $eye = strtoupper(trim((string)$row['eye']));
-        $eyeClass = '';
-        if ($eye === 'OD') $eyeClass = 'eye-od';
-        elseif ($eye === 'OS') $eyeClass = 'eye-os';
-        elseif ($eye === 'OU') $eyeClass = 'eye-ou';
+        $counter = 1;
+        foreach ($groupRows as $row) {
+            $eye = strtoupper(trim((string)$row['eye']));
+            $eyeClass = '';
+            if ($eye === 'OD') $eyeClass = 'eye-od';
+            elseif ($eye === 'OS') $eyeClass = 'eye-os';
+            elseif ($eye === 'OU') $eyeClass = 'eye-ou';
 
-        $confirmed = (int)$row['attendance_status'] === 1;
-        $statusClass = $confirmed ? 'confirmed' : 'waiting';
-        $statusText = $confirmed ? 'Confirmed' : 'Needs confirmation';
-        $searchText = strtolower(implode(' ', [
-            $row['serial_no'],
-            $row['full_name'],
-            $row['eye'],
-            $row['operation_type'],
-            $row['notes'],
-            $row['phone'],
-            $row['phone_alt'],
-            $kind,
-        ]));
+            $confirmed = (int)$row['attendance_status'] === 1;
+            $statusClass = $confirmed ? 'confirmed' : 'waiting';
+            $statusText = $confirmed ? 'Confirmed' : 'Needs confirmation';
+            $searchText = strtolower(implode(' ', [
+                $row['serial_no'],
+                $row['full_name'],
+                $row['eye'],
+                $row['operation_type'],
+                $row['notes'],
+                $row['phone'],
+                $row['phone_alt'],
+                $kind,
+            ]));
 
-        echo "<article class='op-card' data-status='" . h($statusClass) . "' data-search='" . h($searchText) . "'>";
-        echo "<div class='op-card-top'>";
-        echo "<span class='serial'>#" . h($row['serial_no'] ?: '-') . "</span>";
-        echo "<span class='status $statusClass'>" . h($statusText) . "</span>";
-        echo "</div>";
-        echo "<h3>" . h($row['full_name']) . "</h3>";
-        echo "<div class='op-type'>" . h($row['operation_type'] ?: '-') . "</div>";
-        echo "<div class='op-meta'>";
-        echo "<div><span>Eye</span><strong><span class='eye-badge $eyeClass'>" . h($eye ?: '-') . "</span></strong></div>";
-        echo "<div><span>Phone</span><strong>" . h($row['phone'] ?: '-') . "</strong></div>";
-        echo "<div><span>Alt phone</span><strong>" . h($row['phone_alt'] ?: '-') . "</strong></div>";
-        echo "</div>";
-        echo "<p class='op-note'>" . nl2br(h($row['notes'] ?: 'No notes.')) . "</p>";
-        echo "<div class='op-actions'>";
-        if (!$confirmed) {
-            echo "<a class='action confirm' href='confirm-attendance.php?id=" . h($row['id']) . "&date=" . h($date) . "'>Confirm</a>";
+            echo "<article class='op-card op-card-" . h($statusClass) . "' data-status='" . h($statusClass) . "' data-search='" . h($searchText) . "'>";
+            if ($confirmed) {
+                echo "<div class='confirmed-checkmark' aria-hidden='true'><span>📞</span><span>✓</span></div>";
+            }
+            echo "<div class='op-card-top'>";
+            echo "<span class='serial'>#" . h((string)$counter) . "</span>";
+            echo "<span class='status $statusClass'>" . h($statusText) . "</span>";
+            echo "</div>";
+            echo "<h3>" . h($row['full_name']) . "</h3>";
+            echo "<div class='op-type'>" . h($row['operation_type'] ?: '-') . "</div>";
+            echo "<div class='op-meta'>";
+            echo "<div><span>Eye</span><strong><span class='eye-badge $eyeClass'>" . h($eye ?: '-') . "</span></strong></div>";
+            echo "<div><span>Phone</span><strong>" . h($row['phone'] ?: '-') . "</strong></div>";
+            echo "<div><span>Alt phone</span><strong>" . h($row['phone_alt'] ?: '-') . "</strong></div>";
+            echo "</div>";
+            echo "<p class='op-note'>" . nl2br(h($row['notes'] ?: 'No notes.')) . "</p>";
+            echo "<div class='op-actions'>";
+            if (!$confirmed) {
+                echo "<a class='action confirm' href='confirm-attendance.php?id=" . h($row['id']) . "&date=" . h($date) . "'>Confirm</a>";
+            }
+            echo "<a class='action done' href='" . h($row['_decision'])
+                . "?id=" . h($row['patient_id'])
+                . "&appointment_id=" . h($row['id'])
+                . "&appointment_date=" . h($date)
+                . "'>Add result</a>";
+            echo "<a class='action edit' href='" . h($row['_edit']) . "?id=" . h($row['id']) . "'>Edit</a>";
+            echo "<a class='action delete' onclick=\"return confirm('Delete this appointment?')\" href='" . h($row['_delete']) . "?id=" . h($row['id']) . "'>Delete</a>";
+            echo "</div>";
+            echo "</article>";
+            $counter++;
         }
-        echo "<a class='action done' href='" . h($row['_decision'])
-            . "?id=" . h($row['patient_id'])
-            . "&appointment_id=" . h($row['id'])
-            . "&appointment_date=" . h($date)
-            . "'>Add result</a>";
-        echo "<a class='action edit' href='" . h($row['_edit']) . "?id=" . h($row['id']) . "'>Edit</a>";
-        echo "<a class='action delete' onclick=\"return confirm('Delete this appointment?')\" href='" . h($row['_delete']) . "?id=" . h($row['id']) . "'>Delete</a>";
-        echo "</div>";
-        echo "</article>";
-    }
         echo "</div>";
         echo "</section>";
     }
@@ -223,8 +237,11 @@ $summary = [
         justify-content: space-between;
         align-items: center;
         margin-bottom: 12px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--border, #dbe7ef);
+        padding: 12px 14px;
+        border: 1px solid var(--border, #dbe7ef);
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ffffff, #f8fbff);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
     }
 
     .op-column-head span {
@@ -236,8 +253,48 @@ $summary = [
     .op-column-head h2 {
         margin: 2px 0 0;
         color: var(--text, #172033);
-        font-size: 18px;
+        font-size: 21px;
         font-weight: 900;
+        letter-spacing: 0.2px;
+    }
+
+    .op-column.surgery .op-column-head {
+        border-color: rgba(37, 99, 235, 0.24);
+        background: linear-gradient(135deg, #dbeafe, #eff6ff 58%, #ffffff);
+    }
+
+    .op-column.surgery .op-column-head h2 {
+        color: #1d4ed8;
+    }
+
+    .op-column.surgery .op-column-head span {
+        color: #1e40af;
+    }
+
+    .op-column.laser .op-column-head {
+        border-color: rgba(245, 158, 11, 0.28);
+        background: linear-gradient(135deg, #fef3c7, #fff7ed 58%, #ffffff);
+    }
+
+    .op-column.laser .op-column-head h2 {
+        color: #b45309;
+    }
+
+    .op-column.laser .op-column-head span {
+        color: #92400e;
+    }
+
+    .op-column.injection .op-column-head {
+        border-color: rgba(5, 150, 105, 0.24);
+        background: linear-gradient(135deg, #d1fae5, #ecfdf5 58%, #ffffff);
+    }
+
+    .op-column.injection .op-column-head h2 {
+        color: #047857;
+    }
+
+    .op-column.injection .op-column-head span {
+        color: #065f46;
     }
 
     .op-list {
@@ -263,38 +320,88 @@ $summary = [
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        border: 1px solid var(--border, #dbe7ef);
-        border-radius: 14px;
-        background: var(--panel, #ffffff);
-        padding: 9px 11px;
+        border: 1px solid rgba(37, 99, 235, 0.18);
+        border-radius: 16px;
+        background: linear-gradient(135deg, #eff6ff, #ffffff 58%, #ecfeff);
+        padding: 12px 14px;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
     }
 
     .op-type-head strong {
-        color: var(--text, #172033);
-        font-size: 14px;
+        color: #0f172a;
+        font-size: 18px;
         font-weight: 900;
+        letter-spacing: 0.2px;
         overflow-wrap: anywhere;
     }
 
     .op-type-head span {
-        min-width: 28px;
-        min-height: 28px;
+        min-width: 34px;
+        min-height: 34px;
         border-radius: 999px;
-        background: #e0f2fe;
-        color: #075985;
+        background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        color: #ffffff;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 900;
         flex: 0 0 auto;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
     }
 
     .op-card {
+        position: relative;
         border: 1px solid var(--border, #dbe7ef);
         border-radius: 16px;
         background: var(--panel-soft, #f8fafc);
         padding: 13px;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .op-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .op-card-confirmed {
+        border: 2px solid #22c55e;
+        background: linear-gradient(180deg, #f0fdf4, #ecfdf5 50%, #f8fafc 100%);
+        box-shadow: 0 16px 32px rgba(34, 197, 94, 0.15);
+    }
+
+    .op-card-confirmed::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 6px;
+        border-radius: 16px 0 0 16px;
+        background: linear-gradient(180deg, #16a34a, #22c55e);
+    }
+
+    .confirmed-checkmark {
+        position: absolute;
+        top: 12px;
+        left: 16px;
+        min-width: 64px;
+        height: 38px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 12px;
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 900;
+        box-shadow: 0 12px 24px rgba(34, 197, 94, 0.28);
+        z-index: 2;
+    }
+
+    .op-card-waiting {
+        border-color: #fed7aa;
+        background: linear-gradient(180deg, #fffaf2, #fff7ed);
     }
 
     .op-card-top,
@@ -456,10 +563,126 @@ $summary = [
         border-color: rgba(148, 163, 184, 0.18);
     }
 
+    body[data-theme="dark"] .op-column.surgery .op-column-head {
+        background: linear-gradient(135deg, rgba(30, 64, 175, 0.38), rgba(15, 23, 42, 0.96) 60%, rgba(14, 165, 233, 0.18));
+        border-color: rgba(96, 165, 250, 0.42);
+    }
+
+    body[data-theme="dark"] .op-column.laser .op-column-head {
+        background: linear-gradient(135deg, rgba(180, 83, 9, 0.38), rgba(15, 23, 42, 0.96) 60%, rgba(251, 191, 36, 0.16));
+        border-color: rgba(251, 191, 36, 0.38);
+    }
+
+    body[data-theme="dark"] .op-column.injection .op-column-head {
+        background: linear-gradient(135deg, rgba(4, 120, 87, 0.42), rgba(15, 23, 42, 0.96) 60%, rgba(52, 211, 153, 0.16));
+        border-color: rgba(52, 211, 153, 0.38);
+    }
+
+    body[data-theme="dark"] .op-column-head h2 {
+        color: #f8fafc;
+    }
+
+    body[data-theme="dark"] .op-column.surgery .op-column-head span {
+        color: #bfdbfe;
+    }
+
+    body[data-theme="dark"] .op-column.laser .op-column-head span {
+        color: #fde68a;
+    }
+
+    body[data-theme="dark"] .op-column.injection .op-column-head span {
+        color: #a7f3d0;
+    }
+
+    body[data-theme="dark"] .op-type-head {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.96) 55%, rgba(8, 47, 73, 0.9));
+        border-color: rgba(96, 165, 250, 0.35);
+        box-shadow: 0 14px 28px rgba(2, 6, 23, 0.28);
+    }
+
     body[data-theme="dark"] .op-card,
     body[data-theme="dark"] .empty-column {
         background: rgba(2, 6, 23, 0.24);
         border-color: rgba(148, 163, 184, 0.18);
+    }
+
+    body[data-theme="dark"] .op-card h3,
+    body[data-theme="dark"] .op-note,
+    body[data-theme="dark"] .op-meta strong,
+    body[data-theme="dark"] .op-type-head strong,
+    body[data-theme="dark"] .day-head h2 {
+        color: #f8fafc;
+    }
+
+    body[data-theme="dark"] .op-meta span,
+    body[data-theme="dark"] .day-head span,
+    body[data-theme="dark"] .op-column-head span,
+    body[data-theme="dark"] .op-type-head span {
+        color: #cbd5e1;
+    }
+
+    body[data-theme="dark"] .op-type-head strong {
+        color: #f8fafc;
+    }
+
+    body[data-theme="dark"] .op-type-head span {
+        background: linear-gradient(135deg, #38bdf8, #2563eb);
+        color: #eff6ff;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.34);
+    }
+
+    body[data-theme="dark"] .op-type {
+        color: #7dd3fc;
+    }
+
+    body[data-theme="dark"] .serial {
+        background: rgba(59, 130, 246, 0.28);
+        color: #dbeafe;
+        border: 1px solid rgba(147, 197, 253, 0.28);
+    }
+
+    body[data-theme="dark"] .status.confirmed {
+        background: rgba(34, 197, 94, 0.26);
+        color: #dcfce7;
+        border: 1px solid rgba(74, 222, 128, 0.32);
+    }
+
+    body[data-theme="dark"] .status.waiting {
+        background: rgba(245, 158, 11, 0.24);
+        color: #fef3c7;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    body[data-theme="dark"] .op-card-confirmed {
+        background: linear-gradient(180deg, rgba(21, 128, 61, 0.34), rgba(6, 95, 70, 0.5) 52%, rgba(15, 23, 42, 0.92));
+        border-color: rgba(74, 222, 128, 0.95);
+        box-shadow: 0 20px 36px rgba(34, 197, 94, 0.26);
+    }
+
+    body[data-theme="dark"] .op-card-confirmed::before {
+        background: linear-gradient(180deg, #4ade80, #22c55e);
+        box-shadow: 0 0 18px rgba(74, 222, 128, 0.45);
+    }
+
+    body[data-theme="dark"] .confirmed-checkmark {
+        background: linear-gradient(135deg, #22c55e, #86efac);
+        color: #052e16;
+        box-shadow: 0 14px 26px rgba(34, 197, 94, 0.34);
+    }
+
+    body[data-theme="dark"] .op-card-waiting {
+        background: linear-gradient(180deg, rgba(146, 64, 14, 0.3), rgba(51, 65, 85, 0.58));
+        border-color: rgba(251, 191, 36, 0.45);
+    }
+
+    body[data-theme="dark"] .op-card-confirmed .op-meta div {
+        background: rgba(4, 47, 46, 0.58);
+        border-color: rgba(110, 231, 183, 0.22);
+    }
+
+    body[data-theme="dark"] .op-card-waiting .op-meta div {
+        background: rgba(51, 65, 85, 0.5);
+        border-color: rgba(251, 191, 36, 0.14);
     }
 
     @media (max-width: 1250px) {
@@ -480,7 +703,9 @@ $summary = [
     }
 </style>
 
-<script type="application/json" id="operationSummaryPayload"><?= json_encode($summary) ?></script>
+<script type="application/json" id="operationSummaryPayload">
+    <?= json_encode($summary) ?>
+</script>
 
 <section class="operations-day">
     <div class="day-head">
