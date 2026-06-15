@@ -1202,9 +1202,15 @@ if ($openSyncConflicts > 0) {
       <section class="box" aria-label="System health">
         <h3><?= h(clinic_t('system_health')) ?></h3>
         <div class="health-grid">
-          <div class="card"><span id="healthBackup"><?= h($latestBackupAt ?: clinic_t('no_backup')) ?></span><p><?= h(clinic_t('last_local_backup')) ?></p></div>
-          <div class="card"><span id="healthConflicts"><?= $openSyncConflicts ?></span><p><?= h(clinic_t('open_conflicts')) ?></p></div>
-          <div class="card"><span id="healthImages"><?= $pendingImageSync ?></span><p><?= h(clinic_t('pending_images')) ?></p></div>
+          <div class="card"><span id="healthBackup"><?= h($latestBackupAt ?: clinic_t('no_backup')) ?></span>
+            <p><?= h(clinic_t('last_local_backup')) ?></p>
+          </div>
+          <div class="card"><span id="healthConflicts"><?= $openSyncConflicts ?></span>
+            <p><?= h(clinic_t('open_conflicts')) ?></p>
+          </div>
+          <div class="card"><span id="healthImages"><?= $pendingImageSync ?></span>
+            <p><?= h(clinic_t('pending_images')) ?></p>
+          </div>
         </div>
       </section>
 
@@ -1664,7 +1670,9 @@ if ($openSyncConflicts > 0) {
     async function refreshDashboardStatus() {
       try {
         const response = await fetch("dashboard-status.php", {
-          headers: { Accept: "application/json" },
+          headers: {
+            Accept: "application/json"
+          },
           cache: "no-store"
         });
         if (!response.ok) return;
