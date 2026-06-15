@@ -229,6 +229,22 @@ include_once "clinic_helpers.php";
       border-top: 1px solid var(--border);
     }
 
+    .duplicate-warning {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 14px;
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      background: #fffbeb;
+      color: #92400e;
+      font-weight: 700;
+      line-height: 1.7;
+    }
+
+    .duplicate-warning.is-visible {
+      display: block;
+    }
+
     .submit-btn {
       background: var(--primary);
       color: #fff;
@@ -295,6 +311,7 @@ include_once "clinic_helpers.php";
     </header>
 
     <form class="form-card" action="add-patient2.php" method="post" autocomplete="off">
+      <?php echo clinic_csrf_input(); ?>
       <div class="form-grid">
         <div class="field field-wide">
           <label for="full_name">الاسم الرباعي</label>
@@ -340,12 +357,65 @@ include_once "clinic_helpers.php";
         </div>
       </div>
 
+      <div class="duplicate-warning" id="duplicateWarning" role="alert"></div>
+
       <div class="form-footer">
         <a class="btn btn-muted" href="main.php">إلغاء</a>
         <button class="btn submit-btn" type="submit" name="submit">إضافة المريض</button>
       </div>
     </form>
   </main>
+  <script>
+    (() => {
+      const form = document.querySelector('.form-card');
+      const nameInput = document.getElementById('full_name');
+      const phoneInput = document.getElementById('phone_no');
+      const ageInput = document.getElementById('age');
+      const warning = document.getElementById('duplicateWarning');
+      let matches = [];
+      let requestId = 0;
+
+      async function checkDuplicates() {
+        const currentRequest = ++requestId;
+        const params = new URLSearchParams({
+          name: nameInput.value.trim(),
+          phone: phoneInput.value.trim(),
+          age: ageInput.value.trim()
+        });
+        if (!params.get('name') && !params.get('phone')) return [];
+
+        const response = await fetch('check-patient-duplicates.php?' + params.toString(), {
+          headers: { Accept: 'application/json' }
+        });
+        const data = await response.json();
+        if (currentRequest !== requestId) return matches;
+
+        matches = Array.isArray(data.matches) ? data.matches : [];
+        warning.classList.toggle('is-visible', matches.length > 0);
+        warning.textContent = matches.length
+          ? 'تنبيه: يوجد مريض مشابه: ' + matches.map(item =>
+              item.full_name + ' (رقم ' + item.id + (item.phone_no ? '، ' + item.phone_no : '') + ')'
+            ).join('، ')
+          : '';
+        return matches;
+      }
+
+      [nameInput, phoneInput, ageInput].forEach(input => {
+        input.addEventListener('blur', () => checkDuplicates().catch(() => {}));
+      });
+
+      form.addEventListener('submit', async event => {
+        if (form.dataset.duplicateConfirmed === '1') return;
+        event.preventDefault();
+        const found = await checkDuplicates().catch(() => []);
+        if (found.length && !confirm('يوجد مريض مشابه. هل تريد إضافة سجل جديد رغم ذلك؟')) {
+          return;
+        }
+        form.dataset.duplicateConfirmed = '1';
+        form.submit();
+      });
+    })();
+  </script>
 </body>
 
 </html>

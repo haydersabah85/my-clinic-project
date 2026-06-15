@@ -418,6 +418,7 @@ clinic_audit(
             border-radius: 8px;
         }
     </style>
+<script src="assets/lang.js" data-clinic-lang defer></script>
 </head>
 
 <body>

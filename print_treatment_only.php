@@ -151,6 +151,7 @@ while ($m = mysqli_fetch_assoc($q)) {
             }
         }
     </style>
+<script src="assets/lang.js" data-clinic-lang defer></script>
 </head>
 
 <body>

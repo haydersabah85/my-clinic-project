@@ -7,6 +7,7 @@ include_once 'clinic_helpers.php';
 clinic_ensure_column($con, 'va', 'iop_od', 'VARCHAR(50) NULL');
 clinic_ensure_column($con, 'va', 'iop_os', 'VARCHAR(50) NULL');
 clinic_ensure_retina_drawings($con);
+$flash = clinic_take_flash();
 
 $row = null;
 $id = (int)($_GET['id'] ?? $_GET['id_open'] ?? $_GET['patient_id'] ?? 0);
@@ -1964,6 +1965,11 @@ if (!function_exists('pf_format_visit_note')) {
 </head>
 
 <body>
+    <?php if ($flash): ?>
+        <div style="max-width:1100px;margin:12px auto;padding:12px 16px;border-radius:12px;font-weight:700;background:<?= ($flash['type'] ?? '') === 'success' ? '#dcfce7' : '#fee2e2' ?>;color:<?= ($flash['type'] ?? '') === 'success' ? '#166534' : '#991b1b' ?>;">
+            <?= h($flash['message'] ?? '') ?>
+        </div>
+    <?php endif; ?>
     <button type="button" class="app-sidebar-toggle" id="appSidebarToggle" aria-controls="appSidebar" aria-expanded="false">➡️ القائمة</button>
 
     <aside class="app-sidebar" id="appSidebar" aria-label="القائمة الجانبية">
@@ -2206,7 +2212,7 @@ if (!function_exists('pf_format_visit_note')) {
                                         if ($rawNote === '') {
                                             echo "<div class='visit-note-item'>لا توجد ملاحظات</div>";
                                         } else {
-                                            echo "<div class='visit-note-item'>" . pf_format_visit_note($rawNote) . "</div>";
+                                            echo "<div class='visit-note-item clinic-user-content' data-user-content data-no-translate>" . pf_format_visit_note($rawNote) . "</div>";
                                         }
                                     }
                                 } else {
@@ -2265,7 +2271,7 @@ if (!function_exists('pf_format_visit_note')) {
                                         }
                                         echo "<span>" . h($label) . "</span>";
                                         if (!empty($retina_row['notes'])) {
-                                            echo "<p>" . nl2br(h($retina_row['notes'])) . "</p>";
+                                            echo "<p class='retina-user-note clinic-user-content' data-no-translate>" . nl2br(h($retina_row['notes'])) . "</p>";
                                         }
                                         echo "</a>";
                                     }
@@ -2329,7 +2335,11 @@ if (!function_exists('pf_format_visit_note')) {
                                 echo "<div><span>العين</span><strong><span class='eye-badge $eye_class'>" . h($eye ?: '-') . "</span></strong></div>";
                                 echo "<div><span>نوع الجلسة</span><strong>" . h($laser_row['laser_type'] ?: '-') . "</strong></div>";
                                 echo "</div>";
-                                echo "<p class='procedure-note'>" . nl2br(h($laser_row['notes'] ?: 'لا توجد ملاحظات.')) . "</p>";
+                                if (!empty(trim((string)$laser_row['notes']))) {
+                                    echo "<p class='procedure-note clinic-user-content' data-user-content data-no-translate>" . nl2br(h($laser_row['notes'])) . "</p>";
+                                } else {
+                                    echo "<p class='procedure-note'>لا توجد ملاحظات.</p>";
+                                }
                                 echo "</article>";
                             }
                         } else {
@@ -2371,7 +2381,11 @@ if (!function_exists('pf_format_visit_note')) {
                                 echo "<div><span>العين</span><strong><span class='eye-badge $eye_class'>" . h($eye ?: '-') . "</span></strong></div>";
                                 echo "<div><span>نوع العدسة</span><strong>" . h($surgery_row['iol_type'] ?: '-') . "</strong></div>";
                                 echo "</div>";
-                                echo "<p class='procedure-note'>" . nl2br(h($surgery_row['notes'] ?: 'لا توجد ملاحظات.')) . "</p>";
+                                if (!empty(trim((string)$surgery_row['notes']))) {
+                                    echo "<p class='procedure-note clinic-user-content' data-user-content data-no-translate>" . nl2br(h($surgery_row['notes'])) . "</p>";
+                                } else {
+                                    echo "<p class='procedure-note'>لا توجد ملاحظات.</p>";
+                                }
                                 echo "</article>";
                             }
                         } else {
@@ -2415,7 +2429,11 @@ if (!function_exists('pf_format_visit_note')) {
                                 echo "<div><span>العين</span><strong><span class='eye-badge $eye_class'>" . h($eye ?: '-') . "</span></strong></div>";
                                 echo "<div><span>نوع الحقنة</span><strong>" . h($injection_row['injection_type'] ?: '-') . "</strong></div>";
                                 echo "</div>";
-                                echo "<p class='procedure-note'>" . nl2br(h($injection_row['notes'] ?: 'لا توجد ملاحظات.')) . "</p>";
+                                if (!empty(trim((string)$injection_row['notes']))) {
+                                    echo "<p class='procedure-note clinic-user-content' data-user-content data-no-translate>" . nl2br(h($injection_row['notes'])) . "</p>";
+                                } else {
+                                    echo "<p class='procedure-note'>لا توجد ملاحظات.</p>";
+                                }
                                 echo "</article>";
                             }
                         } else {
@@ -2502,10 +2520,10 @@ LIMIT 20
                             echo "</div>";
 
                             if (!empty($prescription_row['diagnosis'])) {
-                                echo "<div class='prescription-diagnosis'>🩺 " . htmlspecialchars($prescription_row['diagnosis']) . "</div>";
+                                echo "<div class='prescription-diagnosis clinic-user-content' data-no-translate>🩺 " . htmlspecialchars($prescription_row['diagnosis']) . "</div>";
                             }
 
-                            echo "<ul class='prescription-list'>";
+                            echo "<ul class='prescription-list clinic-user-content' data-no-translate>";
                         }
 
                         // تحديد لون شارة العين
@@ -2749,34 +2767,8 @@ LIMIT 20
         </div>
 
         <script>
-            (function() {
-                const sidebar = document.getElementById('appSidebar');
-                const toggle = document.getElementById('appSidebarToggle');
-                const backdrop = document.getElementById('appSidebarBackdrop');
-                if (!sidebar || !toggle || !backdrop) return;
-
-                function setSidebar(open, saveState) {
-                    sidebar.classList.toggle('is-open', open);
-                    backdrop.classList.toggle('is-open', open);
-                    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                    toggle.textContent = open ? '⬅️ إخفاء القائمة' : '➡️ القائمة';
-                    if (saveState) {
-                        localStorage.setItem('clinicSidebarState', open ? 'show' : 'hidden');
-                    }
-                }
-
-                const saved = localStorage.getItem('clinicSidebarState');
-                setSidebar(saved === 'show', false);
-
-                toggle.addEventListener('click', function() {
-                    setSidebar(!sidebar.classList.contains('is-open'), true);
-                });
-
-                backdrop.addEventListener('click', function() {
-                    setSidebar(false, true);
-                });
-            })();
         </script>
+        <script src="assets/patient-file-sidebar.js" defer></script>
 
     </div>
 </body>

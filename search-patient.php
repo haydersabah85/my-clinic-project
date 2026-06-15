@@ -1,5 +1,6 @@
 <?php
 include 'config.php';
+include 'auth.php';
 include_once 'clinic_helpers.php';
 
 if (!isset($_GET['q'])) {
@@ -83,12 +84,14 @@ while ($row = mysqli_fetch_assoc($result)) {
 
     echo "
         <div class='result-item'>
-            <span onclick=\"window.location.href='" . $patientUrl . "'\"
+            <span class='clinic-user-content' data-no-translate
+                  onclick=\"window.location.href='" . $patientUrl . "'\"
                   style='color: $color; cursor:pointer; font-weight: bold;'>
                 " . h($row['full_name']) . "
             </span>
 
-            <span onclick=\"window.location.href='" . $patientUrl . "'\"
+            <span class='clinic-user-content' data-no-translate
+                  onclick=\"window.location.href='" . $patientUrl . "'\"
                   style='color: $color; cursor:pointer; font-size: 14px;'>
                  " . h($row['notes']) . "
             </span>
@@ -96,7 +99,10 @@ while ($row = mysqli_fetch_assoc($result)) {
             <span onclick=\"window.location.href='" . $patientUrl . "'\">
                  <small style='color: #888; font-size: 12px;'>" . $lastVisitText . "</small>
                  <small style='color: #0f766e; font-size: 12px; display:block;'>" . $nextFollowupText . "</small>
-                 <small style='color: #64748b; font-size: 12px; display:block;'>العمر: " . h($row['age']) . " | الهاتف: " . h($row['phone_no']) . "</small>
+                 <small style='color: #64748b; font-size: 12px; display:block;'>
+                    العمر: <span class='clinic-user-content' data-no-translate>" . h($row['age']) . "</span>
+                    | الهاتف: <span class='clinic-user-content' data-no-translate>" . h($row['phone_no']) . "</span>
+                 </small>
             </span>
 
             <span class='delete-btn' onclick='deletePatient(" . $patientId . ")'>

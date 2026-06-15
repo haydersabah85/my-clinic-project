@@ -474,6 +474,7 @@ $resolvedCount = (int) ($resolvedCountRow['total'] ?? 0);
             font-family: inherit;
         }
     </style>
+<script src="assets/lang.js" data-clinic-lang defer></script>
 </head>
 
 <body>

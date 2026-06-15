@@ -86,6 +86,9 @@ function clinic_ensure_infrastructure(mysqli $con): void
     clinic_ensure_column($con, 'add_patient', 'is_deleted', 'TINYINT(1) NOT NULL DEFAULT 0');
     clinic_ensure_column($con, 'add_patient', 'deleted_at', 'DATETIME NULL');
     clinic_ensure_column($con, 'add_patient', 'deleted_by', 'VARCHAR(120) NULL');
+    if (clinic_table_exists($con, 'surgery_appointment')) {
+        clinic_ensure_column($con, 'surgery_appointment', 'readiness_json', 'TEXT NULL');
+    }
 
     clinic_ensure_index($con, 'add_patient', 'idx_add_patient_deleted', '`is_deleted`');
     clinic_ensure_index($con, 'add_patient', 'idx_add_patient_phone', '`phone_no`');
@@ -353,6 +356,106 @@ function clinic_current_user(): string
     }
 
     return $_SESSION['username'] ?? $_SESSION['user'] ?? $_SESSION['full_name'] ?? 'system';
+}
+
+function clinic_csrf_token(): string
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    if (empty($_SESSION['clinic_csrf_token'])) {
+        $_SESSION['clinic_csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    return (string) $_SESSION['clinic_csrf_token'];
+}
+
+function clinic_csrf_input(): string
+{
+    return '<input type="hidden" name="csrf_token" value="' .
+        htmlspecialchars(clinic_csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
+}
+
+function clinic_verify_csrf(?string $token = null): bool
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    $expected = $_SESSION['clinic_csrf_token'] ?? '';
+    $provided = $token ?? ($_POST['csrf_token'] ?? '');
+
+    return is_string($expected) && $expected !== '' &&
+        is_string($provided) && hash_equals($expected, $provided);
+}
+
+function clinic_require_csrf(): void
+{
+    if (clinic_verify_csrf()) {
+        return;
+    }
+
+    http_response_code(403);
+    exit('Invalid or expired form token. Please return to the previous page and try again.');
+}
+
+function clinic_set_flash(string $type, string $message): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    $_SESSION['clinic_flash'] = [
+        'type' => $type,
+        'message' => $message,
+    ];
+}
+
+function clinic_take_flash(): ?array
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    $flash = $_SESSION['clinic_flash'] ?? null;
+    unset($_SESSION['clinic_flash']);
+
+    return is_array($flash) ? $flash : null;
+}
+
+function clinic_language(): string
+{
+    $language = strtolower((string) ($_COOKIE['clinic_lang'] ?? 'ar'));
+    return $language === 'en' ? 'en' : 'ar';
+}
+
+function clinic_t(string $key, array $replacements = []): string
+{
+    static $translations = [
+        'ar' => [
+            'system_health' => 'حالة النسخ والمزامنة',
+            'last_local_backup' => 'آخر نسخة محلية',
+            'open_conflicts' => 'تعارضات مفتوحة',
+            'pending_images' => 'صور بانتظار المزامنة',
+            'no_backup' => 'لا توجد نسخة',
+        ],
+        'en' => [
+            'system_health' => 'Backup and Sync Health',
+            'last_local_backup' => 'Last Local Backup',
+            'open_conflicts' => 'Open Conflicts',
+            'pending_images' => 'Images Pending Sync',
+            'no_backup' => 'No Backup Found',
+        ],
+    ];
+
+    $language = clinic_language();
+    $text = $translations[$language][$key] ?? $translations['ar'][$key] ?? $key;
+    foreach ($replacements as $name => $value) {
+        $text = str_replace(':' . $name, (string) $value, $text);
+    }
+
+    return $text;
 }
 
 function clinic_audit(mysqli $con, string $action, string $table, ?int $record_id = null, $old_value = null, $new_value = null): void

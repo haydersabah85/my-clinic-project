@@ -450,6 +450,7 @@ $patientName = $patient['name'] ?? $patient['full_name'] ?? $patient['patient_na
             }
         }
     </style>
+<script src="assets/lang.js" data-clinic-lang defer></script>
 </head>
 
 <body>

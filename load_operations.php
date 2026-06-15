@@ -34,6 +34,7 @@ function fetch_operation_rows(mysqli $con, string $date, string $kind): array
     $meta = $config[$kind];
     $table = $meta['table'];
     $typeColumn = $meta['type_column'];
+    $readinessSelect = $kind === 'surgery' ? 'a.readiness_json' : 'NULL AS readiness_json';
 
     $stmt = $con->prepare("
         SELECT
@@ -47,6 +48,7 @@ function fetch_operation_rows(mysqli $con, string $date, string $kind): array
             a.phone,
             a.phone_alt,
             a.attendance_status,
+            $readinessSelect,
             a.date
         FROM $table a
         JOIN add_patient p ON a.patient_id = p.id
@@ -114,6 +116,14 @@ function render_operation_column(string $title, string $kind, array $rows, strin
             elseif ($eye === 'OU') $eyeClass = 'eye-ou';
 
             $confirmed = (int)$row['attendance_status'] === 1;
+            $readiness = json_decode((string)($row['readiness_json'] ?? ''), true);
+            $readiness = is_array($readiness) ? $readiness : [];
+            $readyCount = count(array_filter($readiness));
+            $readyTotal = 8;
+            $readinessClass = $readyCount === $readyTotal ? 'confirmed' : 'waiting';
+            $readinessText = $readyCount === $readyTotal
+                ? 'Readiness complete'
+                : "Readiness $readyCount/$readyTotal";
             $statusClass = $confirmed ? 'confirmed' : 'waiting';
             $statusText = $confirmed ? 'Confirmed' : 'Needs confirmation';
             $searchText = strtolower(implode(' ', [
@@ -134,6 +144,9 @@ function render_operation_column(string $title, string $kind, array $rows, strin
             echo "<div class='op-card-top'>";
             echo "<span class='serial'>#" . h((string)$counter) . "</span>";
             echo "<span class='status $statusClass'>" . h($statusText) . "</span>";
+            if ($kind === 'surgery') {
+                echo "<span class='status $readinessClass'>" . h($readinessText) . "</span>";
+            }
             echo "</div>";
             echo "<h3>" . h($row['full_name']) . "</h3>";
             echo "<div class='op-type'>" . h($row['operation_type'] ?: '-') . "</div>";

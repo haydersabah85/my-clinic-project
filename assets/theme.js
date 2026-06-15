@@ -1,3 +1,17 @@
+// Load the shared language toggle on every page that includes theme.js.
+(function () {
+    if (document.querySelector('script[data-clinic-lang]')) return;
+
+    var s = document.createElement('script');
+    s.dataset.clinicLang = 'true';
+    s.defer = true;
+    var base = (document.currentScript && document.currentScript.src)
+        ? document.currentScript.src.replace(/theme\.js(\?.*)?$/, '')
+        : 'assets/';
+    s.src = base + 'lang.js?v=20260615-11';
+    document.head.appendChild(s);
+})();
+
 document.addEventListener("DOMContentLoaded", function () {
 
     const themeBtn = document.getElementById("themeToggle");

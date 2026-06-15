@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="assets/dark-mode.css">
-    <script src="assets/theme.js" defer></script>
+    <script src="assets/theme.js?v=20260615-11" defer></script>
+    <script src="assets/lang.js?v=20260615-11" data-clinic-lang defer></script>
 </head>
 
 <style>

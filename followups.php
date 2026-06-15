@@ -258,6 +258,7 @@ $query = mysqli_stmt_get_result($stmt);
             }
         }
     </style>
+<script src="assets/lang.js" data-clinic-lang defer></script>
 </head>
 
 <body>

@@ -6,12 +6,40 @@ include_once 'clinic_helpers.php';
 
 clinic_ensure_infrastructure($con);
 
-if (!isset($_GET['id_delete'])) {
-    echo "<script>window.location.href='main.php';</script>";
-    exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
+    exit('Method not allowed.');
 }
 
-$id_delete = (int) $_GET['id_delete'];
+clinic_require_csrf();
+
+if (!isset($_POST['id_delete'])) {
+    http_response_code(400);
+    exit('Missing patient id.');
+}
+
+$id_delete = (int) $_POST['id_delete'];
+if ($id_delete <= 0) {
+    http_response_code(400);
+    exit('Invalid patient id.');
+}
+
+$wantsJson = str_contains(strtolower($_SERVER['HTTP_ACCEPT'] ?? ''), 'application/json') ||
+    strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest';
+
+function delete_patient_response(bool $success, string $message, bool $wantsJson): void
+{
+    if ($wantsJson) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => $success, 'message' => $message], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    clinic_set_flash($success ? 'success' : 'error', $message);
+    header('Location: main.php');
+    exit;
+}
 
 $old_stmt = mysqli_prepare($con, "SELECT * FROM add_patient WHERE id = ?");
 mysqli_stmt_bind_param($old_stmt, "i", $id_delete);
@@ -28,9 +56,7 @@ if ($result_delete) {
         'is_deleted' => 1,
         'deleted_by' => $deleted_by,
     ]);
-    echo "<script>alert('تم نقل المريض إلى الأرشيف بنجاح');</script>";
-    echo "<script>window.location.href='main.php';</script>";
+    delete_patient_response(true, 'تم نقل المريض إلى الأرشيف بنجاح', $wantsJson);
 } else {
-    echo "<script>alert('فشل حذف بيانات المريض');</script>";
-    echo "<script>window.location.href='main.php';</script>";
+    delete_patient_response(false, 'فشل حذف بيانات المريض', $wantsJson);
 }

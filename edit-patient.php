@@ -328,6 +328,7 @@ if ($id > 0) {
         </header>
 
         <form class="form-card" action="update-patient.php?id_edit=<?php echo h($id); ?>" method="post" autocomplete="off">
+            <?php echo clinic_csrf_input(); ?>
             <div class="form-grid">
                 <div class="field field-wide">
                     <label for="full_name">الاسم الرباعي</label>

@@ -569,6 +569,26 @@ function patient_status_class(?string $status): string
         display: block;
     }
 
+    .notice {
+        margin: 0 0 14px;
+        padding: 11px 13px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-weight: 800;
+    }
+
+    .notice.success {
+        color: #166534;
+        background: #ecfdf5;
+        border-color: #bbf7d0;
+    }
+
+    .notice.error {
+        color: #b91c1c;
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+
     @media (max-width: 1100px) {
         .app-shell {
             grid-template-columns: 1fr;
@@ -629,6 +649,7 @@ function patient_status_class(?string $status): string
     }
 </style>
 
+<?php $flash = clinic_take_flash(); ?>
 <body>
     <div class="app-shell sidebar-collapsed" id="appShell">
         <aside class="sidebar hidden" id="sidebar">
@@ -676,6 +697,11 @@ function patient_status_class(?string $status): string
         </aside>
 
         <main class="main-area">
+            <?php if ($flash): ?>
+                <div class="notice <?= ($flash['type'] ?? '') === 'success' ? 'success' : 'error' ?>">
+                    <?= h($flash['message'] ?? '') ?>
+                </div>
+            <?php endif; ?>
             <header class="topbar">
                 <div class="topbar-actions">
                     <button class="icon-btn" type="button" onclick="toggleSidebar()" id="sidebarToggle" aria-label="إظهار القائمة">☰</button>
@@ -821,7 +847,23 @@ function patient_status_class(?string $status): string
 
         function confirmDelete(id) {
             if (confirm("هل تريد نقل هذا المريض إلى الأرشيف؟")) {
-                window.location.href = "delete-patient.php?id_delete=" + encodeURIComponent(id);
+                const form = document.createElement("form");
+                form.method = "post";
+                form.action = "delete-patient.php";
+
+                const idInput = document.createElement("input");
+                idInput.type = "hidden";
+                idInput.name = "id_delete";
+                idInput.value = String(id);
+
+                const csrfInput = document.createElement("input");
+                csrfInput.type = "hidden";
+                csrfInput.name = "csrf_token";
+                csrfInput.value = <?= json_encode(clinic_csrf_token()) ?>;
+
+                form.append(idInput, csrfInput);
+                document.body.appendChild(form);
+                form.submit();
             }
         }
 

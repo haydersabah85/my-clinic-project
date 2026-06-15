@@ -1,5 +1,42 @@
 <?php
 
+if (!defined('CLINIC_LANGUAGE_LOADER_ENABLED')) {
+    define('CLINIC_LANGUAGE_LOADER_ENABLED', true);
+
+    ob_start(static function (string $output): string {
+        if (stripos($output, '<html') === false && stripos($output, '<!doctype') === false) {
+            return $output;
+        }
+
+        $version = '20260615-11';
+        $output = preg_replace(
+            '~assets/theme\.js(?:\?[^"\']*)?~i',
+            'assets/theme.js?v=' . $version,
+            $output
+        ) ?? $output;
+        $output = preg_replace(
+            '~assets/lang\.js(?:\?[^"\']*)?~i',
+            'assets/lang.js?v=' . $version,
+            $output
+        ) ?? $output;
+
+        if (stripos($output, 'assets/lang.js') !== false) {
+            return $output;
+        }
+
+        $loader = '<script src="assets/lang.js?v=' . $version . '" data-clinic-lang defer></script>';
+        if (stripos($output, '</head>') !== false) {
+            return preg_replace('~</head>~i', $loader . "\n</head>", $output, 1) ?? $output;
+        }
+
+        if (stripos($output, '</body>') !== false) {
+            return preg_replace('~</body>~i', $loader . "\n</body>", $output, 1) ?? $output;
+        }
+
+        return $output . $loader;
+    });
+}
+
 if (!function_exists('clinic_is_private_host')) {
     function clinic_is_private_host(string $host): bool
     {

@@ -6,6 +6,7 @@ include_once "clinic_helpers.php";
 
 clinic_ensure_infrastructure($con);
 clinic_ensure_sync_conflicts($con);
+$flash = clinic_take_flash();
 clinic_ensure_runtime_controls($con);
 
 $nextPatientAlert = null;
@@ -240,6 +241,18 @@ if ($soon > 0) // قريبة
 $openSyncConflicts = 0;
 $openSyncConflictsRow = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM sync_conflicts WHERE resolution_status = 'open'"));
 $openSyncConflicts = (int) ($openSyncConflictsRow['total'] ?? 0);
+$pendingImageSync = 0;
+if (clinic_table_exists($con, 'patient_images') && clinic_column_exists($con, 'patient_images', 'sync_status')) {
+  $pendingImageSyncRow = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM patient_images WHERE sync_status = 0"));
+  $pendingImageSync = (int) ($pendingImageSyncRow['total'] ?? 0);
+}
+$latestBackupAt = null;
+$backupFiles = is_dir('C:/clinic_backups') ? (glob('C:/clinic_backups/*.sql') ?: []) : [];
+if ($backupFiles) {
+  usort($backupFiles, static fn($a, $b) => filemtime($b) <=> filemtime($a));
+  $backupMtime = filemtime($backupFiles[0]);
+  $latestBackupAt = $backupMtime ? date('Y-m-d H:i', $backupMtime) : null;
+}
 
 if ($openSyncConflicts > 0) {
   $alerts[] = "<div class='alert alert-danger'>⛔ يوجد $openSyncConflicts تعارض مزامنة مفتوح - <a href='sync_conflicts.php'>إدارة التعارضات</a></div>";
@@ -483,6 +496,30 @@ if ($openSyncConflicts > 0) {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 18px;
     margin-bottom: 25px;
+  }
+
+  .health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  .health-grid .card {
+    padding: 16px;
+  }
+
+  .health-grid .card span {
+    display: block;
+    color: var(--primary);
+    font-size: 19px;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+  }
+
+  .health-grid .card p {
+    margin: 7px 0 0;
+    color: var(--text);
+    font-weight: 800;
   }
 
   .patient-overview {
@@ -1123,6 +1160,11 @@ if ($openSyncConflicts > 0) {
     </aside>
 
     <main class="content">
+      <?php if ($flash): ?>
+        <div class="alert <?= ($flash['type'] ?? '') === 'success' ? 'alert-success' : 'alert-danger' ?>">
+          <?= h($flash['message'] ?? '') ?>
+        </div>
+      <?php endif; ?>
 
       <div class="search-box">
         <input type="text" id="search" placeholder="🔍 ابحث عن مريض..." onkeyup="searchPatient()">
@@ -1156,6 +1198,15 @@ if ($openSyncConflicts > 0) {
           <a href="add-patient.php">➕ إضافة مريض</a>
         </div>
       </div>
+
+      <section class="box" aria-label="System health">
+        <h3><?= h(clinic_t('system_health')) ?></h3>
+        <div class="health-grid">
+          <div class="card"><span id="healthBackup"><?= h($latestBackupAt ?: clinic_t('no_backup')) ?></span><p><?= h(clinic_t('last_local_backup')) ?></p></div>
+          <div class="card"><span id="healthConflicts"><?= $openSyncConflicts ?></span><p><?= h(clinic_t('open_conflicts')) ?></p></div>
+          <div class="card"><span id="healthImages"><?= $pendingImageSync ?></span><p><?= h(clinic_t('pending_images')) ?></p></div>
+        </div>
+      </section>
 
       <!-- ===== Cards ===== -->
       <div class="cards-grid workload-cards">
@@ -1320,12 +1371,8 @@ if ($openSyncConflicts > 0) {
 
   </div>
 
-
+  <script src="assets/lang.js" data-clinic-lang defer></script>
   <script>
-    setInterval(() => {
-      window.location.reload();
-    }, 30000);
-
     const dashboardCharts = {
       dailyVisits: {
         labels: <?= json_encode($dailyVisitLabels, JSON_UNESCAPED_UNICODE) ?>,
@@ -1590,17 +1637,47 @@ if ($openSyncConflicts > 0) {
     function deletePatient(id) {
 
       if (confirm("⚠️ هل أنت متأكد من حذف هذا المريض؟")) {
+        const body = new URLSearchParams({
+          id_delete: String(id),
+          csrf_token: <?= json_encode(clinic_csrf_token()) ?>
+        });
 
-        fetch("delete-patient.php?id_delete=" + id)
-          .then(res => res.text())
+        fetch("delete-patient.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+              "Accept": "application/json",
+              "X-Requested-With": "XMLHttpRequest"
+            },
+            body: body.toString()
+          })
+          .then(res => res.json())
           .then(data => {
-            alert("تم الحذف بنجاح");
-
-            // إعادة البحث لتحديث النتائج
+            if (!data.success) throw new Error(data.message || "تعذر حذف المريض");
+            alert(data.message);
             document.getElementById("search").dispatchEvent(new Event('keyup'));
-          });
+          })
+          .catch(error => alert(error.message));
       }
     }
+
+    async function refreshDashboardStatus() {
+      try {
+        const response = await fetch("dashboard-status.php", {
+          headers: { Accept: "application/json" },
+          cache: "no-store"
+        });
+        if (!response.ok) return;
+        const status = await response.json();
+        document.getElementById("healthBackup").textContent = status.latest_backup_at || "لا توجد نسخة";
+        document.getElementById("healthConflicts").textContent = status.open_conflicts;
+        document.getElementById("healthImages").textContent = status.pending_images;
+      } catch (error) {
+        // Keep the last visible values when the local server is temporarily busy.
+      }
+    }
+
+    setInterval(refreshDashboardStatus, 60000);
   </script>
 
 </body>

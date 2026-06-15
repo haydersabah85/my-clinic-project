@@ -842,7 +842,7 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                     <div class="next-patient-banner">
                         <div>
                             المريض القادم الآن:
-                            <strong><?= htmlspecialchars($nextPatientAlert['full_name']) ?></strong>
+                            <strong class="clinic-user-content" data-no-translate><?= htmlspecialchars($nextPatientAlert['full_name']) ?></strong>
                             | القسم: <?= htmlspecialchars($nextPatientAlert['queue'] ?? 'زيارات اليوم') ?>
                             | الوقت: <?= htmlspecialchars($nextPatientAlert['notified_at'] ?? '-') ?>
                         </div>
@@ -915,7 +915,7 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                                 <tr data-patient-id="<?= (int) $row['patient_id'] ?>">
                                     <td><?= $row['daily_serial'] ?></td>
                                     <td>
-                                        <a class="name-link <?= ((int) $row['patient_id'] === $nextPatientId) ? 'next-patient-name' : '' ?>" href="patient-file.php?id=<?= $row['patient_id'] ?>">
+                                        <a class="name-link clinic-user-content <?= ((int) $row['patient_id'] === $nextPatientId) ? 'next-patient-name' : '' ?>" data-no-translate href="patient-file.php?id=<?= $row['patient_id'] ?>">
                                             <?= htmlspecialchars($row['full_name']) ?>
                                         </a>
                                     </td>

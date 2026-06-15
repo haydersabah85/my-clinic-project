@@ -6,7 +6,8 @@ include_once 'clinic_helpers.php';
 
 clinic_ensure_infrastructure($con);
 
-if (isset($_POST['submit'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
+    clinic_require_csrf();
 
     $uuid = bin2hex(random_bytes(16));
     $full_name = $_POST['full_name'];

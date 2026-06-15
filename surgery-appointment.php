@@ -2,38 +2,25 @@
 include 'config.php';
 
 include 'auth.php';
+include_once 'clinic_helpers.php';
 
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-    $select_query = "SELECT * FROM add_patient WHERE id = $id";
-    $result = mysqli_query($con, $select_query);
-    $row = mysqli_fetch_assoc($result);
+clinic_ensure_infrastructure($con);
+$flash = clinic_take_flash();
+$row = null;
+$id = (int) ($_GET['id'] ?? 0);
+
+if ($id > 0) {
+    $stmt = mysqli_prepare($con, "SELECT * FROM add_patient WHERE id = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, 'i', $id);
+    mysqli_stmt_execute($stmt);
+    $row = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 }
 
-?>
-
-<?php
-// process_add_operation.php أو نفس الملف إذا كنت تستخدم POST في نفس الصفحة
-if($_SERVER['REQUEST_METHOD'] == "POST") {
-    // تأكد من تعريف قاعدة البيانات $con قبل هذا الجزء
-    $patient_name = $_POST['patient_name'];
-    $phone = $_POST['phone'];
-    $eye_type = $_POST['eye_type'];
-    $operation_type = $_POST['operation_type'];
-    $lens_type = $_POST['lens_type'];
-    $operation_date = $_POST['operation_date'];
-    $notes = $_POST['notes'];
-
-    // استعلام لإدخال البيانات
-    $sql = "INSERT INTO operations (patient_name, phone, eye_type, operation_type, lens_type, operation_date, notes)
-            VALUES ('$patient_name', '$phone', '$eye_type', '$operation_type', '$lens_type', '$operation_date', '$notes')";
-
-    if(mysqli_query($con, $sql)){
-        echo "<script>alert('تم حفظ العملية بنجاح');</script>";
-    } else {
-        echo "<script>alert('حدث خطأ أثناء الحفظ');</script>";
-    }
+if (!$row) {
+    http_response_code(404);
+    exit('Patient not found.');
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -210,10 +197,16 @@ input[type="submit"]:active {
     <script src="assets/theme.js" defer></script>
 </head>
 <body>
+    <?php if ($flash): ?>
+        <div style="max-width:760px;margin:0 auto 16px;padding:12px 16px;border-radius:12px;font-weight:700;background:<?= ($flash['type'] ?? '') === 'success' ? '#dcfce7' : '#fee2e2' ?>;color:<?= ($flash['type'] ?? '') === 'success' ? '#166534' : '#991b1b' ?>;">
+            <?= h($flash['message'] ?? '') ?>
+        </div>
+    <?php endif; ?>
      
     <h1>عيادة الدكتور حيدر صباح الربيعي</h1>
     <h2>حجز موعد عملية</h2>
     <form action="surgery-appointment2.php?id=<?php echo $id; ?>" method="POST">
+        <?php echo clinic_csrf_input(); ?>
         
         <label for="name">الاسم الكامل:</label><br>
         <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($row['full_name']); ?>"
@@ -262,6 +255,27 @@ input[type="submit"]:active {
 
         <label for="notes">ملاحظات إضافية:</label><br>
         <textarea id="notes" name="notes"></textarea><br><br>
+
+        <fieldset style="margin:0 0 20px;padding:16px;border:1px solid #cbd5e1;border-radius:12px">
+            <legend style="font-weight:800">جاهزية العملية</legend>
+            <?php
+            $readinessItems = [
+                'patient_verified' => 'تأكيد هوية المريض',
+                'eye_verified' => 'تأكيد العين',
+                'procedure_verified' => 'تأكيد نوع العملية',
+                'consent_ready' => 'الموافقة الجراحية جاهزة',
+                'iol_ready' => 'العدسة / IOL محددة عند الحاجة',
+                'allergy_checked' => 'مراجعة الحساسية والأدوية',
+                'investigations_ready' => 'الفحوصات المطلوبة جاهزة',
+                'payment_reviewed' => 'مراجعة الدفع / الحالة الإدارية',
+            ];
+            foreach ($readinessItems as $key => $label) {
+                echo '<label style="display:flex;gap:8px;align-items:center;margin:8px 0">';
+                echo '<input type="checkbox" name="readiness[' . h($key) . ']" value="1"> ';
+                echo h($label) . '</label>';
+            }
+            ?>
+        </fieldset>
 
         <input type="submit" name="submit_surgery" value="حجز الموعد">
 

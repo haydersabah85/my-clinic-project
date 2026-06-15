@@ -21,6 +21,7 @@ if (!$row) {
 
 $patientId = (int) $row['id'];
 $patientName = $row['full_name'] ?? '';
+$flash = clinic_take_flash();
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -437,10 +438,15 @@ $patientName = $row['full_name'] ?? '';
     <div class="app-sidebar-backdrop" id="appSidebarBackdrop"></div>
 
     <main class="page">
+        <?php if ($flash): ?>
+            <div class="card" style="margin-bottom:14px;border-color:<?= ($flash['type'] ?? '') === 'success' ? '#86efac' : '#fca5a5' ?>">
+                <?= h($flash['message'] ?? '') ?>
+            </div>
+        <?php endif; ?>
         <section class="hero">
             <div>
-                <h1><?= h($patientName) ?></h1>
-                <p>ملف المريض رقم <?= $patientId ?> | <?= h($row['phone_no'] ?? '') ?></p>
+                <h1 class="clinic-user-content" data-no-translate><?= h($patientName) ?></h1>
+                <p>ملف المريض رقم <?= $patientId ?> | <span class="clinic-user-content" data-no-translate><?= h($row['phone_no'] ?? '') ?></span></p>
             </div>
             <div class="hero-actions">
                 <a href="dashboard.php">لوحة التحكم</a>
@@ -468,27 +474,27 @@ $patientName = $row['full_name'] ?? '';
                     </div>
                     <div class="info-item">
                         <span>العمر</span>
-                        <strong><?= h($row['age'] ?? '') ?></strong>
+                        <strong class="clinic-user-content" data-no-translate><?= h($row['age'] ?? '') ?></strong>
                     </div>
                     <div class="info-item">
                         <span>الجنس</span>
-                        <strong><?= h($row['gender'] ?? '') ?></strong>
+                        <strong class="clinic-user-content" data-no-translate><?= h($row['gender'] ?? '') ?></strong>
                     </div>
                     <div class="info-item">
                         <span>الموبايل</span>
-                        <strong><?= h($row['phone_no'] ?? '') ?></strong>
+                        <strong class="clinic-user-content" data-no-translate><?= h($row['phone_no'] ?? '') ?></strong>
                     </div>
                     <div class="info-item">
                         <span>الموبايل البديل</span>
-                        <strong><?= h($row['phone_no_alt'] ?? '') ?></strong>
+                        <strong class="clinic-user-content" data-no-translate><?= h($row['phone_no_alt'] ?? '') ?></strong>
                     </div>
                     <div class="info-item">
                         <span>العنوان</span>
-                        <strong><?= h($row['address'] ?? '') ?></strong>
+                        <strong class="clinic-user-content" data-no-translate><?= h($row['address'] ?? '') ?></strong>
                     </div>
                     <div class="info-item wide">
                         <span>الملاحظات</span>
-                        <strong><?= h($row['notes'] ?? '') ?></strong>
+                        <strong class="clinic-user-content" data-no-translate><?= h($row['notes'] ?? '') ?></strong>
                     </div>
                 </div>
             </section>
