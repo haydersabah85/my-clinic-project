@@ -2,7 +2,9 @@
 
 if (!defined('CLINIC_LANGUAGE_LOADER_ENABLED')) {
     define('CLINIC_LANGUAGE_LOADER_ENABLED', true);
+}
 
+if (CLINIC_LANGUAGE_LOADER_ENABLED) {
     ob_start(static function (string $output): string {
         if (stripos($output, '<html') === false && stripos($output, '<!doctype') === false) {
             return $output;

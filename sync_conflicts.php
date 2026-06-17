@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 include 'auth.php';
+$requiredPermissions = ['sync'];
 include 'admin-only.php';
 include_once 'clinic_helpers.php';
 
@@ -474,7 +475,7 @@ $resolvedCount = (int) ($resolvedCountRow['total'] ?? 0);
             font-family: inherit;
         }
     </style>
-<script src="assets/lang.js" data-clinic-lang defer></script>
+    <script src="assets/lang.js" data-clinic-lang defer></script>
 </head>
 
 <body>

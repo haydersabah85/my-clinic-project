@@ -2,14 +2,29 @@
 include 'config.php';
 include 'auth.php';
 include_once 'clinic_helpers.php';
+$requiredPermissions = ['settings'];
 include 'admin-only.php';
 
 clinic_ensure_infrastructure($con);
 clinic_ensure_runtime_controls($con);
 clinic_ensure_sync_conflicts($con);
+clinic_ensure_column($con, 'users', 'permissions_json', 'LONGTEXT NULL');
 
 $modeMessage = '';
 $canManageWriteLock = clinic_can_manage_online_write_lock($con);
+$canManageUsers = clinic_user_has_permission(['users']);
+$staffMessage = '';
+
+$staffPermissionOptions = [
+    'patients' => 'إدارة المرضى',
+    'appointments' => 'إدارة المواعيد',
+    'prescriptions' => 'الوصفات الطبية',
+    'reports' => 'التقارير والإحصاءات',
+    'settings' => 'الإعدادات العامة',
+    'backup' => 'النسخ الاحتياطي والاستعادة',
+    'sync' => 'المزامنة السحابية',
+    'users' => 'إدارة الحسابات',
+];
 
 if (isset($_POST['save_runtime_mode'])) {
     if (!$canManageWriteLock) {
@@ -20,6 +35,40 @@ if (isset($_POST['save_runtime_mode'])) {
             $modeMessage = "<p style='color:green'>✔ تم تحديث وضع الكتابة بنجاح</p>";
         } else {
             $modeMessage = "<p style='color:red'>❌ فشل تحديث وضع الكتابة</p>";
+        }
+    }
+}
+
+if (isset($_POST['register_staff'])) {
+    if (!$canManageUsers) {
+        $staffMessage = "<p style='color:red'>❌ لا تملك صلاحية إنشاء موظفين</p>";
+    } else {
+        $fullName = trim($_POST['full_name'] ?? '');
+        $username = trim($_POST['username'] ?? '');
+        $rawPassword = (string) ($_POST['pass'] ?? '');
+        $role = trim($_POST['role'] ?? '');
+        $permissions = clinic_normalize_permissions($_POST['permissions'] ?? []);
+
+        if ($fullName === '' || $username === '' || $rawPassword === '' || $role === '') {
+            $staffMessage = "<p style='color:red'>❌ يرجى تعبئة جميع الحقول المطلوبة</p>";
+        } else {
+            $hashedPassword = password_hash($rawPassword, PASSWORD_DEFAULT);
+            $permissionsJson = json_encode($permissions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            $stmt = $con->prepare("INSERT INTO users (full_name, username, pass, role, permissions_json) VALUES (?,?,?,?,?)");
+            if ($stmt) {
+                $stmt->bind_param("sssss", $fullName, $username, $hashedPassword, $role, $permissionsJson);
+
+                if ($stmt->execute()) {
+                    $staffMessage = "<p style='color:green'>✔ تم إنشاء حساب الموظف بنجاح</p>";
+                } else {
+                    $staffMessage = ($con->errno === 1062)
+                        ? "<p style='color:red'>❌ اسم المستخدم موجود مسبقاً</p>"
+                        : "<p style='color:red'>❌ تعذر حفظ الحساب، حاول مرة أخرى</p>";
+                }
+            } else {
+                $staffMessage = "<p style='color:red'>❌ تعذر تجهيز الاستعلام</p>";
+            }
         }
     }
 }
@@ -119,6 +168,7 @@ if ($IS_LOCAL) {
     }
 
     .actions-card,
+    .staff-card,
     .runtime-panel,
     .emergency-guide {
         background: var(--card);
@@ -181,6 +231,91 @@ if ($IS_LOCAL) {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
         gap: 10px;
+    }
+
+    .staff-card {
+        display: grid;
+        gap: 14px;
+    }
+
+    .staff-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .staff-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .staff-field.full {
+        grid-column: 1 / -1;
+    }
+
+    .staff-field label,
+    .staff-permissions>label {
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .staff-field input,
+    .staff-field select {
+        min-height: 44px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+        background: #fff;
+        color: var(--text);
+        font-family: inherit;
+    }
+
+    .staff-permissions {
+        display: grid;
+        gap: 10px;
+    }
+
+    .staff-permissions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+    }
+
+    .staff-permission-item {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: #fafcff;
+    }
+
+    .staff-permission-item label {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        line-height: 1.6;
+        cursor: pointer;
+        font-weight: 700;
+    }
+
+    .staff-permission-item input {
+        margin-top: 4px;
+        accent-color: var(--primary);
+    }
+
+    .staff-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-staff {
+        background: #0f766e;
+    }
+
+    .btn-staff:hover {
+        background: #0b5f59;
     }
 
     .btn-link,
@@ -339,6 +474,21 @@ if ($IS_LOCAL) {
         .actions-layout {
             grid-template-columns: 1fr 1fr;
         }
+
+        .staff-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 680px) {
+        .staff-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .staff-actions .btn-link,
+        .staff-actions .btn-submit {
+            width: 100%;
+        }
     }
 </style>
 
@@ -395,6 +545,69 @@ if ($IS_LOCAL) {
                     </div>
                 </section>
             </div>
+        </section>
+
+        <section class="staff-card" id="staff-registration">
+            <h3 class="section-title">إضافة موظف جديد</h3>
+            <p class="section-subtitle">إنشاء حساب موظف مباشر من داخل الإعدادات مع تحديد الصلاحيات الخاصة به.</p>
+
+            <?php if (!$canManageUsers): ?>
+                <p class="cloud-note">هذه الميزة متاحة فقط للحسابات التي تملك صلاحية إدارة الحسابات.</p>
+            <?php endif; ?>
+
+            <form method="post" class="staff-grid">
+                <div class="staff-field full">
+                    <label for="staff_full_name">الاسم الكامل</label>
+                    <input id="staff_full_name" type="text" name="full_name" placeholder="مثال: سارة أحمد" required>
+                </div>
+
+                <div class="staff-field">
+                    <label for="staff_username">اسم المستخدم</label>
+                    <input id="staff_username" type="text" name="username" placeholder="مثال: sara.a" required>
+                </div>
+
+                <div class="staff-field">
+                    <label for="staff_pass">كلمة المرور</label>
+                    <input id="staff_pass" type="password" name="pass" placeholder="كلمة المرور" required>
+                </div>
+
+                <div class="staff-field full">
+                    <label for="staff_role">الدور</label>
+                    <select id="staff_role" name="role" required>
+                        <option value="">اختر الدور</option>
+                        <option value="admin">أدمن</option>
+                        <option value="doctor">طبيب</option>
+                        <option value="secretary">استقبال / سكرتارية</option>
+                        <option value="nurse">تمريض</option>
+                        <option value="accountant">محاسبة</option>
+                    </select>
+                </div>
+
+                <div class="staff-permissions full">
+                    <label>الصلاحيات</label>
+                    <div class="staff-permissions-grid">
+                        <?php foreach ($staffPermissionOptions as $key => $label): ?>
+                            <div class="staff-permission-item">
+                                <label>
+                                    <input type="checkbox" name="permissions[]" value="<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <span><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></span>
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="staff-actions full">
+                    <button class="btn-submit btn-staff" type="submit" name="register_staff" <?php echo $canManageUsers ? '' : 'disabled'; ?>>حفظ الموظف</button>
+                    <a class="btn-link btn-conflicts" href="registration.php">فتح صفحة التسجيل الكاملة</a>
+                </div>
+            </form>
+
+            <?php if (!empty($staffMessage)): ?>
+                <div class="notice <?php echo (strpos($staffMessage, '❌') !== false) ? 'error' : 'success'; ?>">
+                    <?php echo strip_tags($staffMessage); ?>
+                </div>
+            <?php endif; ?>
         </section>
 
         <?php

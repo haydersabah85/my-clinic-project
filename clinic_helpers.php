@@ -310,6 +310,155 @@ function clinic_can_manage_online_write_lock(mysqli $con): bool
     return $currentUserId === clinic_write_lock_owner_user_id($con);
 }
 
+function clinic_normalize_permissions($permissions): array
+{
+    if (!is_array($permissions)) {
+        return [];
+    }
+
+    $permissions = array_map(static function ($permission): string {
+        return trim((string) $permission);
+    }, $permissions);
+
+    $permissions = array_filter($permissions, static function (string $permission): bool {
+        return $permission !== '';
+    });
+
+    return array_values(array_unique($permissions));
+}
+
+function clinic_current_user_permissions(): array
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    return clinic_normalize_permissions($_SESSION['permissions'] ?? []);
+}
+
+function clinic_user_has_permission($requiredPermissions): bool
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    if (($_SESSION['role'] ?? '') === 'admin') {
+        return true;
+    }
+
+    $requiredPermissions = clinic_normalize_permissions(is_array($requiredPermissions) ? $requiredPermissions : [$requiredPermissions]);
+    if (empty($requiredPermissions)) {
+        return false;
+    }
+
+    return count(array_intersect($requiredPermissions, clinic_current_user_permissions())) > 0;
+}
+
+function clinic_require_permissions($requiredPermissions, string $message = 'غير مصرح لك بالدخول'): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
+
+    if ((int) ($_SESSION['user_id'] ?? 0) <= 0) {
+        header('Location: log-in.php');
+        exit;
+    }
+
+    if (!clinic_user_has_permission($requiredPermissions)) {
+        exit($message);
+    }
+}
+
+function clinic_required_permissions_for_script(string $scriptName): array
+{
+    $scriptName = strtolower(trim($scriptName));
+
+    $exactMap = [
+        'registration.php' => ['users'],
+        'settings.php' => ['settings'],
+        'backup_and_upload.php' => ['backup'],
+        'restore.php' => ['backup'],
+        'sync_conflicts.php' => ['sync'],
+        'sync_from_online.php' => ['sync'],
+        'sync_to_online_safe.php' => ['sync'],
+        'sync_to_online2.php' => ['sync'],
+        'audit-log.php' => ['reports'],
+        'dashboard.php' => ['reports'],
+        'dashboard-status.php' => ['reports'],
+        'data-quality.php' => ['reports'],
+        'confirmed-list.php' => ['reports'],
+        'work-queue.php' => ['reports'],
+        'operation-by-date.php' => ['reports'],
+        'load_operations.php' => ['reports'],
+        'main.php' => ['reports'],
+        'patient-data.php' => ['patients'],
+        'patient-file.php' => ['patients'],
+        'patient-file2.php' => ['patients'],
+        'patient-visits.php' => ['patients'],
+        'patient_timeline.php' => ['patients'],
+        'archived-patients.php' => ['patients'],
+        'check-patient-duplicates.php' => ['patients'],
+        'search-patient.php' => ['patients'],
+        'update-patient.php' => ['patients'],
+        'edit-patient.php' => ['patients'],
+        'delete-patient.php' => ['patients'],
+        'add-patient.php' => ['patients'],
+        'add-patient2.php' => ['patients'],
+        'retina-chart.php' => ['patients'],
+        'image-comparison.php' => ['patients'],
+        'show-image.php' => ['patients'],
+        'save-retina-drawing.php' => ['patients'],
+        'add-image.php' => ['patients'],
+        'add-image2.php' => ['patients'],
+        'delete-image.php' => ['patients'],
+        'common-medicines.php' => ['prescriptions'],
+        'common-medicines2.php' => ['prescriptions'],
+        'treatment.php' => ['prescriptions'],
+        'treatment-templates.php' => ['prescriptions'],
+        'edit-prescription.php' => ['prescriptions'],
+        'update-prescription.php' => ['prescriptions'],
+        'print_prescription.php' => ['prescriptions'],
+        'print_treatment_only.php' => ['prescriptions'],
+        'save_prescription.php' => ['prescriptions'],
+        'edit-medicine.php' => ['prescriptions'],
+        'edit-medicine2.php' => ['prescriptions'],
+        'delete-medicine.php' => ['prescriptions'],
+        'followup-appointment.php' => ['appointments'],
+        'delete-followup.php' => ['appointments'],
+        'save_followup.php' => ['appointments'],
+        'visits.php' => ['appointments'],
+        'visits2.php' => ['appointments'],
+        'patient_reports.php' => ['reports'],
+    ];
+
+    if (isset($exactMap[$scriptName])) {
+        return $exactMap[$scriptName];
+    }
+
+    if (preg_match('/^(add|edit|delete|discharge|process_decision|mark|confirm|cancel)[-_](surgery|laser|injection)/', $scriptName)) {
+        return ['appointments'];
+    }
+
+    if (preg_match('/^(surgery|laser|injection)[-_]appointment(2)?\.php$/', $scriptName)) {
+        return ['appointments'];
+    }
+
+    if (preg_match('/^(followup|followups|next-visit-appointment|expected_appointments|notify-next-patient|confirm-attendance|cancel-attendance|mark_done|mark_arrived|mark_not_arrived)\.php$/', $scriptName)) {
+        return ['appointments'];
+    }
+
+    if (preg_match('/^(add|edit|delete|save|update)[-_](patient|visit|image|va)/', $scriptName)) {
+        return ['patients'];
+    }
+
+    if (preg_match('/^(add|edit|delete|update|save)[-_]prescription/', $scriptName) || preg_match('/^(common-medicines|treatment|print_prescription|print_treatment_only)\.php$/', $scriptName)) {
+        return ['prescriptions'];
+    }
+
+    return [];
+}
+
 function clinic_ensure_retina_drawings(mysqli $con): void
 {
     mysqli_query($con, "
@@ -332,22 +481,22 @@ function clinic_ensure_retina_drawings(mysqli $con): void
     ");
 }
 
-    function clinic_ensure_patient_images_sync_support(mysqli $con): void
-    {
-        if (!clinic_table_exists($con, 'patient_images')) {
-            return;
-        }
-
-        clinic_ensure_column($con, 'patient_images', 'sync_status', 'TINYINT(1) NOT NULL DEFAULT 0');
-        clinic_ensure_column($con, 'patient_images', 'updated_at', 'DATETIME NULL');
-
-        // Keep updated_at usable for sync ordering even on old schemas.
-        if (clinic_column_exists($con, 'patient_images', 'uploaded_at')) {
-            mysqli_query($con, "UPDATE `patient_images` SET `updated_at` = `uploaded_at` WHERE `updated_at` IS NULL");
-        } elseif (clinic_column_exists($con, 'patient_images', 'date_added')) {
-            mysqli_query($con, "UPDATE `patient_images` SET `updated_at` = `date_added` WHERE `updated_at` IS NULL");
-        }
+function clinic_ensure_patient_images_sync_support(mysqli $con): void
+{
+    if (!clinic_table_exists($con, 'patient_images')) {
+        return;
     }
+
+    clinic_ensure_column($con, 'patient_images', 'sync_status', 'TINYINT(1) NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, 'patient_images', 'updated_at', 'DATETIME NULL');
+
+    // Keep updated_at usable for sync ordering even on old schemas.
+    if (clinic_column_exists($con, 'patient_images', 'uploaded_at')) {
+        mysqli_query($con, "UPDATE `patient_images` SET `updated_at` = `uploaded_at` WHERE `updated_at` IS NULL");
+    } elseif (clinic_column_exists($con, 'patient_images', 'date_added')) {
+        mysqli_query($con, "UPDATE `patient_images` SET `updated_at` = `date_added` WHERE `updated_at` IS NULL");
+    }
+}
 
 function clinic_current_user(): string
 {

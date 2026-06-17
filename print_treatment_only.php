@@ -1,4 +1,5 @@
 ﻿<?php
+define('CLINIC_LANGUAGE_LOADER_ENABLED', false);
 include 'config.php';
 include_once 'clinic_helpers.php';
 
@@ -102,7 +103,7 @@ while ($m = mysqli_fetch_assoc($q)) {
         }
 
         .medicine strong {
-            color: rgb(20, 69, 232);   
+            color: rgb(20, 69, 232);
             margin-right: 10px;
         }
 
@@ -151,7 +152,6 @@ while ($m = mysqli_fetch_assoc($q)) {
             }
         }
     </style>
-<script src="assets/lang.js" data-clinic-lang defer></script>
 </head>
 
 <body>
@@ -168,7 +168,7 @@ while ($m = mysqli_fetch_assoc($q)) {
                     <span class="medicine-part"><?php echo h($row['frequency']); ?></span>
                     <span class="medicine-part"><?php echo h($row['duration']); ?></span>
                     <span class="medicine-part"><?php echo h($row['instructions']); ?></span>
-                    <span class="medicine-part"> 
+                    <span class="medicine-part">
                         <?php if ($row['eye'] === 'right') echo " (العين اليمنى)"; ?>
                         <?php if ($row['eye'] === 'left') echo " (العين اليسرى)"; ?>
                         <?php if ($row['eye'] === 'both') echo " (العينين)"; ?>

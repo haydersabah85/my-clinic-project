@@ -1,5 +1,5 @@
 <?php
-if ($_SESSION['role'] != 'admin') {
-    exit("غير مصرح لك بالدخول");
-}
-?>
+include_once 'clinic_helpers.php';
+
+$requiredPermissions = $requiredPermissions ?? ['admin'];
+clinic_require_permissions($requiredPermissions);

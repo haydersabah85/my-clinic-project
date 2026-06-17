@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 include 'auth.php';
+$requiredPermissions = ['sync'];
 include 'admin-only.php';
 include_once 'clinic_helpers.php';
 
@@ -418,7 +419,7 @@ clinic_audit(
             border-radius: 8px;
         }
     </style>
-<script src="assets/lang.js" data-clinic-lang defer></script>
+    <script src="assets/lang.js" data-clinic-lang defer></script>
 </head>
 
 <body>

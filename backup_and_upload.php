@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 include 'auth.php';
+$requiredPermissions = ['backup'];
 include 'admin-only.php';
 
 if (!$IS_LOCAL) {
