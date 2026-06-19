@@ -45,6 +45,51 @@ if (!function_exists('pf_format_visit_note')) {
     }
 }
 
+if (!function_exists('pf_extract_first_visit_summary')) {
+    function pf_extract_first_visit_summary(string $note): array
+    {
+        $normalized = trim(str_replace(["\r\n", "\r"], "\n", $note));
+        if ($normalized === '') {
+            return [
+                'diagnosis' => '',
+                'plan' => '',
+                'preview' => '',
+            ];
+        }
+
+        $lines = preg_split('/\n+/u', $normalized) ?: [];
+        $diagnosis = '';
+        $plan = '';
+
+        foreach ($lines as $line) {
+            $line = trim((string) $line);
+            if ($line === '') {
+                continue;
+            }
+
+            if ($diagnosis === '' && preg_match('/^(?:التشخيص(?:\s+الأولي)?|تشخيص|dx|diagnosis|impression)\s*[:\-]?\s*(.*)$/iu', $line, $m)) {
+                $diagnosis = trim((string) ($m[1] ?? ''));
+                continue;
+            }
+
+            if ($plan === '' && preg_match('/^(?:الخطة(?:\s+العلاجية)?|خطة\s*العلاج|العلاج|التوصيات?|plan|recommendation|rx)\s*[:\-]?\s*(.*)$/iu', $line, $m)) {
+                $plan = trim((string) ($m[1] ?? ''));
+            }
+        }
+
+        $preview = $normalized;
+        if (mb_strlen($preview) > 260) {
+            $preview = mb_substr($preview, 0, 260) . '...';
+        }
+
+        return [
+            'diagnosis' => $diagnosis,
+            'plan' => $plan,
+            'preview' => $preview,
+        ];
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -694,6 +739,113 @@ if (!function_exists('pf_format_visit_note')) {
             direction: rtl;
         }
 
+        .first-visit-summary {
+            position: sticky;
+            top: 12px;
+            z-index: 5;
+            margin: 0 auto;
+            width: min(920px, 100%);
+            padding: 10px 12px;
+            border: 1px solid #86efac;
+            border-radius: 14px;
+            background: linear-gradient(180deg, #f0fdf4, #ecfdf5);
+            color: #14532d;
+            box-shadow: 0 8px 22px rgba(22, 101, 52, 0.12);
+            direction: rtl;
+        }
+
+        .first-visit-summary strong {
+            display: inline-block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .first-visit-summary .summary-date {
+            font-weight: 800;
+        }
+
+        .first-visit-summary .summary-note {
+            margin-top: 8px;
+            font-size: 13px;
+            line-height: 1.9;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .first-visit-layout {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 8px;
+            
+        }
+
+        .summary-col {
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.66);
+            padding: 8px 9px;
+            direction: ltr;
+        }
+
+        .summary-col-title {
+            font-size: 12px;
+            font-weight: 900;
+            color: #166534;
+            margin-bottom: 7px;
+        }
+
+        .summary-item {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 6px 8px;
+            margin-bottom: 6px;
+        }
+
+        .summary-item-label {
+            font-size: 11px;
+            font-weight: 900;
+            color: #166534;
+            margin-bottom: 4px;
+        }
+
+        .summary-item-value {
+            color: #14532d;
+            line-height: 1.85;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .summary-va {
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.65);
+        }
+
+        .summary-va-title {
+            font-size: 12px;
+            font-weight: 900;
+            color: #166534;
+            margin-bottom: 6px;
+        }
+
+        .summary-va-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+            font-size: 12px;
+            color: #14532d;
+        }
+
+        .summary-empty {
+            font-size: 12px;
+            color: #166534;
+            line-height: 1.7;
+        }
+
         .visit-card {
             border: 1px solid var(--border);
             border-radius: 18px;
@@ -792,6 +944,15 @@ if (!function_exists('pf_format_visit_note')) {
                 grid-template-columns: 1fr;
             }
 
+            .first-visit-summary {
+                position: static;
+                width: 100%;
+            }
+
+            .first-visit-layout {
+                grid-template-columns: 1fr;
+            }
+
             .previous_data,
             .procedure-meta {
                 grid-template-columns: 1fr;
@@ -875,6 +1036,23 @@ if (!function_exists('pf_format_visit_note')) {
 
         .encounter-card.no-va::before {
             background: #f59e0b;
+        }
+
+        .encounter-card.first-visit {
+            border-color: #0f766e;
+            box-shadow: 0 14px 28px rgba(15, 118, 110, 0.16);
+        }
+
+        .first-visit-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 5px 9px;
         }
 
         .encounter-head {
@@ -1692,6 +1870,29 @@ if (!function_exists('pf_format_visit_note')) {
             color: #dce7f3;
         }
 
+        body[data-theme="dark"] .first-visit-summary {
+            background: rgba(22, 101, 52, 0.18);
+            border-color: rgba(74, 222, 128, 0.5);
+            color: #dcfce7;
+        }
+
+        body[data-theme="dark"] .summary-item,
+        body[data-theme="dark"] .summary-va,
+        body[data-theme="dark"] .summary-col {
+            background: rgba(15, 23, 42, 0.6);
+            border-color: rgba(74, 222, 128, 0.35);
+        }
+
+        body[data-theme="dark"] .summary-item-label,
+        body[data-theme="dark"] .summary-va-title {
+            color: #86efac;
+        }
+
+        body[data-theme="dark"] .summary-item-value,
+        body[data-theme="dark"] .summary-va-grid {
+            color: #dcfce7;
+        }
+
         body[data-theme="dark"] .clinical-note p+p {
             border-top-color: rgba(148, 163, 184, 0.25);
         }
@@ -2180,13 +2381,84 @@ if (!function_exists('pf_format_visit_note')) {
                                 echo "<p class='timeline-summary'>إجمالي الأيام المسجلة: " . count($dateKeys) . " | مع VA: " . $withVaCount . " | رسومات شبكية: " . $withRetinaCount . " | تحتاج VA: " . $withoutVaCount . "</p>";
                             }
 
+                            $firstVisitDate = '';
+                            if (!empty($dateKeys)) {
+                                $firstVisitDate = (string) end($dateKeys);
+                                reset($dateKeys);
+
+                                $firstVisitRows = $visitRows[$firstVisitDate] ?? [];
+                                $firstVisitNote = '';
+                                if (!empty($firstVisitRows)) {
+                                    foreach ($firstVisitRows as $firstVisitRow) {
+                                        $rawFirstNote = trim((string) ($firstVisitRow['notes'] ?? ''));
+                                        if ($rawFirstNote !== '') {
+                                            $firstVisitNote = $rawFirstNote;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                $firstVisitSummary = pf_extract_first_visit_summary($firstVisitNote);
+                                $firstVisitVaRows = $vaRowsByDate[$firstVisitDate] ?? [];
+
+                                echo "<div class='first-visit-summary'>";
+                                echo "<strong>ملخص الزيارة الأولى</strong> <span class='summary-date'>(" . h($firstVisitDate) . ")</span>";
+                                echo "<div class='first-visit-layout'>";
+
+                                echo "<div class='summary-col summary-col-va'>";
+                                echo "<div class='summary-col-title'>فحص النظر بنفس الزيارة</div>";
+                                if (!empty($firstVisitVaRows)) {
+                                    $firstVa = $firstVisitVaRows[0];
+                                    $ucvaOd = trim((string) ($firstVa['va_od'] ?? ''));
+                                    $ucvaOs = trim((string) ($firstVa['va_os'] ?? ''));
+                                    $bcvaOd = trim((string) ($firstVa['bcva_od'] ?? ''));
+                                    $bcvaOs = trim((string) ($firstVa['bcva_os'] ?? ''));
+
+                                    echo "<div class='summary-va'>";
+                                    echo "<div class='summary-va-grid'>";
+                                    echo "<div>UCVA (OD): " . h($ucvaOd !== '' ? $ucvaOd : '-') . "</div>";
+                                    echo "<div>UCVA (OS): " . h($ucvaOs !== '' ? $ucvaOs : '-') . "</div>";
+                                    echo "<div>BCVA (OD): " . h($bcvaOd !== '' ? $bcvaOd : '-') . "</div>";
+                                    echo "<div>BCVA (OS): " . h($bcvaOs !== '' ? $bcvaOs : '-') . "</div>";
+                                    echo "</div>";
+                                    echo "</div>";
+                                } else {
+                                    echo "<div class='summary-empty'>لا يوجد VA مسجل بنفس تاريخ الزيارة الأولى.</div>";
+                                }
+                                echo "</div>";
+
+                                echo "<div class='summary-col summary-col-notes'>";
+                                echo "<div class='summary-col-title'>ملاحظات الزيارة الأولى</div>";
+                                if ($firstVisitNote !== '') {
+                                    if (($firstVisitSummary['diagnosis'] ?? '') !== '') {
+                                        echo "<div class='summary-item'><div class='summary-item-label'>التشخيص الأولي</div><div class='summary-item-value clinic-user-content' data-user-content data-no-translate>" . h((string) $firstVisitSummary['diagnosis']) . "</div></div>";
+                                    }
+                                    if (($firstVisitSummary['plan'] ?? '') !== '') {
+                                        echo "<div class='summary-item'><div class='summary-item-label'>الخطة / التوصيات</div><div class='summary-item-value clinic-user-content' data-user-content data-no-translate>" . h((string) $firstVisitSummary['plan']) . "</div></div>";
+                                    }
+                                    if (($firstVisitSummary['diagnosis'] ?? '') === '' && ($firstVisitSummary['plan'] ?? '') === '') {
+                                        echo "<div class='summary-note clinic-user-content' data-user-content data-no-translate>" . pf_format_visit_note((string) ($firstVisitSummary['preview'] ?? '')) . "</div>";
+                                    }
+                                } else {
+                                    echo "<div class='summary-empty'>لا توجد ملاحظات نصية محفوظة في الزيارة الأولى.</div>";
+                                }
+                                echo "</div>";
+
+                                echo "</div>";
+                                echo "</div>";
+                            }
+
                             $cardIndex = 0;
                             foreach ($dateKeys as $visitDate) {
                                 $visitsForDate = $visitRows[$visitDate] ?? [];
                                 $vaForDate = $vaRowsByDate[$visitDate] ?? [];
                                 $retinaForDate = $retinaRowsByDate[$visitDate] ?? [];
                                 $hasVa = !empty($vaForDate);
+                                $isFirstVisitDate = ($firstVisitDate !== '' && (string) $visitDate === $firstVisitDate);
                                 $cardClass = $hasVa ? 'encounter-card with-va' : 'encounter-card no-va';
+                                if ($isFirstVisitDate) {
+                                    $cardClass .= ' first-visit';
+                                }
                                 $statusClass = $hasVa ? 'encounter-status' : 'encounter-status missing';
                                 $statusText = $hasVa ? 'تم تسجيل VA / IOP' : 'تحتاج فحص VA';
                                 $panelId = 'encounter-panel-' . $cardIndex;
@@ -2199,6 +2471,9 @@ if (!function_exists('pf_format_visit_note')) {
                                 echo "<div class='encounter-head-main'>";
                                 echo "<div class='encounter-date'><span>تاريخ الزيارة</span><span>" . h($visitDate) . "</span></div>";
                                 echo "<span class='$statusClass'>$statusText</span>";
+                                if ($isFirstVisitDate) {
+                                    echo "<span class='first-visit-badge'>الزيارة الأولى</span>";
+                                }
                                 echo "</div>";
                                 echo "<button type='button' class='encounter-toggle' data-target='$panelId' aria-expanded='" . ($defaultCollapsed ? "false" : "true") . "'>$toggleText</button>";
                                 echo "</div>";
