@@ -4,8 +4,29 @@ include 'config.php';
 include_once 'clinic_helpers.php';
 
 clinic_ensure_runtime_controls($con);
+clinic_ensure_daily_revenue($con);
 
 $today = date('Y-m-d');
+
+$isAdminUser = (($_SESSION['role'] ?? '') === 'admin');
+$todayRevenue = null;
+
+if ($isAdminUser) {
+    $revStmt = mysqli_prepare($con, "
+        SELECT visit_income, procedures_income, other_income, service_staff_due
+        FROM daily_revenue
+        WHERE revenue_date = ?
+        LIMIT 1
+    ");
+
+    if ($revStmt) {
+        mysqli_stmt_bind_param($revStmt, 's', $today);
+        mysqli_stmt_execute($revStmt);
+        $revResult = mysqli_stmt_get_result($revStmt);
+        $todayRevenue = $revResult ? mysqli_fetch_assoc($revResult) : null;
+    }
+}
+
 $stats = ['total' => 0, 'free' => 0, 'done' => 0, 'pending' => 0];
 $last_visit_date = null;
 $status_filter = $_GET['status'] ?? 'all';
@@ -278,6 +299,41 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 12px;
             margin-bottom: 12px;
+        }
+
+        .finance-admin-card {
+            margin-bottom: 12px;
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.14), rgba(31, 120, 87, 0.1));
+            box-shadow: var(--shadow);
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .finance-admin-card .meta {
+            font-size: 14px;
+            color: var(--ink);
+            font-weight: 700;
+            line-height: 1.8;
+        }
+
+        .finance-admin-card .meta strong {
+            color: #0f5132;
+        }
+
+        .finance-admin-card .open-revenue {
+            text-decoration: none;
+            border-radius: 8px;
+            padding: 9px 12px;
+            color: #fff;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e40af, #0f766e);
+            border: 1px solid rgba(255, 255, 255, 0.34);
         }
 
         .card {
@@ -583,6 +639,7 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
         }
 
         @keyframes notifyBell {
+
             0%,
             100% {
                 transform: rotate(0deg);
@@ -791,6 +848,7 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             <div class="menu-group">
                 <span>📅 المواعيد</span>
                 <a href="visits.php"><i class="fa-solid fa-calendar-day"></i> زيارات اليوم</a>
+                <a href="procedure-entries.php"><i class="fa-solid fa-camera-retro"></i> إدخال الإجراءات</a>
                 <a href="operation-by-date.php"><i class="fa-solid fa-calendar-check"></i> مواعيد العمليات</a>
                 <a href="expected_appointments.php"><i class="fa-solid fa-clock"></i> المواعيد المتوقعة</a>
             </div>
@@ -798,6 +856,9 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             <div class="menu-group">
                 <span>⚙️ النظام</span>
                 <a href="reports.php"><i class="fa-solid fa-chart-line"></i> التقارير</a>
+                <?php if ($isAdminUser): ?>
+                    <a href="daily-revenue.php"><i class="fa-solid fa-sack-dollar"></i> الإيراد اليومي</a>
+                <?php endif; ?>
                 <a href="settings.php"><i class="fa-solid fa-gear"></i> الإعدادات</a>
                 <a href="logout.php"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</a>
             </div>
@@ -836,6 +897,25 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                 </div>
 
             </div>
+
+            <?php if ($isAdminUser): ?>
+                <?php
+                $visitIncome = (float) ($todayRevenue['visit_income'] ?? 0);
+                $proceduresIncome = (float) ($todayRevenue['procedures_income'] ?? 0);
+                $otherIncome = (float) ($todayRevenue['other_income'] ?? 0);
+                $serviceDue = (float) ($todayRevenue['service_staff_due'] ?? 0);
+                $totalIncome = $visitIncome + $proceduresIncome + $otherIncome;
+                $netIncome = $totalIncome - $serviceDue;
+                ?>
+                <div class="finance-admin-card">
+                    <div class="meta">
+                        ملخص الإيراد لليوم: <strong><?php echo number_format($totalIncome, 0); ?></strong>
+                        | مستحقات الخدمة: <strong><?php echo number_format($serviceDue, 0); ?></strong>
+                        | الصافي: <strong><?php echo number_format($netIncome, 0); ?></strong>
+                    </div>
+                    <a class="open-revenue" href="daily-revenue.php?date=<?php echo urlencode($today); ?>">فتح شاشة الإيراد</a>
+                </div>
+            <?php endif; ?>
 
             <div class="visit-tools">
                 <?php if ($nextPatientAlert): ?>

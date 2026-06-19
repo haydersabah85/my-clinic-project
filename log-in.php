@@ -20,6 +20,8 @@ if (isset($_POST['login'])) {
     if (password_verify($password, $user['pass'])) {
       $_SESSION['user_id'] = $user['id'];
       $_SESSION['role'] = $user['role'];
+      $_SESSION['username'] = $user['username'];
+      $_SESSION['full_name'] = $user['full_name'];
       $_SESSION['name'] = $user['full_name'];
       $_SESSION['permissions'] = json_decode($user['permissions_json'] ?? '[]', true) ?: [];
 

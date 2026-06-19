@@ -12,9 +12,13 @@ clinic_ensure_column($con, 'users', 'permissions_json', 'LONGTEXT NULL');
 
 $modeMessage = '';
 $autoSyncMessage = '';
+$accountManageMessage = '';
 $canManageWriteLock = clinic_can_manage_online_write_lock($con);
 $canManageUsers = clinic_user_has_permission(['users']);
+$isAdminRole = strtolower((string) ($_SESSION['role'] ?? '')) === 'admin';
+$canManageAccounts = $isAdminRole;
 $staffMessage = '';
+$activeSection = trim((string) ($_POST['active_section'] ?? ($_GET['section'] ?? 'account-center')));
 
 $staffPermissionOptions = [
     'patients' => 'إدارة المرضى',
@@ -58,8 +62,8 @@ if (isset($_POST['save_auto_sync'])) {
 }
 
 if (isset($_POST['register_staff'])) {
-    if (!$canManageUsers) {
-        $staffMessage = "<p style='color:red'>❌ لا تملك صلاحية إنشاء موظفين</p>";
+    if (!$canManageAccounts) {
+        $staffMessage = "<p style='color:red'>❌ إدارة الحسابات متاحة فقط من خلال حساب المدير</p>";
     } else {
         $fullName = trim($_POST['full_name'] ?? '');
         $username = trim($_POST['username'] ?? '');
@@ -70,22 +74,90 @@ if (isset($_POST['register_staff'])) {
         if ($fullName === '' || $username === '' || $rawPassword === '' || $role === '') {
             $staffMessage = "<p style='color:red'>❌ يرجى تعبئة جميع الحقول المطلوبة</p>";
         } else {
-            $hashedPassword = password_hash($rawPassword, PASSWORD_DEFAULT);
-            $permissionsJson = json_encode($permissions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-            $stmt = $con->prepare("INSERT INTO users (full_name, username, pass, role, permissions_json) VALUES (?,?,?,?,?)");
-            if ($stmt) {
-                $stmt->bind_param("sssss", $fullName, $username, $hashedPassword, $role, $permissionsJson);
-
-                if ($stmt->execute()) {
-                    $staffMessage = "<p style='color:green'>✔ تم إنشاء حساب الموظف بنجاح</p>";
-                } else {
-                    $staffMessage = ($con->errno === 1062)
-                        ? "<p style='color:red'>❌ اسم المستخدم موجود مسبقاً</p>"
-                        : "<p style='color:red'>❌ تعذر حفظ الحساب، حاول مرة أخرى</p>";
-                }
+            $checkStmt = $con->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
+            if (!$checkStmt) {
+                $staffMessage = "<p style='color:red'>❌ تعذر التحقق من اسم المستخدم</p>";
             } else {
-                $staffMessage = "<p style='color:red'>❌ تعذر تجهيز الاستعلام</p>";
+                $checkStmt->bind_param("s", $username);
+                $checkStmt->execute();
+                $checkStmt->store_result();
+
+                if ($checkStmt->num_rows > 0) {
+                    $staffMessage = "<p style='color:red'>❌ اسم المستخدم موجود مسبقاً</p>";
+                } else {
+                    $hashedPassword = password_hash($rawPassword, PASSWORD_DEFAULT);
+                    $permissionsJson = json_encode($permissions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                    $stmt = $con->prepare("INSERT INTO users (full_name, username, pass, role, permissions_json) VALUES (?,?,?,?,?)");
+                    if ($stmt) {
+                        $stmt->bind_param("sssss", $fullName, $username, $hashedPassword, $role, $permissionsJson);
+
+                        if ($stmt->execute()) {
+                            $staffMessage = "<p style='color:green'>✔ تم إنشاء حساب الموظف بنجاح</p>";
+                        } else {
+                            $staffMessage = (mysqli_errno($con) === 1062)
+                                ? "<p style='color:red'>❌ اسم المستخدم موجود مسبقاً</p>"
+                                : "<p style='color:red'>❌ تعذر حفظ الحساب، حاول مرة أخرى</p>";
+                        }
+                    } else {
+                        $staffMessage = "<p style='color:red'>❌ تعذر تجهيز الاستعلام</p>";
+                    }
+                }
+            }
+        }
+    }
+}
+
+if (isset($_POST['save_user_account'])) {
+    if (!$canManageAccounts) {
+        $accountManageMessage = "<p style='color:red'>❌ إدارة الحسابات متاحة فقط من خلال حساب المدير</p>";
+    } else {
+        $userId = (int) ($_POST['edit_user_id'] ?? 0);
+        $fullName = trim((string) ($_POST['edit_full_name'] ?? ''));
+        $username = trim((string) ($_POST['edit_username'] ?? ''));
+        $newPassword = (string) ($_POST['edit_pass'] ?? '');
+        $permissions = clinic_normalize_permissions($_POST['edit_permissions'] ?? []);
+        $permissionsJson = json_encode($permissions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        if ($userId <= 0 || $fullName === '' || $username === '') {
+            $accountManageMessage = "<p style='color:red'>❌ يرجى تعبئة الاسم واسم المستخدم بشكل صحيح</p>";
+        } else {
+            $checkStmt = $con->prepare("SELECT id FROM users WHERE username = ? AND id <> ? LIMIT 1");
+            if (!$checkStmt) {
+                $accountManageMessage = "<p style='color:red'>❌ تعذر التحقق من اسم المستخدم</p>";
+            } else {
+                $checkStmt->bind_param("si", $username, $userId);
+                $checkStmt->execute();
+                $checkStmt->store_result();
+
+                if ($checkStmt->num_rows > 0) {
+                    $accountManageMessage = "<p style='color:red'>❌ اسم المستخدم مستخدم مسبقا</p>";
+                } else {
+                    if ($newPassword !== '') {
+                        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+                        $stmt = $con->prepare("UPDATE users SET full_name = ?, username = ?, pass = ?, permissions_json = ? WHERE id = ? LIMIT 1");
+                        if ($stmt) {
+                            $stmt->bind_param("ssssi", $fullName, $username, $hashedPassword, $permissionsJson, $userId);
+                        }
+                    } else {
+                        $stmt = $con->prepare("UPDATE users SET full_name = ?, username = ?, permissions_json = ? WHERE id = ? LIMIT 1");
+                        if ($stmt) {
+                            $stmt->bind_param("sssi", $fullName, $username, $permissionsJson, $userId);
+                        }
+                    }
+
+                    if (!isset($stmt) || !$stmt) {
+                        $accountManageMessage = "<p style='color:red'>❌ تعذر تجهيز تحديث الحساب</p>";
+                    } else {
+                        if ($stmt->execute()) {
+                            $accountManageMessage = "<p style='color:green'>✔ تم تحديث بيانات الحساب بنجاح</p>";
+                        } else {
+                            $accountManageMessage = (mysqli_errno($con) === 1062)
+                                ? "<p style='color:red'>❌ اسم المستخدم مستخدم مسبقا</p>"
+                                : "<p style='color:red'>❌ فشل تحديث بيانات الحساب</p>";
+                        }
+                    }
+                }
             }
         }
     }
@@ -104,6 +176,19 @@ $openConflicts = 0;
 if ($IS_LOCAL) {
     $openConflictsRow = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM sync_conflicts WHERE resolution_status = 'open'"));
     $openConflicts = (int) ($openConflictsRow['total'] ?? 0);
+}
+
+$availableSections = ['account-center', 'quick-actions', 'staff-registration', 'runtime-center', 'auto-sync-center', 'emergency-guide'];
+if (!in_array($activeSection, $availableSections, true)) {
+    $activeSection = 'account-center';
+}
+
+$usersList = [];
+$usersResult = mysqli_query($con, "SELECT id, full_name, username, role, created_at, permissions_json FROM users ORDER BY id ASC");
+while ($usersResult && ($row = mysqli_fetch_assoc($usersResult))) {
+    $decodedPermissions = json_decode((string) ($row['permissions_json'] ?? '[]'), true);
+    $row['permissions'] = clinic_normalize_permissions(is_array($decodedPermissions) ? $decodedPermissions : []);
+    $usersList[] = $row;
 }
 ?>
 
@@ -173,6 +258,38 @@ if ($IS_LOCAL) {
         color: var(--muted);
     }
 
+    .section-nav {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 10px;
+        margin-bottom: 14px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .section-nav a {
+        text-decoration: none;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-weight: 700;
+        background: #f8fbff;
+    }
+
+    .section-nav a:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .section-nav a.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+
     .notice {
         margin: 0 0 14px;
         padding: 10px 12px;
@@ -201,6 +318,20 @@ if ($IS_LOCAL) {
         border-radius: 14px;
         padding: 16px;
         margin-bottom: 14px;
+    }
+
+    .settings-section {
+        display: none;
+    }
+
+    .settings-section.active {
+        display: grid;
+    }
+
+    .actions-card.settings-section.active,
+    .runtime-panel.settings-section.active,
+    .emergency-guide.settings-section.active {
+        display: block;
     }
 
     .section-title {
@@ -333,6 +464,100 @@ if ($IS_LOCAL) {
         gap: 10px;
         align-items: center;
         flex-wrap: wrap;
+    }
+
+    .accounts-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .account-item {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fafcff;
+    }
+
+    .account-item form {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        align-items: end;
+    }
+
+    .account-item .meta {
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .account-item input {
+        min-height: 40px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+    }
+
+    .account-permissions {
+        grid-column: 1 / -1;
+        display: grid;
+        gap: 8px;
+    }
+
+    .account-permissions-title {
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .account-permissions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+    }
+
+    .input-with-toggle {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-with-toggle input {
+        width: 100%;
+        padding-inline-end: 70px;
+    }
+
+    .pass-toggle {
+        position: absolute;
+        inset-inline-end: 6px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        background: #f8fbff;
+        color: var(--text);
+        min-height: 30px;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .username-hint {
+        margin-top: 4px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748b;
+    }
+
+    .username-hint.error {
+        color: var(--danger);
+    }
+
+    .btn-account-save {
+        background: #0f766e;
+    }
+
+    .btn-account-save:hover {
+        background: #0b5f59;
     }
 
     .btn-staff {
@@ -510,6 +735,10 @@ if ($IS_LOCAL) {
             grid-template-columns: 1fr;
         }
 
+        .account-item form {
+            grid-template-columns: 1fr;
+        }
+
         .staff-actions .btn-link,
         .staff-actions .btn-submit {
             width: 100%;
@@ -525,13 +754,76 @@ if ($IS_LOCAL) {
             <p>إدارة النسخ الاحتياطي، المزامنة، وإجراءات الطوارئ من مكان واحد.</p>
         </section>
 
+        <nav class="section-nav">
+            <a href="#account-center" data-section-link="account-center">إدارة الحسابات</a>
+            <a href="#quick-actions" data-section-link="quick-actions">الإجراءات السريعة</a>
+            <a href="#staff-registration" data-section-link="staff-registration">إضافة موظف</a>
+            <a href="#runtime-center" data-section-link="runtime-center">وضع التشغيل</a>
+            <a href="#auto-sync-center" data-section-link="auto-sync-center">المزامنة التلقائية</a>
+            <a href="#emergency-guide" data-section-link="emergency-guide">دليل الطوارئ</a>
+        </nav>
+
         <?php if (!empty($modeMessage)): ?>
             <div class="notice <?php echo (strpos($modeMessage, '❌') !== false) ? 'error' : 'success'; ?>">
                 <?php echo strip_tags($modeMessage); ?>
             </div>
         <?php endif; ?>
 
-        <section class="actions-card">
+        <section class="staff-card settings-section" id="account-center" data-section-panel="account-center">
+            <h3 class="section-title">إدارة الحسابات</h3>
+            <p class="section-subtitle">تعديل بيانات المدير والموظفين من مكان واحد. هذه الإدارة متاحة فقط عند تسجيل الدخول بحساب المدير.</p>
+
+            <?php if (!$canManageAccounts): ?>
+                <p class="cloud-note">إدارة الحسابات (تعديل الاسم واسم المستخدم وكلمة المرور) متاحة فقط لحساب المدير.</p>
+            <?php endif; ?>
+
+            <?php if (!empty($accountManageMessage)): ?>
+                <div class="notice <?php echo (strpos($accountManageMessage, '❌') !== false) ? 'error' : 'success'; ?>">
+                    <?php echo strip_tags($accountManageMessage); ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="accounts-list">
+                <?php foreach ($usersList as $u): ?>
+                    <article class="account-item">
+                        <div class="meta">
+                            الحساب #<?php echo (int) $u['id']; ?>
+                            | الدور: <?php echo htmlspecialchars((string) $u['role'], ENT_QUOTES, 'UTF-8'); ?>
+                            | أنشئ بتاريخ: <?php echo htmlspecialchars((string) ($u['created_at'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?>
+                        </div>
+                        <form method="post" class="manage-account-form" data-user-id="<?php echo (int) $u['id']; ?>">
+                            <input type="hidden" name="active_section" value="account-center">
+                            <input type="hidden" name="edit_user_id" value="<?php echo (int) $u['id']; ?>">
+                            <input type="text" name="edit_full_name" value="<?php echo htmlspecialchars((string) $u['full_name'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="الاسم الكامل" required>
+                            <div>
+                                <input class="js-username-field" type="text" name="edit_username" value="<?php echo htmlspecialchars((string) $u['username'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="اسم المستخدم" required>
+                                <div class="username-hint">اسم المستخدم متاح</div>
+                            </div>
+                            <div class="input-with-toggle">
+                                <input id="edit_pass_<?php echo (int) $u['id']; ?>" type="password" name="edit_pass" placeholder="كلمة مرور جديدة (اختياري)">
+                                <button class="pass-toggle" type="button" data-toggle-pass data-target="edit_pass_<?php echo (int) $u['id']; ?>">إظهار</button>
+                            </div>
+                            <div class="account-permissions">
+                                <div class="account-permissions-title">صلاحيات هذا الحساب</div>
+                                <div class="account-permissions-grid">
+                                    <?php foreach ($staffPermissionOptions as $key => $label): ?>
+                                        <div class="staff-permission-item">
+                                            <label>
+                                                <input type="checkbox" name="edit_permissions[]" value="<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>" <?php echo in_array($key, $u['permissions'] ?? [], true) ? 'checked' : ''; ?>>
+                                                <span><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></span>
+                                            </label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <button class="btn-submit btn-account-save" type="submit" name="save_user_account" <?php echo $canManageAccounts ? '' : 'disabled'; ?>>حفظ التعديل</button>
+                        </form>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        </section>
+
+        <section class="actions-card settings-section" id="quick-actions" data-section-panel="quick-actions">
             <h3 class="section-title">الإجراءات السريعة</h3>
             <p class="section-subtitle">تم تقسيم الإجراءات إلى مجموعتين: إجراءات تشغيل اعتيادية، وإجراءات حساسة تتطلب انتباها أعلى.</p>
 
@@ -572,15 +864,16 @@ if ($IS_LOCAL) {
             </div>
         </section>
 
-        <section class="staff-card" id="staff-registration">
+        <section class="staff-card settings-section" id="staff-registration" data-section-panel="staff-registration">
             <h3 class="section-title">إضافة موظف جديد</h3>
             <p class="section-subtitle">إنشاء حساب موظف مباشر من داخل الإعدادات مع تحديد الصلاحيات الخاصة به.</p>
 
-            <?php if (!$canManageUsers): ?>
-                <p class="cloud-note">هذه الميزة متاحة فقط للحسابات التي تملك صلاحية إدارة الحسابات.</p>
+            <?php if (!$canManageAccounts): ?>
+                <p class="cloud-note">إضافة الموظفين متاحة فقط عند تسجيل الدخول بحساب المدير.</p>
             <?php endif; ?>
 
             <form method="post" class="staff-grid">
+                <input type="hidden" name="active_section" value="staff-registration">
                 <div class="staff-field full">
                     <label for="staff_full_name">الاسم الكامل</label>
                     <input id="staff_full_name" type="text" name="full_name" placeholder="مثال: سارة أحمد" required>
@@ -588,12 +881,16 @@ if ($IS_LOCAL) {
 
                 <div class="staff-field">
                     <label for="staff_username">اسم المستخدم</label>
-                    <input id="staff_username" type="text" name="username" placeholder="مثال: sara.a" required>
+                    <input id="staff_username" class="js-username-field" type="text" name="username" placeholder="مثال: sara.a" required>
+                    <div class="username-hint">اسم المستخدم متاح</div>
                 </div>
 
                 <div class="staff-field">
                     <label for="staff_pass">كلمة المرور</label>
-                    <input id="staff_pass" type="password" name="pass" placeholder="كلمة المرور" required>
+                    <div class="input-with-toggle">
+                        <input id="staff_pass" type="password" name="pass" placeholder="كلمة المرور" required>
+                        <button class="pass-toggle" type="button" data-toggle-pass data-target="staff_pass">إظهار</button>
+                    </div>
                 </div>
 
                 <div class="staff-field full">
@@ -623,7 +920,7 @@ if ($IS_LOCAL) {
                 </div>
 
                 <div class="staff-actions full">
-                    <button class="btn-submit btn-staff" type="submit" name="register_staff" <?php echo $canManageUsers ? '' : 'disabled'; ?>>حفظ الموظف</button>
+                    <button class="btn-submit btn-staff" type="submit" name="register_staff" <?php echo $canManageAccounts ? '' : 'disabled'; ?>>حفظ الموظف</button>
                     <a class="btn-link btn-conflicts" href="registration.php">فتح صفحة التسجيل الكاملة</a>
                 </div>
             </form>
@@ -657,7 +954,7 @@ if ($IS_LOCAL) {
         }
         ?>
 
-        <section class="runtime-panel" dir="rtl">
+        <section class="runtime-panel settings-section" dir="rtl" id="runtime-center" data-section-panel="runtime-center">
             <h3>وضع التشغيل أثناء الطوارئ</h3>
             <div class="runtime-status">
                 حالة النسخة السحابية الآن:
@@ -673,6 +970,7 @@ if ($IS_LOCAL) {
             </div>
             <?php if ($canManageWriteLock): ?>
                 <form class="runtime-form" method="post">
+                    <input type="hidden" name="active_section" value="runtime-center">
                     <label>
                         <input type="checkbox" name="online_write_enabled" value="1" <?php echo $isOnlineWriteLocked ? '' : 'checked'; ?>>
                         السماح بالكتابة على النسخة السحابية
@@ -685,7 +983,7 @@ if ($IS_LOCAL) {
         </section>
 
         <?php if ($IS_LOCAL): ?>
-            <section class="runtime-panel" dir="rtl">
+            <section class="runtime-panel settings-section" dir="rtl" id="auto-sync-center" data-section-panel="auto-sync-center">
                 <h3>المزامنة التلقائية من السحابة إلى المحلي</h3>
                 <div class="runtime-note">
                     عند تفعيل هذا الخيار سيقوم النظام بمحاولة سحب أحدث البيانات من السحابة تلقائيا كل 5 أو 10 دقائق أثناء استخدام النظام محليا.
@@ -698,6 +996,7 @@ if ($IS_LOCAL) {
                 <?php endif; ?>
 
                 <form class="runtime-form" method="post">
+                    <input type="hidden" name="active_section" value="auto-sync-center">
                     <label>
                         <input type="checkbox" name="auto_pull_enabled" value="1" <?php echo $autoPullEnabled ? 'checked' : ''; ?>>
                         تفعيل المزامنة التلقائية
@@ -722,7 +1021,7 @@ if ($IS_LOCAL) {
         <?php endif; ?>
 
         <?php if ($IS_LOCAL): ?>
-            <section class="emergency-guide" dir="rtl">
+            <section class="emergency-guide settings-section" dir="rtl" id="emergency-guide" data-section-panel="emergency-guide">
                 <h3>دليل الطوارئ للمزامنة (إجراء معتمد)</h3>
 
                 <h4>أولا: عند حدوث الطارئ وانقطاع الاتصال</h4>
@@ -766,6 +1065,144 @@ if ($IS_LOCAL) {
             </section>
         <?php endif; ?>
     </main>
+
+    <script>
+        (function() {
+            const initialSection = <?php echo json_encode($activeSection, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+            const users = <?php echo json_encode(array_map(static function ($u) {
+                                return [
+                                    'id' => (int) ($u['id'] ?? 0),
+                                    'username' => (string) ($u['username'] ?? ''),
+                                ];
+                            }, $usersList), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+
+            const sectionLinks = document.querySelectorAll('[data-section-link]');
+            const sectionPanels = document.querySelectorAll('[data-section-panel]');
+
+            function activateSection(sectionId) {
+                let found = false;
+
+                sectionPanels.forEach((panel) => {
+                    const isActive = panel.getAttribute('data-section-panel') === sectionId;
+                    panel.classList.toggle('active', isActive);
+                    if (isActive) {
+                        found = true;
+                    }
+                });
+
+                sectionLinks.forEach((link) => {
+                    const isActive = link.getAttribute('data-section-link') === sectionId;
+                    link.classList.toggle('active', isActive);
+                });
+
+                return found;
+            }
+
+            sectionLinks.forEach((link) => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const sectionId = link.getAttribute('data-section-link') || '';
+                    if (!activateSection(sectionId)) {
+                        return;
+                    }
+                    window.location.hash = sectionId;
+                });
+            });
+
+            const requestedSection = (window.location.hash || '').replace('#', '') || initialSection;
+            if (!activateSection(requestedSection)) {
+                activateSection('account-center');
+            }
+
+            const usernameIndex = new Map();
+            users.forEach((u) => {
+                const key = (u.username || '').trim().toLowerCase();
+                if (key !== '') {
+                    usernameIndex.set(key, Number(u.id || 0));
+                }
+            });
+
+            function setHint(field, message, isError) {
+                const wrapper = field.closest('div');
+                if (!wrapper) {
+                    return;
+                }
+                const hint = wrapper.querySelector('.username-hint');
+                if (!hint) {
+                    return;
+                }
+                hint.textContent = message;
+                hint.classList.toggle('error', !!isError);
+            }
+
+            function validateUsernameField(field) {
+                const form = field.closest('form');
+                const currentId = Number(form?.dataset.userId || 0);
+                const value = (field.value || '').trim().toLowerCase();
+
+                if (value === '') {
+                    field.setCustomValidity('يرجى إدخال اسم المستخدم');
+                    setHint(field, 'يرجى إدخال اسم المستخدم', true);
+                    return false;
+                }
+
+                const ownerId = Number(usernameIndex.get(value) || 0);
+                const isDuplicate = ownerId > 0 && ownerId !== currentId;
+
+                if (isDuplicate) {
+                    field.setCustomValidity('اسم المستخدم مستخدم مسبقا');
+                    setHint(field, 'اسم المستخدم مستخدم مسبقا', true);
+                    return false;
+                }
+
+                field.setCustomValidity('');
+                setHint(field, 'اسم المستخدم متاح', false);
+                return true;
+            }
+
+            document.querySelectorAll('.js-username-field').forEach((field) => {
+                field.addEventListener('input', () => {
+                    validateUsernameField(field);
+                });
+
+                field.addEventListener('blur', () => {
+                    validateUsernameField(field);
+                });
+
+                validateUsernameField(field);
+            });
+
+            document.querySelectorAll('form').forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    const fields = form.querySelectorAll('.js-username-field');
+                    let ok = true;
+                    fields.forEach((field) => {
+                        if (!validateUsernameField(field)) {
+                            ok = false;
+                        }
+                    });
+
+                    if (!ok) {
+                        event.preventDefault();
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-toggle-pass]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.getAttribute('data-target');
+                    const input = targetId ? document.getElementById(targetId) : null;
+                    if (!input) {
+                        return;
+                    }
+
+                    const nextType = input.type === 'password' ? 'text' : 'password';
+                    input.type = nextType;
+                    btn.textContent = nextType === 'password' ? 'إظهار' : 'إخفاء';
+                });
+            });
+        })();
+    </script>
 </body>
 
 </html>

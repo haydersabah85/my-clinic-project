@@ -47,7 +47,7 @@ mysqli_stmt_execute($old_stmt);
 $old_row = mysqli_fetch_assoc(mysqli_stmt_get_result($old_stmt));
 
 $deleted_by = clinic_current_user();
-$stmt = mysqli_prepare($con, "UPDATE add_patient SET is_deleted = 1, deleted_at = NOW(), deleted_by = ? WHERE id = ?");
+$stmt = mysqli_prepare($con, "UPDATE add_patient SET is_deleted = 1, deleted_at = NOW(), deleted_by = ?, updated_at = NOW() WHERE id = ?");
 mysqli_stmt_bind_param($stmt, "si", $deleted_by, $id_delete);
 $result_delete = mysqli_stmt_execute($stmt);
 

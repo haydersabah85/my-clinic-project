@@ -259,6 +259,9 @@ function clinic_sync_pull_from_online_worker(mysqli $localDb, bool $forceFullPul
     clinic_ensure_runtime_controls($localDb);
     clinic_ensure_patient_images_sync_support($localDb);
     clinic_ensure_deleted_records($localDb);
+    clinic_ensure_daily_revenue($localDb);
+    clinic_ensure_procedure_types($localDb);
+    clinic_ensure_procedure_entries($localDb);
 
     $onlineHost = $GLOBALS['onlineDb']['host'] ?? 'localhost';
     $onlineUser = $GLOBALS['onlineDb']['user'] ?? '';
@@ -280,6 +283,9 @@ function clinic_sync_pull_from_online_worker(mysqli $localDb, bool $forceFullPul
 
     clinic_ensure_patient_images_sync_support($online);
     clinic_ensure_deleted_records($online);
+    clinic_ensure_daily_revenue($online);
+    clinic_ensure_procedure_types($online);
+    clinic_ensure_procedure_entries($online);
 
     $tables = [
         ['name' => 'add_patient', 'pk' => 'id'],
@@ -297,6 +303,9 @@ function clinic_sync_pull_from_online_worker(mysqli $localDb, bool $forceFullPul
         ['name' => 'va', 'pk' => 'va_id'],
         ['name' => 'followups', 'pk' => 'id'],
         ['name' => 'visits', 'pk' => 'visit_id'],
+        ['name' => 'daily_revenue', 'pk' => 'id'],
+        ['name' => 'procedure_types', 'pk' => 'id'],
+        ['name' => 'procedure_entries', 'pk' => 'id'],
     ];
 
     $results = [];

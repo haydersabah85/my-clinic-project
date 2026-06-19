@@ -316,6 +316,8 @@ include_once "clinic_helpers.php";
         <div class="field field-wide">
           <label for="full_name">الاسم الرباعي</label>
           <input type="text" id="full_name" name="full_name" required autofocus>
+
+          <div class="duplicate-warning" id="duplicateWarning" role="alert"></div>
         </div>
 
         <div class="field">
@@ -357,10 +359,10 @@ include_once "clinic_helpers.php";
         </div>
       </div>
 
-      <div class="duplicate-warning" id="duplicateWarning" role="alert"></div>
+      
 
       <div class="form-footer">
-        <a class="btn btn-muted" href="main.php">إلغاء</a>
+        <a class="btn btn-muted" href="dashboard.php">إلغاء</a>
         <button class="btn submit-btn" type="submit" name="submit">إضافة المريض</button>
       </div>
     </form>

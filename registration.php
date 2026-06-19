@@ -52,6 +52,15 @@ $permissionOptions = [
     'sync' => 'المزامنة السحابية',
     'users' => 'إدارة الحسابات',
 ];
+
+$existingUsers = [];
+$usersResult = mysqli_query($con, "SELECT id, username FROM users");
+while ($usersResult && ($u = mysqli_fetch_assoc($usersResult))) {
+    $existingUsers[] = [
+        'id' => (int) ($u['id'] ?? 0),
+        'username' => (string) ($u['username'] ?? ''),
+    ];
+}
 ?>
 
 <!DOCTYPE html>
@@ -223,6 +232,41 @@ $permissionOptions = [
             box-shadow: 0 0 0 4px rgba(13, 110, 253, .12);
         }
 
+        .input-with-toggle {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-toggle input {
+            padding-inline-end: 70px;
+        }
+
+        .pass-toggle {
+            position: absolute;
+            inset-inline-end: 8px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: rgba(13, 110, 253, .08);
+            color: var(--text);
+            min-height: 32px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .field-note {
+            margin-top: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #2b6cb0;
+        }
+
+        .field-note.error {
+            color: #b91c1c;
+        }
+
         .permissions {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -376,12 +420,16 @@ $permissionOptions = [
 
                 <div class="field">
                     <label for="username">اسم المستخدم</label>
-                    <input id="username" type="text" name="username" placeholder="مثال: sara.a" required>
+                    <input id="username" class="js-username-field" type="text" name="username" placeholder="مثال: sara.a" required>
+                    <div class="field-note" id="username_note">اسم المستخدم متاح</div>
                 </div>
 
                 <div class="field">
                     <label for="pass">كلمة المرور</label>
-                    <input id="pass" type="password" name="pass" placeholder="••••••••" required>
+                    <div class="input-with-toggle">
+                        <input id="pass" type="password" name="pass" placeholder="••••••••" required>
+                        <button class="pass-toggle" type="button" data-toggle-pass data-target="pass">إظهار</button>
+                    </div>
                 </div>
 
                 <div class="field full">
@@ -425,6 +473,74 @@ $permissionOptions = [
         if (savedTheme === 'dark') {
             document.body.classList.add('dark');
         }
+
+        (function() {
+            const users = <?php echo json_encode($existingUsers, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+            const usernameIndex = new Set();
+            users.forEach((u) => {
+                const key = (u.username || '').trim().toLowerCase();
+                if (key !== '') {
+                    usernameIndex.add(key);
+                }
+            });
+
+            const usernameField = document.getElementById('username');
+            const note = document.getElementById('username_note');
+
+            function validateUsername() {
+                if (!usernameField || !note) {
+                    return true;
+                }
+
+                const value = (usernameField.value || '').trim().toLowerCase();
+                if (value === '') {
+                    usernameField.setCustomValidity('يرجى إدخال اسم المستخدم');
+                    note.textContent = 'يرجى إدخال اسم المستخدم';
+                    note.classList.add('error');
+                    return false;
+                }
+
+                if (usernameIndex.has(value)) {
+                    usernameField.setCustomValidity('اسم المستخدم مستخدم مسبقا');
+                    note.textContent = 'اسم المستخدم مستخدم مسبقا';
+                    note.classList.add('error');
+                    return false;
+                }
+
+                usernameField.setCustomValidity('');
+                note.textContent = 'اسم المستخدم متاح';
+                note.classList.remove('error');
+                return true;
+            }
+
+            if (usernameField) {
+                usernameField.addEventListener('input', validateUsername);
+                usernameField.addEventListener('blur', validateUsername);
+                validateUsername();
+            }
+
+            document.querySelectorAll('form').forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    if (!validateUsername()) {
+                        event.preventDefault();
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-toggle-pass]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.getAttribute('data-target');
+                    const input = targetId ? document.getElementById(targetId) : null;
+                    if (!input) {
+                        return;
+                    }
+
+                    const nextType = input.type === 'password' ? 'text' : 'password';
+                    input.type = nextType;
+                    btn.textContent = nextType === 'password' ? 'إظهار' : 'إخفاء';
+                });
+            });
+        })();
     </script>
 
 </body>

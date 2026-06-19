@@ -29,11 +29,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
     $result = mysqli_stmt_execute($stmt);
 
     if ($result) {
+        $newPatientId = (int) mysqli_insert_id($con);
         clinic_audit($con, 'create', 'add_patient', mysqli_insert_id($con), null, [
             'full_name' => $full_name,
             'phone_no' => $phone_no,
         ]);
+        header('Location: patient-data.php?id=' . $newPatientId);
+        exit;
     }
 
     header('Location: dashboard.php');
+    exit;
 }

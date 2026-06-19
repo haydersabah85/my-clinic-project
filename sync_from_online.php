@@ -18,6 +18,9 @@ if (!$IS_LOCAL) {
 clinic_ensure_runtime_controls($con);
 clinic_ensure_patient_images_sync_support($con);
 clinic_ensure_deleted_records($con);
+clinic_ensure_daily_revenue($con);
+clinic_ensure_procedure_types($con);
+clinic_ensure_procedure_entries($con);
 set_time_limit(0);
 $forceFullPull = isset($_GET['full']) && $_GET['full'] === '1';
 
@@ -31,6 +34,9 @@ if (!isset($online) || !($online instanceof mysqli)) {
 
 clinic_ensure_patient_images_sync_support($online);
 clinic_ensure_deleted_records($online);
+clinic_ensure_daily_revenue($online);
+clinic_ensure_procedure_types($online);
+clinic_ensure_procedure_entries($online);
 
 function sync_table_exists(mysqli $db, string $table): bool
 {
@@ -315,6 +321,9 @@ $tables = [
     ['name' => 'va', 'pk' => 'va_id'],
     ['name' => 'followups', 'pk' => 'id'],
     ['name' => 'visits', 'pk' => 'visit_id'],
+    ['name' => 'daily_revenue', 'pk' => 'id'],
+    ['name' => 'procedure_types', 'pk' => 'id'],
+    ['name' => 'procedure_entries', 'pk' => 'id'],
 ];
 
 $results = [];

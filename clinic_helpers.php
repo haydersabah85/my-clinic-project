@@ -96,6 +96,96 @@ function clinic_ensure_infrastructure(mysqli $con): void
     clinic_ensure_index($con, 'followups', 'idx_followups_status_date', '`status`, `followup_date`');
 }
 
+function clinic_ensure_daily_revenue(mysqli $con): void
+{
+    mysqli_query($con, "
+        CREATE TABLE IF NOT EXISTS daily_revenue (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            revenue_date DATE NOT NULL,
+            visit_first_count INT NOT NULL DEFAULT 0,
+            visit_repeat_count INT NOT NULL DEFAULT 0,
+            paid_visits_count INT NOT NULL DEFAULT 0,
+            visit_first_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+            visit_repeat_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+            visit_income DECIMAL(12,2) NOT NULL DEFAULT 0,
+            retina_count INT NOT NULL DEFAULT 0,
+            retina_income DECIMAL(12,2) NOT NULL DEFAULT 0,
+            laser_count INT NOT NULL DEFAULT 0,
+            laser_income DECIMAL(12,2) NOT NULL DEFAULT 0,
+            procedures_income DECIMAL(12,2) NOT NULL DEFAULT 0,
+            other_income DECIMAL(12,2) NOT NULL DEFAULT 0,
+            service_staff_due DECIMAL(12,2) NOT NULL DEFAULT 0,
+            notes TEXT NULL,
+            created_by VARCHAR(120) NULL,
+            updated_by VARCHAR(120) NULL,
+            sync_status TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_daily_revenue_date (revenue_date),
+            INDEX idx_daily_revenue_updated (updated_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
+    clinic_ensure_column($con, 'daily_revenue', 'visit_first_count', 'INT NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, 'daily_revenue', 'visit_repeat_count', 'INT NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, 'daily_revenue', 'paid_visits_count', 'INT NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, 'daily_revenue', 'visit_first_price', 'DECIMAL(12,2) NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, 'daily_revenue', 'visit_repeat_price', 'DECIMAL(12,2) NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, 'daily_revenue', 'retina_count', 'INT NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, 'daily_revenue', 'laser_count', 'INT NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, 'daily_revenue', 'procedures_income', 'DECIMAL(12,2) NOT NULL DEFAULT 0');
+}
+
+function clinic_ensure_procedure_types(mysqli $con): void
+{
+    mysqli_query($con, "
+        CREATE TABLE IF NOT EXISTS procedure_types (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            type_name VARCHAR(180) NOT NULL,
+            category ENUM('retina','laser','other') NOT NULL DEFAULT 'other',
+            is_active TINYINT(1) NOT NULL DEFAULT 1,
+            sync_status TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_procedure_type_name (type_name),
+            INDEX idx_procedure_category (category)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
+    mysqli_query($con, "INSERT IGNORE INTO procedure_types (type_name, category, is_active, sync_status) VALUES ('فحص الشبكية', 'retina', 1, 0)");
+    mysqli_query($con, "INSERT IGNORE INTO procedure_types (type_name, category, is_active, sync_status) VALUES ('ليزر الشبكية', 'laser', 1, 0)");
+}
+
+function clinic_ensure_procedure_entries(mysqli $con): void
+{
+    mysqli_query($con, "
+        CREATE TABLE IF NOT EXISTS procedure_entries (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            procedure_date DATE NOT NULL,
+            patient_id INT NULL,
+            patient_name VARCHAR(220) NOT NULL,
+            procedure_type_id INT NOT NULL,
+            procedure_type_name VARCHAR(180) NOT NULL,
+            category ENUM('retina','laser','other') NOT NULL DEFAULT 'other',
+            qty INT NOT NULL DEFAULT 1,
+            unit_cost DECIMAL(12,2) NOT NULL DEFAULT 0,
+            total_cost DECIMAL(12,2) NOT NULL DEFAULT 0,
+            notes TEXT NULL,
+            entered_by VARCHAR(120) NULL,
+            sync_status TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_procedure_date (procedure_date),
+            INDEX idx_procedure_patient (patient_id),
+            INDEX idx_procedure_category (category),
+            INDEX idx_procedure_type (procedure_type_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
+    clinic_ensure_column($con, 'procedure_entries', 'patient_id', 'INT NULL');
+    clinic_ensure_index($con, 'procedure_entries', 'idx_procedure_patient', '`patient_id`');
+}
+
 function clinic_ensure_runtime_controls(mysqli $con): void
 {
     mysqli_query($con, "
@@ -561,6 +651,9 @@ function clinic_required_permissions_for_script(string $scriptName): array
     $scriptName = strtolower(trim($scriptName));
 
     $exactMap = [
+        'daily-revenue.php' => ['admin'],
+        'procedure-entries.php' => ['appointments'],
+        'procedure-patient-search.php' => ['appointments'],
         'registration.php' => ['users'],
         'settings.php' => ['settings'],
         'backup_and_upload.php' => ['backup'],
@@ -690,7 +783,18 @@ function clinic_current_user(): string
         @session_start();
     }
 
-    return $_SESSION['username'] ?? $_SESSION['user'] ?? $_SESSION['full_name'] ?? 'system';
+    $role = strtolower((string) ($_SESSION['role'] ?? ''));
+    if ($role === 'admin') {
+        return 'admin';
+    }
+
+    $username = trim((string) ($_SESSION['username'] ?? $_SESSION['user'] ?? ''));
+    if ($username !== '') {
+        return $username;
+    }
+
+    $fallbackName = trim((string) ($_SESSION['full_name'] ?? $_SESSION['name'] ?? ''));
+    return $fallbackName !== '' ? $fallbackName : 'system';
 }
 
 function clinic_csrf_token(): string

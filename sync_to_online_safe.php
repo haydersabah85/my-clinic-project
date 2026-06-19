@@ -19,6 +19,9 @@ set_time_limit(0);
 clinic_ensure_runtime_controls($con);
 clinic_ensure_sync_conflicts($con);
 clinic_ensure_patient_images_sync_support($con);
+clinic_ensure_daily_revenue($con);
+clinic_ensure_procedure_types($con);
+clinic_ensure_procedure_entries($con);
 
 ob_start();
 include 'online-config.php';
@@ -29,6 +32,9 @@ if (!isset($online) || !($online instanceof mysqli)) {
 }
 
 clinic_ensure_patient_images_sync_support($online);
+clinic_ensure_daily_revenue($online);
+clinic_ensure_procedure_types($online);
+clinic_ensure_procedure_entries($online);
 
 function safe_sync_table_exists(mysqli $db, string $table): bool
 {
@@ -240,6 +246,9 @@ $tables = [
     ['name' => 'va', 'pk' => 'va_id'],
     ['name' => 'followups', 'pk' => 'id'],
     ['name' => 'visits', 'pk' => 'visit_id'],
+    ['name' => 'daily_revenue', 'pk' => 'id'],
+    ['name' => 'procedure_types', 'pk' => 'id'],
+    ['name' => 'procedure_entries', 'pk' => 'id'],
 ];
 
 $results = [];
