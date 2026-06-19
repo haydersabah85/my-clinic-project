@@ -13,6 +13,7 @@ if (isset($_GET['id'])) {
 
     // Execute the statement
     if ($stmt->execute()) {
+        clinic_log_deleted_record($con, 'laser_appointment', (int) $id);
         // Redirect to the appointments list page after deletion
         echo "<script>alert('تم حذف الموعد بنجاح');</script>";
         echo "<script>window.location.href = 'operation-by-date.php';</script>";
@@ -23,4 +24,3 @@ if (isset($_GET['id'])) {
     // Close the statement
     $stmt->close();
 }
-?>

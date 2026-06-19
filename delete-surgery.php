@@ -10,7 +10,7 @@ if (isset($_GET['id_delete'])) {
     $delete_query = "DELETE FROM surgery WHERE id = ?";
     $stmt = mysqli_prepare($con, $delete_query);
     mysqli_stmt_bind_param($stmt, 'i', $id_delete);
-    
+
     // Get the patient ID before deletion for redirection
     $patient_id_query = "SELECT patient_id FROM surgery WHERE id = ?";
     $patient_id_stmt = mysqli_prepare($con, $patient_id_query);
@@ -19,10 +19,11 @@ if (isset($_GET['id_delete'])) {
     mysqli_stmt_bind_result($patient_id_stmt, $patient_id);
     mysqli_stmt_fetch($patient_id_stmt);
     mysqli_stmt_close($patient_id_stmt);
-    
+
 
     // Execute the statement
     if (mysqli_stmt_execute($stmt)) {
+        clinic_log_deleted_record($con, 'surgery', (int) $id_delete);
         // Redirect back to the patient file or visits page after deletion
         header("Location: patient-file.php?id=" . $patient_id);
         exit();
@@ -35,4 +36,3 @@ if (isset($_GET['id_delete'])) {
 }
 // Close the database connection
 mysqli_close($con);
-?>

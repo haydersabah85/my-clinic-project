@@ -8,12 +8,13 @@ if (isset($_GET['id'])) {
     $id = $_GET['id'];
 
     // Prepare the DELETE statement
-   $stmt = $con->prepare("DELETE FROM surgery_appointment WHERE id = ?");
+    $stmt = $con->prepare("DELETE FROM surgery_appointment WHERE id = ?");
     $stmt->bind_param("i", $id);
 
 
     // Execute the statement
     if ($stmt->execute()) {
+        clinic_log_deleted_record($con, 'surgery_appointment', (int) $id);
         // Redirect to the appointments list page after deletion
         echo "<script>alert('تم حذف الموعد بنجاح');</script>";
         echo "<script>window.location.href = 'operation-by-date.php';</script>";
@@ -25,4 +26,3 @@ if (isset($_GET['id'])) {
     $stmt->close();
 }
 $conn->close();
-?>

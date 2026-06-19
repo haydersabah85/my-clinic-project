@@ -11,6 +11,7 @@ clinic_ensure_sync_conflicts($con);
 clinic_ensure_column($con, 'users', 'permissions_json', 'LONGTEXT NULL');
 
 $modeMessage = '';
+$autoSyncMessage = '';
 $canManageWriteLock = clinic_can_manage_online_write_lock($con);
 $canManageUsers = clinic_user_has_permission(['users']);
 $staffMessage = '';
@@ -36,6 +37,23 @@ if (isset($_POST['save_runtime_mode'])) {
         } else {
             $modeMessage = "<p style='color:red'>❌ فشل تحديث وضع الكتابة</p>";
         }
+    }
+}
+
+if (isset($_POST['save_auto_sync'])) {
+    $enabled = isset($_POST['auto_pull_enabled']) ? '1' : '0';
+    $interval = (int) ($_POST['auto_pull_interval_minutes'] ?? 10);
+    if (!in_array($interval, [5, 10], true)) {
+        $interval = 10;
+    }
+
+    $okEnabled = clinic_set_app_setting($con, 'auto_pull_enabled', $enabled);
+    $okInterval = clinic_set_app_setting($con, 'auto_pull_interval_minutes', (string) $interval);
+
+    if ($okEnabled && $okInterval) {
+        $autoSyncMessage = "<p style='color:green'>✔ تم حفظ إعدادات المزامنة التلقائية</p>";
+    } else {
+        $autoSyncMessage = "<p style='color:red'>❌ فشل حفظ إعدادات المزامنة التلقائية</p>";
     }
 }
 
@@ -74,6 +92,13 @@ if (isset($_POST['register_staff'])) {
 }
 
 $isOnlineWriteLocked = clinic_is_online_write_locked($con, (bool) $IS_LOCAL);
+
+$autoPullEnabled = clinic_auto_pull_is_enabled($con);
+$autoPullInterval = clinic_auto_pull_interval_minutes($con);
+$autoPullLastSuccess = clinic_get_app_setting($con, 'auto_pull_last_success_at', 'لم يتم التنفيذ بعد');
+$autoPullLastAttempt = clinic_get_app_setting($con, 'auto_pull_last_attempt_at', 'لم يتم التنفيذ بعد');
+$autoPullLastStatus = clinic_get_app_setting($con, 'auto_pull_last_status', 'unknown');
+$autoPullLastSummary = clinic_get_app_setting($con, 'auto_pull_last_summary', '-');
 
 $openConflicts = 0;
 if ($IS_LOCAL) {
@@ -658,6 +683,43 @@ if ($IS_LOCAL) {
                 <p style="color:#b30000;font-weight:700;margin:6px 0 0;">هذا التحكم محصور بحساب المدير الرئيسي فقط.</p>
             <?php endif; ?>
         </section>
+
+        <?php if ($IS_LOCAL): ?>
+            <section class="runtime-panel" dir="rtl">
+                <h3>المزامنة التلقائية من السحابة إلى المحلي</h3>
+                <div class="runtime-note">
+                    عند تفعيل هذا الخيار سيقوم النظام بمحاولة سحب أحدث البيانات من السحابة تلقائيا كل 5 أو 10 دقائق أثناء استخدام النظام محليا.
+                </div>
+
+                <?php if (!empty($autoSyncMessage)): ?>
+                    <div class="notice <?php echo (strpos($autoSyncMessage, '❌') !== false) ? 'error' : 'success'; ?>">
+                        <?php echo strip_tags($autoSyncMessage); ?>
+                    </div>
+                <?php endif; ?>
+
+                <form class="runtime-form" method="post">
+                    <label>
+                        <input type="checkbox" name="auto_pull_enabled" value="1" <?php echo $autoPullEnabled ? 'checked' : ''; ?>>
+                        تفعيل المزامنة التلقائية
+                    </label>
+
+                    <label for="auto_pull_interval_minutes" style="display:block;margin:10px 0 6px;">الفاصل الزمني</label>
+                    <select id="auto_pull_interval_minutes" name="auto_pull_interval_minutes" style="min-height:40px;border-radius:8px;border:1px solid var(--border);padding:6px 10px;">
+                        <option value="5" <?php echo $autoPullInterval === 5 ? 'selected' : ''; ?>>كل 5 دقائق</option>
+                        <option value="10" <?php echo $autoPullInterval === 10 ? 'selected' : ''; ?>>كل 10 دقائق</option>
+                    </select>
+
+                    <div class="runtime-note" style="margin-top:10px;">
+                        آخر محاولة: <?php echo htmlspecialchars((string) $autoPullLastAttempt, ENT_QUOTES, 'UTF-8'); ?><br>
+                        آخر نجاح: <?php echo htmlspecialchars((string) $autoPullLastSuccess, ENT_QUOTES, 'UTF-8'); ?><br>
+                        الحالة الأخيرة: <?php echo htmlspecialchars((string) $autoPullLastStatus, ENT_QUOTES, 'UTF-8'); ?><br>
+                        الملخص: <?php echo htmlspecialchars((string) $autoPullLastSummary, ENT_QUOTES, 'UTF-8'); ?>
+                    </div>
+
+                    <button type="submit" name="save_auto_sync" onclick="return confirm('تأكيد حفظ إعدادات المزامنة التلقائية؟')">حفظ إعدادات المزامنة التلقائية</button>
+                </form>
+            </section>
+        <?php endif; ?>
 
         <?php if ($IS_LOCAL): ?>
             <section class="emergency-guide" dir="rtl">

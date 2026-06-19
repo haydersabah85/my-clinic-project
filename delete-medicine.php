@@ -9,6 +9,7 @@ if (isset($_GET['id_medicine'])) {
     // Delete the medicine from the database
     $delete_query = "DELETE FROM medicines WHERE id = '$id_medicine'";
     if (mysqli_query($con, $delete_query)) {
+        clinic_log_deleted_record($con, 'medicines', (int) $id_medicine);
         // Redirect back to the common medicines page after deletion
         header("Location: common-medicines.php");
         exit();

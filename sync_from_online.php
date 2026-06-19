@@ -17,6 +17,7 @@ if (!$IS_LOCAL) {
 
 clinic_ensure_runtime_controls($con);
 clinic_ensure_patient_images_sync_support($con);
+clinic_ensure_deleted_records($con);
 set_time_limit(0);
 $forceFullPull = isset($_GET['full']) && $_GET['full'] === '1';
 
@@ -29,6 +30,7 @@ if (!isset($online) || !($online instanceof mysqli)) {
 }
 
 clinic_ensure_patient_images_sync_support($online);
+clinic_ensure_deleted_records($online);
 
 function sync_table_exists(mysqli $db, string $table): bool
 {
@@ -326,6 +328,8 @@ foreach ($tables as $entry) {
     $totalApplied += $result['applied'];
 }
 
+$deletionsApplied = clinic_apply_online_deletions($con, $online);
+
 clinic_audit(
     $con,
     'sync_pull_from_online',
@@ -335,6 +339,7 @@ clinic_audit(
     [
         'total_pulled' => $totalPulled,
         'total_applied' => $totalApplied,
+        'deletions_applied' => $deletionsApplied,
         'tables' => $results,
     ]
 );
@@ -427,6 +432,11 @@ clinic_audit(
         <h1>نتيجة المزامنة العكسية (من السحابة إلى المحلي)</h1>
         <div class="totals">
             تم سحب <strong><?php echo (int) $totalPulled; ?></strong> سجل، وتطبيق <strong><?php echo (int) $totalApplied; ?></strong> سجل على النسخة المحلية.
+            <?php if ($deletionsApplied > 0): ?>
+                — حُذف <strong><?php echo (int) $deletionsApplied; ?></strong> سجل محلياً بناءً على حذوفات السحابة.
+            <?php else: ?>
+                — لا توجد حذوفات جديدة من السحابة.
+            <?php endif; ?>
         </div>
 
         <table>

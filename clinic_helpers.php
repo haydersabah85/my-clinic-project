@@ -214,6 +214,192 @@ function clinic_set_app_setting(mysqli $con, string $key, string $value): bool
     return (bool) mysqli_stmt_execute($stmt);
 }
 
+function clinic_ensure_deleted_records(mysqli $con): void
+{
+    mysqli_query($con, "
+        CREATE TABLE IF NOT EXISTS deleted_records (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            table_name VARCHAR(80) NOT NULL,
+            record_id INT NOT NULL,
+            deleted_by VARCHAR(120) NULL,
+            deleted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_dr_table_record (table_name, record_id),
+            INDEX idx_dr_deleted_at (deleted_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+}
+
+function clinic_log_deleted_record(mysqli $con, string $table, int $recordId): void
+{
+    clinic_ensure_deleted_records($con);
+
+    $user = clinic_current_user();
+    $stmt = mysqli_prepare($con, "
+        INSERT IGNORE INTO deleted_records (table_name, record_id, deleted_by, deleted_at, updated_at)
+        VALUES (?, ?, ?, NOW(), NOW())
+    ");
+
+    if (!$stmt) {
+        return;
+    }
+
+    mysqli_stmt_bind_param($stmt, 'sis', $table, $recordId, $user);
+    mysqli_stmt_execute($stmt);
+}
+
+function clinic_apply_online_deletions(mysqli $localDb, mysqli $onlineDb): int
+{
+    clinic_ensure_deleted_records($localDb);
+
+    if (!clinic_table_exists($onlineDb, 'deleted_records')) {
+        return 0;
+    }
+
+    $allowedTables = [
+        'patient_visits'        => 'id',
+        'visits'                => 'visit_id',
+        'patient_images'        => 'id',
+        'followups'             => 'id',
+        'surgery'               => 'id',
+        'surgery_appointment'   => 'id',
+        'laser_appointment'     => 'id',
+        'injection_appointment' => 'id',
+        'medicines'             => 'id',
+    ];
+
+    $lastChecked = clinic_get_app_setting($localDb, 'deleted_records_last_checked_at', '1970-01-01 00:00:00');
+    if (!$lastChecked) {
+        $lastChecked = '1970-01-01 00:00:00';
+    }
+
+    $stmt = mysqli_prepare($onlineDb, "
+        SELECT id, table_name, record_id, deleted_at
+        FROM deleted_records
+        WHERE deleted_at > ?
+        ORDER BY deleted_at ASC, id ASC
+        LIMIT 2000
+    ");
+
+    if (!$stmt) {
+        return 0;
+    }
+
+    mysqli_stmt_bind_param($stmt, 's', $lastChecked);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    if (!$result) {
+        return 0;
+    }
+
+    $applied = 0;
+    $maxDeletedAt = $lastChecked;
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        $tableName = (string) ($row['table_name'] ?? '');
+        $recordId  = (int)    ($row['record_id']  ?? 0);
+        $deletedAt = (string) ($row['deleted_at'] ?? '');
+
+        if ($deletedAt > $maxDeletedAt) {
+            $maxDeletedAt = $deletedAt;
+        }
+
+        if (!isset($allowedTables[$tableName]) || $recordId <= 0) {
+            continue;
+        }
+
+        if (!clinic_table_exists($localDb, $tableName)) {
+            continue;
+        }
+
+        $pkCol = $allowedTables[$tableName];
+        mysqli_query($localDb, "DELETE FROM `$tableName` WHERE `$pkCol` = $recordId");
+        $applied++;
+    }
+
+    if ($maxDeletedAt > $lastChecked) {
+        clinic_set_app_setting($localDb, 'deleted_records_last_checked_at', $maxDeletedAt);
+    }
+
+    return $applied;
+}
+
+function clinic_auto_pull_interval_minutes(mysqli $con): int
+{
+    $value = (int) clinic_get_app_setting($con, 'auto_pull_interval_minutes', '10');
+    $allowed = [5, 10];
+
+    return in_array($value, $allowed, true) ? $value : 10;
+}
+
+function clinic_auto_pull_is_enabled(mysqli $con): bool
+{
+    return clinic_get_app_setting($con, 'auto_pull_enabled', '1') === '1';
+}
+
+function clinic_auto_pull_tick(mysqli $con, bool $isLocal): void
+{
+    if (!$isLocal) {
+        return;
+    }
+
+    clinic_ensure_runtime_controls($con);
+
+    if (!clinic_auto_pull_is_enabled($con)) {
+        return;
+    }
+
+    $intervalMinutes = clinic_auto_pull_interval_minutes($con);
+    $intervalSeconds = $intervalMinutes * 60;
+    $now = time();
+
+    $lastSuccess = clinic_get_app_setting($con, 'auto_pull_last_success_at', '');
+    $lastTs = $lastSuccess ? strtotime($lastSuccess) : false;
+    if ($lastTs !== false && ($now - $lastTs) < $intervalSeconds) {
+        return;
+    }
+
+    $lockUntilRaw = clinic_get_app_setting($con, 'auto_pull_lock_until_ts', '0');
+    $lockUntil = (int) $lockUntilRaw;
+    if ($lockUntil > $now) {
+        return;
+    }
+
+    clinic_set_app_setting($con, 'auto_pull_lock_until_ts', (string) ($now + 240));
+    clinic_set_app_setting($con, 'auto_pull_last_attempt_at', date('Y-m-d H:i:s', $now));
+
+    include_once __DIR__ . '/sync_from_online_worker.php';
+    $result = clinic_sync_pull_from_online_worker($con, false, 5000);
+
+    $totalPulled = (int) ($result['total_pulled'] ?? 0);
+    $totalApplied = (int) ($result['total_applied'] ?? 0);
+
+    if (!empty($result['ok'])) {
+        clinic_set_app_setting($con, 'auto_pull_last_success_at', date('Y-m-d H:i:s'));
+        clinic_set_app_setting($con, 'auto_pull_last_status', 'ok');
+        clinic_set_app_setting($con, 'auto_pull_last_summary', "pulled={$totalPulled},applied={$totalApplied}");
+
+        clinic_audit(
+            $con,
+            'auto_sync_pull_from_online',
+            'sync',
+            null,
+            null,
+            [
+                'total_pulled' => $totalPulled,
+                'total_applied' => $totalApplied,
+            ]
+        );
+    } else {
+        $error = (string) ($result['error'] ?? 'unknown_error');
+        clinic_set_app_setting($con, 'auto_pull_last_status', 'error');
+        clinic_set_app_setting($con, 'auto_pull_last_summary', $error);
+    }
+
+    clinic_set_app_setting($con, 'auto_pull_lock_until_ts', '0');
+}
+
 function clinic_is_write_endpoint(string $scriptName, string $requestMethod): bool
 {
     if (strtoupper($requestMethod) !== 'GET') {

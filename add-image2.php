@@ -76,7 +76,14 @@ if ($file['size'] > $maxSize) {
     redirect_with_alert('حجم الصورة كبير جداً. الحد الأقصى 10MB.', 'add-image.php?id=' . $patient_id);
 }
 
-$safePatientName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $patient_name);
+$safePatientName = trim((string) $patient_name);
+
+// Keep Arabic/Unicode letters and numbers, replacing only unsafe filesystem characters.
+$safePatientName = preg_replace('/[^\p{L}\p{N}_ -]+/u', '_', $safePatientName);
+$safePatientName = preg_replace('/\s+/u', '_', $safePatientName);
+$safePatientName = preg_replace('/_+/u', '_', $safePatientName);
+$safePatientName = trim($safePatientName, '_- ');
+
 if ($safePatientName === '' || $safePatientName === null) {
     $safePatientName = 'patient_' . $patient_id;
 }
