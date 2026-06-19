@@ -25,4 +25,4 @@ if (isset($_GET['id'])) {
     // Close the statement
     $stmt->close();
 }
-$conn->close();
+$con->close();
