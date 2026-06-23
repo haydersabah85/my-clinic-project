@@ -23,6 +23,7 @@ $query = "
         add_patient.is_critical,
         MAX(visits.visit_date) AS last_visit_date,
         latest_surgery.status,
+        latest_completed_surgery.last_surgery_date,
         next_followup.next_followup_date
     FROM add_patient
     LEFT JOIN surgery_appointment latest_surgery ON latest_surgery.id = (
@@ -31,6 +32,11 @@ $query = "
         ORDER BY id DESC
         LIMIT 1
     )
+    LEFT JOIN (
+        SELECT patient_id, MAX(date) AS last_surgery_date
+        FROM surgery
+        GROUP BY patient_id
+    ) latest_completed_surgery ON latest_completed_surgery.patient_id = add_patient.id
     LEFT JOIN visits ON add_patient.id = visits.patient_id
     LEFT JOIN (
         SELECT patient_id, MIN(followup_date) AS next_followup_date
@@ -68,6 +74,9 @@ while ($row = mysqli_fetch_assoc($result)) {
         $color = "red";
     } elseif ($row['status'] == "pending") {
         $color = "orange";
+    } elseif (!empty($row['last_surgery_date'])) {
+        // Mark patient as completed operation even when it was recorded without an appointment.
+        $color = "green";
     }
 
     $lastVisitText = !empty($row['last_visit_date'])

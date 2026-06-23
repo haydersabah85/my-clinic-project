@@ -488,8 +488,8 @@ if ($listStmt) {
                 top: 90mm;
                 right: 20mm;
                 left: 20mm;
-                font-size: 18px;
-                line-height: 2;
+                font-size: 16px;
+                line-height: 1.5;
                 white-space: pre-wrap;
             }
         }
