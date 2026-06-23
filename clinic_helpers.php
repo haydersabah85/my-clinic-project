@@ -83,6 +83,20 @@ function clinic_ensure_infrastructure(mysqli $con): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
 
+    mysqli_query($con, "
+        CREATE TABLE IF NOT EXISTS staff_messages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            sender_user_id INT NOT NULL,
+            recipient_user_id INT NOT NULL,
+            message_text TEXT NOT NULL,
+            is_read TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            read_at DATETIME NULL,
+            INDEX idx_staff_messages_recipient (recipient_user_id, is_read, created_at),
+            INDEX idx_staff_messages_sender (sender_user_id, created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
     clinic_ensure_column($con, 'add_patient', 'is_deleted', 'TINYINT(1) NOT NULL DEFAULT 0');
     clinic_ensure_column($con, 'add_patient', 'deleted_at', 'DATETIME NULL');
     clinic_ensure_column($con, 'add_patient', 'deleted_by', 'VARCHAR(120) NULL');
@@ -709,6 +723,8 @@ function clinic_required_permissions_for_script(string $scriptName): array
         'visits.php' => ['appointments'],
         'visits2.php' => ['appointments'],
         'patient_reports.php' => ['reports'],
+        'staff-messages.php' => ['appointments'],
+        'staff-messages-poll.php' => ['appointments'],
     ];
 
     if (isset($exactMap[$scriptName])) {

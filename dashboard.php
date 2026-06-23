@@ -9,6 +9,19 @@ clinic_ensure_sync_conflicts($con);
 $flash = clinic_take_flash();
 clinic_ensure_runtime_controls($con);
 
+$unreadStaffMessages = 0;
+$currentUserId = (int) ($_SESSION['user_id'] ?? 0);
+if ($currentUserId > 0 && clinic_table_exists($con, 'staff_messages')) {
+  $unreadStmt = mysqli_prepare($con, "SELECT COUNT(*) AS total FROM staff_messages WHERE recipient_user_id = ? AND is_read = 0");
+  if ($unreadStmt) {
+    mysqli_stmt_bind_param($unreadStmt, 'i', $currentUserId);
+    mysqli_stmt_execute($unreadStmt);
+    $unreadResult = mysqli_stmt_get_result($unreadStmt);
+    $unreadStaffMessages = (int) (($unreadResult ? mysqli_fetch_assoc($unreadResult)['total'] : 0) ?? 0);
+    mysqli_stmt_close($unreadStmt);
+  }
+}
+
 $nextPatientAlert = null;
 $nextPatientRaw = clinic_get_app_setting($con, 'doctor_next_patient_alert', '');
 if ($nextPatientRaw) {
@@ -1153,6 +1166,7 @@ if ($openSyncConflicts > 0) {
         <a href="reports.php">📊 التقارير</a>
         <a href="common-medicines.php">💊 الأدوية الأكثر استعمالًا</a>
         <a href="treatment-templates.php">قوالب العلاج</a>
+        <a href="staff-messages.php">📩 رسائل داخلية<?php if ($unreadStaffMessages > 0): ?> (<?= $unreadStaffMessages ?>)<?php endif; ?></a>
         <a href="audit-log.php">سجل العمليات</a>
         <a href="settings.php">⚙️ الإعدادات</a>
         <a href="logout.php" class="danger">🚪 تسجيل الخروج</a>
