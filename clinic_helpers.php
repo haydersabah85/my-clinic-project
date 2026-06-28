@@ -108,6 +108,201 @@ function clinic_ensure_infrastructure(mysqli $con): void
     clinic_ensure_index($con, 'add_patient', 'idx_add_patient_phone', '`phone_no`');
     clinic_ensure_index($con, 'visits', 'idx_visits_patient_date', '`patient_id`, `visit_date`');
     clinic_ensure_index($con, 'followups', 'idx_followups_status_date', '`status`, `followup_date`');
+
+    clinic_ensure_surgery_iol_power_column($con);
+    clinic_ensure_treatment_type_tables($con);
+}
+
+function clinic_ensure_surgery_iol_power_column(mysqli $con): void
+{
+    if (!clinic_table_exists($con, 'surgery')) {
+        return;
+    }
+
+    clinic_ensure_column($con, 'surgery', 'iol_power', 'DECIMAL(4,1) NULL');
+}
+
+function clinic_ensure_type_table(mysqli $con, string $table): void
+{
+    if (!preg_match('/^[a-z_]+$/', $table)) {
+        return;
+    }
+
+    mysqli_query($con, "
+        CREATE TABLE IF NOT EXISTS `$table` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            type_name VARCHAR(180) NOT NULL,
+            is_active TINYINT(1) NOT NULL DEFAULT 1,
+            sort_order INT NOT NULL DEFAULT 100,
+            sync_status TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_type_name (type_name),
+            INDEX idx_active_sort (is_active, sort_order, type_name)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+}
+
+function clinic_seed_type_table(mysqli $con, string $table, array $defaults): void
+{
+    if (!preg_match('/^[a-z_]+$/', $table) || empty($defaults)) {
+        return;
+    }
+
+    $stmt = mysqli_prepare($con, "INSERT IGNORE INTO `$table` (type_name, sort_order, sync_status) VALUES (?, ?, 0)");
+    if (!$stmt) {
+        return;
+    }
+
+    $order = 10;
+    foreach ($defaults as $name) {
+        $typeName = trim((string) $name);
+        if ($typeName === '') {
+            continue;
+        }
+        mysqli_stmt_bind_param($stmt, 'si', $typeName, $order);
+        mysqli_stmt_execute($stmt);
+        $order += 10;
+    }
+
+    mysqli_stmt_close($stmt);
+}
+
+function clinic_seed_types_from_source(mysqli $con, string $sourceTable, string $sourceColumn, string $targetTable): void
+{
+    if (!preg_match('/^[a-z_]+$/', $sourceTable) || !preg_match('/^[a-z_]+$/', $targetTable) || !preg_match('/^[a-z_]+$/', $sourceColumn)) {
+        return;
+    }
+
+    if (!clinic_table_exists($con, $sourceTable) || !clinic_column_exists($con, $sourceTable, $sourceColumn)) {
+        return;
+    }
+
+    $result = mysqli_query($con, "SELECT DISTINCT `$sourceColumn` AS v FROM `$sourceTable` WHERE `$sourceColumn` IS NOT NULL AND TRIM(`$sourceColumn`) <> ''");
+    if (!$result) {
+        return;
+    }
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        $value = trim((string) ($row['v'] ?? ''));
+        if ($value === '') {
+            continue;
+        }
+        $stmt = mysqli_prepare($con, "INSERT IGNORE INTO `$targetTable` (type_name, sync_status) VALUES (?, 0)");
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, 's', $value);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        }
+    }
+}
+
+function clinic_ensure_treatment_type_tables(mysqli $con): void
+{
+    clinic_ensure_type_table($con, 'surgery_types');
+    clinic_ensure_type_table($con, 'laser_types');
+    clinic_ensure_type_table($con, 'injection_types');
+    clinic_ensure_type_table($con, 'iol_types');
+
+    clinic_seed_type_table($con, 'surgery_types', [
+        'Phaco',
+        'Vitrectomy',
+        'Phaco and Vitrectomy',
+        'SOR',
+        'Phaco and SOR',
+        'Squint',
+        'ECCE',
+        'ICCE',
+        'Chalazion',
+        'EUA',
+        'Probing',
+        'SMILE',
+        'PRK',
+        'AC Washout',
+        'Secondary IOL',
+        'IOL Exchange',
+        'Pterygium with Graft',
+        'Pterygium',
+        'Anterior Vitrectomy'
+    ]);
+    clinic_seed_type_table($con, 'laser_types', ['PRP', 'Retinopexy', 'Focal Laser', 'YAG', 'PI']);
+    clinic_seed_type_table($con, 'injection_types', ['Avastin', 'Eylea 2mg', 'Vabysmo', 'Eylea 8mg', 'Triamcinolone', 'Lucentis', 'Ozurdix']);
+    clinic_seed_type_table($con, 'iol_types', ['Sensar', 'Eyhance', 'Alcon', 'Clareon', 'Synergy', 'Rayner Monofocal', 'Rayner Trifocal', 'Eleon', 'Artisan']);
+
+    clinic_seed_types_from_source($con, 'surgery', 'surgery_type', 'surgery_types');
+    clinic_seed_types_from_source($con, 'surgery_appointment', 'surgery_type', 'surgery_types');
+
+    clinic_seed_types_from_source($con, 'laser', 'laser_type', 'laser_types');
+    clinic_seed_types_from_source($con, 'laser_appointment', 'laser_type', 'laser_types');
+
+    clinic_seed_types_from_source($con, 'injection', 'injection_type', 'injection_types');
+    clinic_seed_types_from_source($con, 'injection_appointment', 'injection_type', 'injection_types');
+
+    clinic_seed_types_from_source($con, 'surgery', 'iol_type', 'iol_types');
+}
+
+function clinic_fetch_type_names(mysqli $con, string $table, bool $includeInactive = false): array
+{
+    if (!preg_match('/^[a-z_]+$/', $table)) {
+        return [];
+    }
+
+    clinic_ensure_treatment_type_tables($con);
+
+    $where = $includeInactive ? '' : 'WHERE is_active = 1';
+    $result = mysqli_query($con, "SELECT type_name FROM `$table` $where ORDER BY sort_order ASC, type_name ASC");
+    if (!$result) {
+        return [];
+    }
+
+    $items = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $value = trim((string) ($row['type_name'] ?? ''));
+        if ($value !== '') {
+            $items[] = $value;
+        }
+    }
+
+    return $items;
+}
+
+function clinic_get_surgery_types(mysqli $con, bool $includeInactive = false): array
+{
+    return clinic_fetch_type_names($con, 'surgery_types', $includeInactive);
+}
+
+function clinic_get_laser_types(mysqli $con, bool $includeInactive = false): array
+{
+    return clinic_fetch_type_names($con, 'laser_types', $includeInactive);
+}
+
+function clinic_get_injection_types(mysqli $con, bool $includeInactive = false): array
+{
+    return clinic_fetch_type_names($con, 'injection_types', $includeInactive);
+}
+
+function clinic_get_iol_types(mysqli $con, bool $includeInactive = false): array
+{
+    return clinic_fetch_type_names($con, 'iol_types', $includeInactive);
+}
+
+function clinic_format_iol_power($value): string
+{
+    if ($value === null || $value === '') {
+        return '-';
+    }
+
+    if (!is_numeric($value)) {
+        return '-';
+    }
+
+    $power = (float) $value;
+    $formatted = number_format($power, 1, '.', '');
+    if ($power > 0) {
+        $formatted = '+' . $formatted;
+    }
+
+    return $formatted . ' D';
 }
 
 function clinic_ensure_daily_revenue(mysqli $con): void
@@ -718,6 +913,7 @@ function clinic_required_permissions_for_script(string $scriptName): array
         'edit-medicine2.php' => ['prescriptions'],
         'delete-medicine.php' => ['prescriptions'],
         'followup-appointment.php' => ['appointments'],
+        'treatment-types.php' => ['appointments'],
         'delete-followup.php' => ['appointments'],
         'save_followup.php' => ['appointments'],
         'visits.php' => ['appointments'],

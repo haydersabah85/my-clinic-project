@@ -272,6 +272,23 @@ if ($topInjectionRes) {
     mysqli_free_result($topInjectionRes);
 }
 
+$topIolPowers = [];
+$topIolPowersRes = mysqli_query($con, "
+    SELECT iol_power, COUNT(*) AS total
+    FROM surgery
+    WHERE date BETWEEN '{$escapedFrom}' AND '{$escapedTo}'
+      AND iol_power IS NOT NULL
+    GROUP BY iol_power
+    ORDER BY iol_power ASC
+    LIMIT 30
+");
+while ($topIolPowersRes && ($row = mysqli_fetch_assoc($topIolPowersRes))) {
+    $topIolPowers[] = $row;
+}
+if ($topIolPowersRes) {
+    mysqli_free_result($topIolPowersRes);
+}
+
 $followupRows = [];
 $followupRes = mysqli_query($con, "
     SELECT f.followup_date, f.status, f.followup_reason, COALESCE(p.full_name, 'غير متوفر') AS full_name, p.id AS patient_id
@@ -1133,6 +1150,31 @@ if ($trendMax < 1) {
                                     <?php foreach ($topInjectionTypes as $row): ?>
                                         <tr>
                                             <td><?php echo hsafe((string) ($row['name'] ?? '')); ?></td>
+                                            <td><?php echo (int) ($row['total'] ?? 0); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card" style="margin-top:10px;">
+                        <div class="title">توزيع قوة العدسات (IOL Power)</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>قوة العدسة</th>
+                                    <th>العدد</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($topIolPowers)): ?>
+                                    <tr>
+                                        <td colspan="2">لا توجد بيانات.</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($topIolPowers as $row): ?>
+                                        <tr>
+                                            <td><?php echo hsafe(clinic_format_iol_power($row['iol_power'] ?? null)); ?></td>
                                             <td><?php echo (int) ($row['total'] ?? 0); ?></td>
                                         </tr>
                                     <?php endforeach; ?>

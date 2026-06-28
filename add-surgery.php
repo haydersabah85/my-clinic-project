@@ -20,38 +20,45 @@ function e($value): string
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-$surgeryTypes = [
-    'Phaco',
-    'Vitrectomy',
-    'Phaco and Vitrectomy',
-    'SOR',
-    'Phaco and SOR',
-    'Squint',
-    'ECCE',
-    'ICCE',
-    'Chalazion',
-    'EUA',
-    'Probing',
-    'SMILE',
-    'PRK',
-    'AC Washout',
-    'Secondary IOL',
-    'IOL Exchange',
-    'Pterygium with Graft',
-    'Pterygium',
-];
+$surgeryTypes = clinic_get_surgery_types($con);
+$iolTypes = clinic_get_iol_types($con);
 
-$iolTypes = [
-    'Sensar',
-    'Eyhance',
-    'Alcon',
-    'Clareon',
-    'Synergy',
-    'Rayner Monofocal',
-    'Rayner Trifocal',
-    'Eleon',
-    'Artisan',
-];
+if (empty($surgeryTypes)) {
+    $surgeryTypes = [
+        'Phaco',
+        'Vitrectomy',
+        'Phaco and Vitrectomy',
+        'SOR',
+        'Phaco and SOR',
+        'Squint',
+        'ECCE',
+        'ICCE',
+        'Chalazion',
+        'EUA',
+        'Probing',
+        'SMILE',
+        'PRK',
+        'AC Washout',
+        'Secondary IOL',
+        'IOL Exchange',
+        'Pterygium with Graft',
+        'Pterygium',
+    ];
+}
+
+if (empty($iolTypes)) {
+    $iolTypes = [
+        'Sensar',
+        'Eyhance',
+        'Alcon',
+        'Clareon',
+        'Synergy',
+        'Rayner Monofocal',
+        'Rayner Trifocal',
+        'Eleon',
+        'Artisan',
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -265,6 +272,8 @@ $iolTypes = [
 
     select,
     input[type="date"],
+    input[type="number"],
+    input[type="text"],
     textarea {
         width: 100%;
         min-height: 42px;
@@ -281,6 +290,8 @@ $iolTypes = [
 
     select:focus,
     input[type="date"]:focus,
+    input[type="number"]:focus,
+    input[type="text"]:focus,
     textarea:focus {
         border-color: var(--tone);
         box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
@@ -319,6 +330,7 @@ $iolTypes = [
     }
 
     @media (max-width: 900px) {
+
         .topbar,
         .form-head {
             display: grid;
@@ -437,6 +449,11 @@ $iolTypes = [
                             </select>
                         </div>
 
+                        <div class="field" id="iolPowerField" style="display:none;">
+                            <label for="iol_power">قوة العدسة (بنصف درجة)</label>
+                            <input type="text" name="iol_power" id="iol_power" inputmode="decimal" pattern="^[+-]?\d+(?:\.0|\.5)?$" placeholder="مثال: +21.5 أو -2.0" title="أدخل رقمًا بنصف درجة مثل +21.5 أو -2.0">
+                        </div>
+
                         <div class="field">
                             <label for="date">التاريخ</label>
                             <input type="date" required name="date" id="date" value="<?= e($defaultDate) ?>">
@@ -455,6 +472,27 @@ $iolTypes = [
             </section>
         <?php endif; ?>
     </main>
+
+    <script>
+        (function() {
+            const iolType = document.getElementById('iol_type');
+            const powerField = document.getElementById('iolPowerField');
+            const powerInput = document.getElementById('iol_power');
+
+            if (!iolType || !powerField || !powerInput) return;
+
+            function toggleIolPower() {
+                const hasIol = (iolType.value || '').trim() !== '';
+                powerField.style.display = hasIol ? 'grid' : 'none';
+                if (!hasIol) {
+                    powerInput.value = '';
+                }
+            }
+
+            iolType.addEventListener('change', toggleIolPower);
+            toggleIolPower();
+        })();
+    </script>
 </body>
 
 </html>

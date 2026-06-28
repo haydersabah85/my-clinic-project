@@ -20,13 +20,16 @@ function e($value): string
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-$laserTypes = [
-    'PRP',
-    'Retinopexy',
-    'Yag',
-    'Focal Laser',
-    'PI',
-];
+$laserTypes = clinic_get_laser_types($con);
+if (empty($laserTypes)) {
+    $laserTypes = [
+        'PRP',
+        'Retinopexy',
+        'YAG',
+        'Focal Laser',
+        'PI',
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -293,6 +296,7 @@ $laserTypes = [
     }
 
     @media (max-width: 900px) {
+
         .topbar,
         .form-head {
             display: grid;

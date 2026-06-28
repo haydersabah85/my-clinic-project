@@ -385,6 +385,7 @@ $pendingCount = max(0, $totalCount - (int)$summary['confirmed_count']);
     }
 
     @media print {
+
         .top-actions,
         .control-panel,
         .nav-btn,
@@ -427,6 +428,7 @@ $pendingCount = max(0, $totalCount - (int)$summary['confirmed_count']);
             <nav class="top-actions">
                 <a class="nav-btn" href="dashboard.php">Dashboard</a>
                 <a class="nav-btn" href="confirmed-list.php">Confirmed list</a>
+                <a class="nav-btn" href="treatment-types.php">Treatment types</a>
                 <button class="tool-btn" type="button" onclick="window.print()">Print</button>
             </nav>
         </header>

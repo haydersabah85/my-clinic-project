@@ -20,15 +20,18 @@ function e($value): string
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-$injectionTypes = [
-    'Avastin',
-    'Triamcinolone',
-    'Eylea 2mg',
-    'Vabysmo',
-    'Eylea 8mg',
-    'Lucentis',
-    'Ozurdix',
-];
+$injectionTypes = clinic_get_injection_types($con);
+if (empty($injectionTypes)) {
+    $injectionTypes = [
+        'Avastin',
+        'Triamcinolone',
+        'Eylea 2mg',
+        'Vabysmo',
+        'Eylea 8mg',
+        'Lucentis',
+        'Ozurdix',
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -295,6 +298,7 @@ $injectionTypes = [
     }
 
     @media (max-width: 900px) {
+
         .topbar,
         .form-head {
             display: grid;

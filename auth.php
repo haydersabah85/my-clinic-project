@@ -17,6 +17,7 @@ if (!empty($requiredPermissions)) {
 
 if (isset($con) && isset($IS_LOCAL)) {
     clinic_enforce_runtime_write_policy($con, (bool) $IS_LOCAL);
+    clinic_ensure_surgery_iol_power_column($con);
     clinic_auto_pull_tick($con, (bool) $IS_LOCAL);
 }
 

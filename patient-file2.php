@@ -53,651 +53,651 @@ $id = (int) $row['id'];
 
 
     <style>
-    /* ====== الخط والخلفية العامة ====== */
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+        /* ====== الخط والخلفية العامة ====== */
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
 
 
-    /* Dark Mode */
-    body[data-theme="dark"] {
-        background: linear-gradient(135deg, #2c3e50, #4ca1af);
-        color: #2c3e50;
-        font-size: 28px;
-    }
-
-    .patient_info[data-theme="dark"] {
-        background: #34495e;
-        color: #ecf0f1;
-    }
-
-    .patient_info[data-theme="dark"] span:first-child {
-        color: #ecf0f1;
-    }
-
-
-
-
-    body {
-        font-family: 'Cairo', sans-serif;
-        direction: rtl;
-        margin: 20px;
-        background: linear-gradient(135deg, #f4f7fb, #eef2f6);
-        color: #172033;
-    }
-
-    /* ====== الهيدر ====== */
-    header h1 {
-        color: #2c3e50;
-        font-size: 28px;
-        font-weight: 700;
-        margin-bottom: 15px;
-        text-align: center;
-    }
-
-    /* ====== معلومات المريض ====== */
-    .patient_info {
-        background: #ffffff;
-        padding: 18px 20px;
-        width: min(1120px, 100%);
-        margin: 0 auto 20px;
-        border-radius: 8px;
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-        gap: 35px;
-    }
-
-    .patient_info p {
-        font-size: 16px;
-        margin: 5px 0;
-    }
-
-    .patient_info span:first-child {
-        font-weight: 600;
-        color: #34495e;
-    }
-
-    .patient_info p span:last-child {
-        color: #7c1d8f;
-        font-weight: 800;
-    }
-
-    /* ====== الأزرار العامة ====== */
-
-
-
-    a {
-        background: linear-gradient(135deg, #0ab370, #1a8f65);
-        color: #fff;
-        text-decoration: none;
-        padding: 8px 14px;
-        font-size: 14px;
-        border-radius: 8px;
-        font-weight: 600;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        transition: all 0.3s ease;
-        font-family: 'Cairo', sans-serif;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-
-    }
-
-    a:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
-    }
-
-    /* ====== شريط التنقل ====== */
-    .nav {
-        margin: 25px 0;
-        display: flex;
-        justify-content: center;
-        gap: 50px;
-
-
-    }
-
-
-
-    /* ====== الحاوية الرئيسية ====== */
-    .previous_data {
-        background: #fff;
-        padding: 22px;
-        border-radius: 8px;
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
-
-    button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 36px;
-        height: 36px;
-        border-radius: 30%;
-        text-decoration: none;
-        font-size: 17px;
-        transition: all .3s ease;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, .15);
-        position: relative;
-        cursor: pointer;
-        padding: 20px;
-
-    }
-
-    /* ====== جدول الزيارات وفحص النظر جنب بعض ====== */
-    .previous_visits {
-        width: 58%;
-        max-height: 320px;
-        overflow-y: auto;
-        overflow-x: auto;
-    }
-
-    .previous_va {
-        width: 40%;
-        max-height: 320px;
-        overflow-y: auto;
-        overflow-x: auto;
-    }
-
-    /* ====== بقية الجداول ====== */
-    .previous_surgeries,
-    .previous_lasers,
-    .previous_injections {
-        width: 49%;
-        max-height: 300px;
-        overflow-y: auto;
-        overflow-x: auto;
-    }
-
-    /* ====== الجداول ====== */
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #fdfefe;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        min-width: 620px;
-    }
-
-    th {
-        background: linear-gradient(135deg, #1976d2, #125aa3);
-        color: #fff;
-        font-size: 14px;
-        padding: 10px;
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-    td {
-        padding: 8px;
-        font-size: 14px;
-        text-align: center;
-        white-space: nowrap;
-        max-width: 220px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-
-    }
-
-    /* تفاعل الصف */
-    tbody tr {
-        transition: background-color 0.25s ease;
-    }
-
-    tbody tr:hover {
-        background-color: #e3f2fd;
-    }
-
-    /* ====== نافذة الملاحظات المنبثقة ====== */
-    .visit-note,
-    .surgery-notes {
-        position: relative;
-        cursor: pointer;
-        direction: ltr;
-        white-space: nowrap;
-        max-width: 220px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-
-    }
-
-    .visit-note::after,
-    .surgery-notes::after {
-        content: attr(data-note);
-        position: absolute;
-        bottom: 125%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.8);
-        color: #fff;
-        padding: 8px 12px;
-        border-radius: 6px;
-        white-space: normal;
-        width: 200px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        display: none;
-        z-index: 10;
-
-    }
-
-    .visit-note:hover::after,
-    .surgery-notes:hover::after {
-        display: block;
-    }
-
-    /* ====== فورم إضافة الزيارة ====== */
-    .patient_visits {
-        width: 47%;
-        margin-top: 10px;
-    }
-
-    #notes {
-        width: 100%;
-        padding: 12px;
-        font-size: 16px;
-        border-radius: 10px;
-        border: 1px solid #ccc;
-        resize: vertical;
-        direction: ltr;
-    }
-
-    #add_visit {
-        margin-top: 10px;
-        background: linear-gradient(135deg, #0ab370, #1a8f65);
-        color: #fff;
-        border: none;
-        width: 150px;
-        height: 40px;
-        padding: 10px 10px;
-        font-size: 16px;
-        border-radius: 8px;
-        font-weight: 600;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        transition: all 0.3s ease;
-    }
-
-
-
-    /* ====== الروابط السفلية ====== */
-    .links {
-        margin: 25px 0;
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        flex-wrap: wrap;
-    }
-
-    .links a {
-        background: linear-gradient(135deg, #e85a27, #bb4c18);
-    }
-
-    /* ====== ICON BUTTONS ====== */
-    .icon-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        text-decoration: none;
-        font-size: 17px;
-        transition: all .3s ease;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, .15);
-        position: relative;
-        cursor: pointer;
-    }
-
-    /* Hover effect */
-    .icon-btn:hover {
-        transform: translateY(-2px) scale(1.08);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, .25);
-    }
-
-    /* Colors */
-    .edit-icon {
-        background: linear-gradient(135deg, #3b82f6, #1e40af);
-        color: #fff;
-    }
-
-    .delete-icon {
-        background: linear-gradient(135deg, #ef4444, #991b1b);
-        color: #fff;
-    }
-
-    .warning-icon {
-        background: linear-gradient(135deg, #facc15, #eab308);
-        color: #000;
-    }
-
-    .visits-icon {
-        background: linear-gradient(135deg, #a011ad, #7a0d78);
-        color: #fff;
-    }
-
-    .home-icon {
-        background: linear-gradient(135deg, #6b7280, #374151);
-        color: #fff;
-    }
-
-    .followup-btn {
-        background: linear-gradient(135deg, #8bafce, #36bcf5);
-        color: #000;
-    }
-
-    /* DELETE SHAKE EFFECT */
-    /* ============================= */
-    .delete-icon:hover {
-        animation: shake .4s;
-    }
-
-    @keyframes shake {
-        0% {
-            transform: translateX(0);
+        /* Dark Mode */
+        body[data-theme="dark"] {
+            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            color: #2c3e50;
+            font-size: 28px;
         }
 
-        25% {
-            transform: translateX(-3px);
+        .patient_info[data-theme="dark"] {
+            background: #34495e;
+            color: #ecf0f1;
         }
 
-        50% {
-            transform: translateX(3px);
+        .patient_info[data-theme="dark"] span:first-child {
+            color: #ecf0f1;
         }
 
-        75% {
-            transform: translateX(-3px);
-        }
-
-        100% {
-            transform: translateX(0);
-        }
-    }
-
-    /* ============================= */
-    /* EDIT ROTATION EFFECT */
-    /* ============================= */
-    .edit-icon:hover {
-        animation: rotateHalf .5s forwards;
-    }
-
-    @keyframes rotateHalf {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(180deg);
-        }
-    }
-
-    /* ============================= */
-    /* WARNING BLINK EFFECT */
-    /* ============================= */
-    .critical-blink {
-        animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-        0% {
-            box-shadow: 0 0 0px rgba(255, 0, 0, 0);
-        }
-
-        50% {
-            box-shadow: 0 0 15px rgba(255, 0, 0, .9);
-        }
-
-        100% {
-            box-shadow: 0 0 0px rgba(255, 0, 0, 0);
-        }
-    }
 
 
-    /* Tooltip */
-    .icon-btn::after {
-        content: attr(data-title);
-        position: absolute;
-        bottom: 120%;
-        right: 50%;
-        transform: translateX(50%);
-        background: #111;
-        color: #fff;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        white-space: nowrap;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity .2s;
-    }
 
-    .icon-btn:not(.edit-icon, .delete-icon):hover::after {
-        opacity: 1;
-    }
-
-    /* الخلفية */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.45);
-    }
-
-    /* الصندوق */
-    .modal-content {
-        background: #fff;
-        width: 350px;
-        padding: 25px;
-        border-radius: 12px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        animation: pop 0.25s ease;
-    }
-
-    /* حركة الظهور */
-    @keyframes pop {
-        from {
-            transform: translate(-50%, -60%) scale(0.9);
-            opacity: 0;
-        }
-
-        to {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
-    }
-
-    /* زر الاغلاق */
-    .close-btn {
-        float: left;
-        font-size: 22px;
-        cursor: pointer;
-        color: #999;
-    }
-
-    /* الحقول */
-    .modal input {
-        width: 100%;
-        padding: 8px;
-        margin-top: 5px;
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-    }
-
-    /* زر الحفظ */
-    .modal button {
-        width: 100%;
-        padding: 10px;
-        border: none;
-        background: #28a745;
-        color: white;
-        border-radius: 6px;
-        font-size: 15px;
-        cursor: pointer;
-    }
-
-    .modal button:hover {
-        background: #23913c;
-    }
-
-    @media (max-width: 400px) {
-        .modal-content {
-            width: 90%;
-        }
-    }
-
-    @media (max-width: 600px) {
         body {
-            margin: 10px;
+            font-family: 'Cairo', sans-serif;
+            direction: rtl;
+            margin: 20px;
+            background: linear-gradient(135deg, #f4f7fb, #eef2f6);
+            color: #172033;
         }
 
-        .previous_visits,
-        .previous_va,
+        /* ====== الهيدر ====== */
+        header h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* ====== معلومات المريض ====== */
+        .patient_info {
+            background: #ffffff;
+            padding: 18px 20px;
+            width: min(1120px, 100%);
+            margin: 0 auto 20px;
+            border-radius: 8px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 35px;
+        }
+
+        .patient_info p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .patient_info span:first-child {
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .patient_info p span:last-child {
+            color: #7c1d8f;
+            font-weight: 800;
+        }
+
+        /* ====== الأزرار العامة ====== */
+
+
+
+        a {
+            background: linear-gradient(135deg, #0ab370, #1a8f65);
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 14px;
+            font-size: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+        }
+
+        a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        /* ====== شريط التنقل ====== */
+        .nav {
+            margin: 25px 0;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+
+
+        }
+
+
+
+        /* ====== الحاوية الرئيسية ====== */
+        .previous_data {
+            background: #fff;
+            padding: 22px;
+            border-radius: 8px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 30%;
+            text-decoration: none;
+            font-size: 17px;
+            transition: all .3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .15);
+            position: relative;
+            cursor: pointer;
+            padding: 20px;
+
+        }
+
+        /* ====== جدول الزيارات وفحص النظر جنب بعض ====== */
+        .previous_visits {
+            width: 58%;
+            max-height: 320px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+
+        .previous_va {
+            width: 40%;
+            max-height: 320px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+
+        /* ====== بقية الجداول ====== */
         .previous_surgeries,
         .previous_lasers,
         .previous_injections {
-            width: 100%;
+            width: 49%;
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: auto;
         }
 
-        .nav {
-            gap: 12px;
+        /* ====== الجداول ====== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fdfefe;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            min-width: 620px;
+        }
+
+        th {
+            background: linear-gradient(135deg, #1976d2, #125aa3);
+            color: #fff;
+            font-size: 14px;
+            padding: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        td {
+            padding: 8px;
+            font-size: 14px;
+            text-align: center;
+            white-space: nowrap;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+        }
+
+        /* تفاعل الصف */
+        tbody tr {
+            transition: background-color 0.25s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* ====== نافذة الملاحظات المنبثقة ====== */
+        .visit-note,
+        .surgery-notes {
+            position: relative;
+            cursor: pointer;
+            direction: ltr;
+            white-space: nowrap;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+        }
+
+        .visit-note::after,
+        .surgery-notes::after {
+            content: attr(data-note);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            white-space: normal;
+            width: 200px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 10;
+
+        }
+
+        .visit-note:hover::after,
+        .surgery-notes:hover::after {
+            display: block;
+        }
+
+        /* ====== فورم إضافة الزيارة ====== */
+        .patient_visits {
+            width: 47%;
+            margin-top: 10px;
+        }
+
+        #notes {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            resize: vertical;
+            direction: ltr;
+        }
+
+        #add_visit {
+            margin-top: 10px;
+            background: linear-gradient(135deg, #0ab370, #1a8f65);
+            color: #fff;
+            border: none;
+            width: 150px;
+            height: 40px;
+            padding: 10px 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+
+
+        /* ====== الروابط السفلية ====== */
+        .links {
+            margin: 25px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
             flex-wrap: wrap;
         }
-    }
 
-    @media (max-width:1200px) {
-        .nav {
-            gap: 30px;
+        .links a {
+            background: linear-gradient(135deg, #e85a27, #bb4c18);
         }
-    }
 
-    .app-sidebar-toggle {
-        position: fixed;
-        top: 14px;
-        right: 14px;
-        z-index: 1300;
-        border: none;
-        border-radius: 12px;
-        padding: 10px 14px;
-        font-size: 14px;
-        font-weight: 800;
-        font-family: 'Cairo', sans-serif;
-        color: #fff;
-        background: linear-gradient(135deg, #1d4ed8, #0f766e);
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
-        cursor: pointer;
-    }
+        /* ====== ICON BUTTONS ====== */
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            text-decoration: none;
+            font-size: 17px;
+            transition: all .3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .15);
+            position: relative;
+            cursor: pointer;
+        }
 
-    .app-sidebar {
-        position: fixed;
-        top: 0;
-        right: 0;
-        width: 286px;
-        max-width: 88vw;
-        height: 100vh;
-        background: #ffffff;
-        border-left: 1px solid rgba(148, 163, 184, 0.3);
-        box-shadow: -18px 0 42px rgba(15, 23, 42, 0.24);
-        padding: 20px 15px;
-        overflow-y: auto;
-        transform: translateX(102%);
-        transition: transform 0.24s ease;
-        z-index: 1250;
-    }
+        /* Hover effect */
+        .icon-btn:hover {
+            transform: translateY(-2px) scale(1.08);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, .25);
+        }
 
-    .app-sidebar.is-open {
-        transform: translateX(0);
-    }
+        /* Colors */
+        .edit-icon {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: #fff;
+        }
 
-    .app-sidebar h3 {
-        margin: 0 0 16px;
-        color: #1d4ed8;
-        font-size: 21px;
-    }
+        .delete-icon {
+            background: linear-gradient(135deg, #ef4444, #991b1b);
+            color: #fff;
+        }
 
-    .app-sidebar .menu-group {
-        margin-bottom: 14px;
-    }
+        .warning-icon {
+            background: linear-gradient(135deg, #facc15, #eab308);
+            color: #000;
+        }
 
-    .app-sidebar .menu-group span {
-        display: block;
-        margin-bottom: 7px;
-        color: #64748b;
-        font-size: 13px;
-        font-weight: 900;
-    }
+        .visits-icon {
+            background: linear-gradient(135deg, #a011ad, #7a0d78);
+            color: #fff;
+        }
 
-    .app-sidebar .menu-group a {
-        display: block;
-        margin-bottom: 6px;
-        padding: 9px 11px;
-        border-radius: 10px;
-        text-decoration: none;
-        color: #172033;
-        border: 1px solid transparent;
-        background: rgba(148, 163, 184, 0.09);
-        font-weight: 800;
-        transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
-    }
+        .home-icon {
+            background: linear-gradient(135deg, #6b7280, #374151);
+            color: #fff;
+        }
 
-    .app-sidebar .menu-group a:hover {
-        border-color: rgba(37, 99, 235, 0.35);
-        background: rgba(37, 99, 235, 0.11);
-        transform: translateX(-2px);
-    }
+        .followup-btn {
+            background: linear-gradient(135deg, #8bafce, #36bcf5);
+            color: #000;
+        }
 
-    .app-sidebar-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.36);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s ease;
-        z-index: 1200;
-    }
+        /* DELETE SHAKE EFFECT */
+        /* ============================= */
+        .delete-icon:hover {
+            animation: shake .4s;
+        }
 
-    .app-sidebar-backdrop.is-open {
-        opacity: 1;
-        pointer-events: auto;
-    }
+        @keyframes shake {
+            0% {
+                transform: translateX(0);
+            }
 
-    body[data-theme="dark"] .app-sidebar {
-        background: #0f1b2a;
-        border-left-color: rgba(147, 197, 253, 0.2);
-        box-shadow: -18px 0 40px rgba(0, 0, 0, 0.45);
-    }
+            25% {
+                transform: translateX(-3px);
+            }
 
-    body[data-theme="dark"] .app-sidebar h3 {
-        color: #60a5fa;
-    }
+            50% {
+                transform: translateX(3px);
+            }
 
-    body[data-theme="dark"] .app-sidebar .menu-group span {
-        color: #9fb0c2;
-    }
+            75% {
+                transform: translateX(-3px);
+            }
 
-    body[data-theme="dark"] .app-sidebar .menu-group a {
-        background: rgba(15, 27, 42, 0.92);
-        color: #e6edf5;
-    }
+            100% {
+                transform: translateX(0);
+            }
+        }
 
-    body[data-theme="dark"] .app-sidebar .menu-group a:hover {
-        border-color: rgba(96, 165, 250, 0.38);
-        background: rgba(30, 58, 95, 0.58);
-    }
-</style>
+        /* ============================= */
+        /* EDIT ROTATION EFFECT */
+        /* ============================= */
+        .edit-icon:hover {
+            animation: rotateHalf .5s forwards;
+        }
+
+        @keyframes rotateHalf {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(180deg);
+            }
+        }
+
+        /* ============================= */
+        /* WARNING BLINK EFFECT */
+        /* ============================= */
+        .critical-blink {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% {
+                box-shadow: 0 0 0px rgba(255, 0, 0, 0);
+            }
+
+            50% {
+                box-shadow: 0 0 15px rgba(255, 0, 0, .9);
+            }
+
+            100% {
+                box-shadow: 0 0 0px rgba(255, 0, 0, 0);
+            }
+        }
+
+
+        /* Tooltip */
+        .icon-btn::after {
+            content: attr(data-title);
+            position: absolute;
+            bottom: 120%;
+            right: 50%;
+            transform: translateX(50%);
+            background: #111;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s;
+        }
+
+        .icon-btn:not(.edit-icon, .delete-icon):hover::after {
+            opacity: 1;
+        }
+
+        /* الخلفية */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        /* الصندوق */
+        .modal-content {
+            background: #fff;
+            width: 350px;
+            padding: 25px;
+            border-radius: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: pop 0.25s ease;
+        }
+
+        /* حركة الظهور */
+        @keyframes pop {
+            from {
+                transform: translate(-50%, -60%) scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* زر الاغلاق */
+        .close-btn {
+            float: left;
+            font-size: 22px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        /* الحقول */
+        .modal input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        /* زر الحفظ */
+        .modal button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: #28a745;
+            color: white;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .modal button:hover {
+            background: #23913c;
+        }
+
+        @media (max-width: 400px) {
+            .modal-content {
+                width: 90%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                margin: 10px;
+            }
+
+            .previous_visits,
+            .previous_va,
+            .previous_surgeries,
+            .previous_lasers,
+            .previous_injections {
+                width: 100%;
+            }
+
+            .nav {
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width:1200px) {
+            .nav {
+                gap: 30px;
+            }
+        }
+
+        .app-sidebar-toggle {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 1300;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-weight: 800;
+            font-family: 'Cairo', sans-serif;
+            color: #fff;
+            background: linear-gradient(135deg, #1d4ed8, #0f766e);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+            cursor: pointer;
+        }
+
+        .app-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 286px;
+            max-width: 88vw;
+            height: 100vh;
+            background: #ffffff;
+            border-left: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: -18px 0 42px rgba(15, 23, 42, 0.24);
+            padding: 20px 15px;
+            overflow-y: auto;
+            transform: translateX(102%);
+            transition: transform 0.24s ease;
+            z-index: 1250;
+        }
+
+        .app-sidebar.is-open {
+            transform: translateX(0);
+        }
+
+        .app-sidebar h3 {
+            margin: 0 0 16px;
+            color: #1d4ed8;
+            font-size: 21px;
+        }
+
+        .app-sidebar .menu-group {
+            margin-bottom: 14px;
+        }
+
+        .app-sidebar .menu-group span {
+            display: block;
+            margin-bottom: 7px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .app-sidebar .menu-group a {
+            display: block;
+            margin-bottom: 6px;
+            padding: 9px 11px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #172033;
+            border: 1px solid transparent;
+            background: rgba(148, 163, 184, 0.09);
+            font-weight: 800;
+            transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .app-sidebar .menu-group a:hover {
+            border-color: rgba(37, 99, 235, 0.35);
+            background: rgba(37, 99, 235, 0.11);
+            transform: translateX(-2px);
+        }
+
+        .app-sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.36);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 1200;
+        }
+
+        .app-sidebar-backdrop.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        body[data-theme="dark"] .app-sidebar {
+            background: #0f1b2a;
+            border-left-color: rgba(147, 197, 253, 0.2);
+            box-shadow: -18px 0 40px rgba(0, 0, 0, 0.45);
+        }
+
+        body[data-theme="dark"] .app-sidebar h3 {
+            color: #60a5fa;
+        }
+
+        body[data-theme="dark"] .app-sidebar .menu-group span {
+            color: #9fb0c2;
+        }
+
+        body[data-theme="dark"] .app-sidebar .menu-group a {
+            background: rgba(15, 27, 42, 0.92);
+            color: #e6edf5;
+        }
+
+        body[data-theme="dark"] .app-sidebar .menu-group a:hover {
+            border-color: rgba(96, 165, 250, 0.38);
+            background: rgba(30, 58, 95, 0.58);
+        }
+    </style>
 </head>
 
 <body>
@@ -799,6 +799,7 @@ $id = (int) $row['id'];
                         </div>
                         <div class="menu-group">
                             <span>⚙️ النظام</span>
+                            <a href="treatment-types.php">🧬 إدارة الأنواع</a>
                             <a href="reports.php">التقارير</a>
                             <a href="settings.php">الإعدادات</a>
                             <a href="logout.php">تسجيل الخروج</a>
@@ -898,7 +899,7 @@ $id = (int) $row['id'];
                         <th>Delete</th>
                         <th>Edit</th>
                         <th>Notes</th>
-                        <th>IOL</th>
+                        <th>IOL (Power)</th>
                         <th>Type of Surgery</th>
                         <th>Eye</th>
                         <th>Date</th>
@@ -932,7 +933,10 @@ $id = (int) $row['id'];
                                     </td>";
 
                             echo "<td class='surgery-notes'>" . htmlspecialchars($surgery_row['notes']) . "</td>";
-                            echo "<td>" . htmlspecialchars($surgery_row['iol_type']) . "</td>";
+                            $iolType = trim((string) ($surgery_row['iol_type'] ?? ''));
+                            $iolPowerText = clinic_format_iol_power($surgery_row['iol_power'] ?? null);
+                            $iolDisplay = $iolType === '' ? '-' : $iolType . ($iolPowerText !== '-' ? ' (' . $iolPowerText . ')' : '');
+                            echo "<td>" . htmlspecialchars($iolDisplay) . "</td>";
                             echo "<td>" . htmlspecialchars($surgery_row['surgery_type']) . "</td>";
                             echo "<td>" . htmlspecialchars($surgery_row['eye']) . "</td>";
                             echo "<td>" . htmlspecialchars($surgery_row['date']) . "</td>";
@@ -1149,14 +1153,15 @@ $id = (int) $row['id'];
         })();
     </script>
 
-<div class="links">
-    <a href="surgery-appointment.php?id=<?php echo h($row['id']); ?>">موعد عملية</a>
-    <a href="laser-appointment.php?id=<?php echo h($row['id']); ?>">موعد ليزر</a>
-    <a href="injection-appointment.php?id=<?php echo h($row['id']); ?>">موعد حقن</a>
-    <a href="add-va.php?id=<?php echo h($row['id']); ?>">اضافة فحص النظر</a>
-    <a href="show-image.php?id=<?php echo h($row['id']); ?>"> عرض الصور</a>
-    <a href="patient_reports.php?id=<?php echo h($row['id']); ?>">التقارير الطبية</a>
-</div>
+    <div class="links">
+        <a href="surgery-appointment.php?id=<?php echo h($row['id']); ?>">موعد عملية</a>
+        <a href="laser-appointment.php?id=<?php echo h($row['id']); ?>">موعد ليزر</a>
+        <a href="injection-appointment.php?id=<?php echo h($row['id']); ?>">موعد حقن</a>
+        <a href="add-va.php?id=<?php echo h($row['id']); ?>">اضافة فحص النظر</a>
+        <a href="show-image.php?id=<?php echo h($row['id']); ?>"> عرض الصور</a>
+        <a href="patient_reports.php?id=<?php echo h($row['id']); ?>">التقارير الطبية</a>
+    </div>
 
 </body>
+
 </html>

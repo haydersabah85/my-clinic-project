@@ -778,7 +778,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px;
             margin-top: 8px;
-            
+
         }
 
         .summary-col {
@@ -2192,6 +2192,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         </div>
         <div class="menu-group">
             <span>⚙️ النظام</span>
+            <a href="treatment-types.php">🧬 إدارة الاجراءات</a>
             <a href="reports.php">التقارير</a>
             <a href="settings.php">الإعدادات</a>
             <a href="logout.php">تسجيل الخروج</a>
@@ -2652,9 +2653,12 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                                 echo "<a class='icon-btn delete-icon' href='delete-surgery.php?id_delete=" . h($surgery_row['id']) . "' onclick=\"return confirm('هل تريد حذف هذه العملية؟');\" title='حذف العملية'>🗑️</a>";
                                 echo "</div>";
                                 echo "</div>";
+                                $iolType = trim((string) ($surgery_row['iol_type'] ?? ''));
+                                $iolPowerText = clinic_format_iol_power($surgery_row['iol_power'] ?? null);
+                                $iolDisplay = $iolType === '' ? '-' : $iolType . ($iolPowerText !== '-' ? ' (' . $iolPowerText . ')' : '');
                                 echo "<div class='procedure-meta'>";
                                 echo "<div><span>العين</span><strong><span class='eye-badge $eye_class'>" . h($eye ?: '-') . "</span></strong></div>";
-                                echo "<div><span>نوع العدسة</span><strong>" . h($surgery_row['iol_type'] ?: '-') . "</strong></div>";
+                                echo "<div><span>العدسة / القوة</span><strong>" . h($iolDisplay) . "</strong></div>";
                                 echo "</div>";
                                 if (!empty(trim((string)$surgery_row['notes']))) {
                                     echo "<p class='procedure-note clinic-user-content' data-user-content data-no-translate>" . nl2br(h($surgery_row['notes'])) . "</p>";

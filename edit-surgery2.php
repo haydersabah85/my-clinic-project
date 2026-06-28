@@ -5,11 +5,24 @@ include 'auth.php';
 
 
 if (isset($_POST['edit_surgery'])) {
+   clinic_ensure_column($con, 'surgery', 'iol_power', 'DECIMAL(4,1) NULL');
    $surgery_id = $_GET['id_update'];
    $patient_id = $_POST['patient_id'];
    $eye = $_POST['eye'];
    $surgery_type = $_POST['surgery_type'];
    $iol_type = $_POST['iol_type'];
+   $iol_power_raw = trim((string) ($_POST['iol_power'] ?? ''));
+   $iol_power = null;
+   if ($iol_type !== '' && $iol_power_raw !== '' && is_numeric($iol_power_raw)) {
+      $iol_power = round(((float) $iol_power_raw) * 2) / 2;
+      if ($iol_power < -40) {
+         $iol_power = -40;
+      }
+      if ($iol_power > 40) {
+         $iol_power = 40;
+      }
+   }
+   $iol_power_sql = $iol_power === null ? "NULL" : "'" . number_format($iol_power, 1, '.', '') . "'";
    $date = $_POST['date'];
    $notes = $_POST['notes'];
 
@@ -28,6 +41,7 @@ if (isset($_POST['edit_surgery'])) {
         eye='$eye', 
         surgery_type='$surgery_type', 
         iol_type='$iol_type',
+         iol_power=$iol_power_sql,
          notes='$notes',
          date='$date',
          patient_uuid = '$patient_uuid',

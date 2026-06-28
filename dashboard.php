@@ -1163,8 +1163,9 @@ if ($openSyncConflicts > 0) {
 
       <div class="menu-group">
         <span>⚙️ النظام</span>
+        <a href="treatment-types.php">🧬 إدارة الاجراءات</a>
         <a href="reports.php">📊 التقارير</a>
-        <a href="common-medicines.php">💊 الأدوية الأكثر استعمالًا</a>
+        <a href="common-medicines.php">💊 إدارة الأدوية</a>
         <a href="treatment-templates.php">قوالب العلاج</a>
         <a href="staff-messages.php">📩 رسائل داخلية<?php if ($unreadStaffMessages > 0): ?> (<?= $unreadStaffMessages ?>)<?php endif; ?></a>
         <a href="audit-log.php">سجل العمليات</a>

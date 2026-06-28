@@ -3,6 +3,8 @@ include 'config.php';
 
 include 'auth.php';
 
+$laser_row = null;
+
 if (isset($_GET['id_edit'])) {
     $laser_id = $_GET['id_edit'];
 
@@ -23,6 +25,16 @@ if (isset($_GET['id_edit'])) {
         WHERE laser.id = '$laser_id' ";
     $result = mysqli_query($con, $select_query);
     $laser_row = mysqli_fetch_assoc($result);
+}
+
+$laser_types = clinic_get_laser_types($con);
+if (empty($laser_types)) {
+    $laser_types = ['PRP', 'Retinopexy', 'YAG', 'Focal Laser', 'PI'];
+}
+
+if (!$laser_row) {
+    http_response_code(404);
+    exit('Laser record not found.');
 }
 
 
@@ -184,13 +196,12 @@ if (isset($_GET['id_edit'])) {
                 <ul>
                     <option value="">اختر نوع الليزر</option>
                     <?php
-                    $laser_types = ['PRP', 'Retinopexy', 'Yag', 'Focal Laser', 'PI'];
                     foreach ($laser_types as $type) {
                         $selected = ($laser_row['laser_type'] === $type) ? 'selected' : '';
                         echo "<option value='$type' $selected>$type</option>";
-                    }   
+                    }
                     ?>
-                  
+
                 </ul>
             </select>
 
