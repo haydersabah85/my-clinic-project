@@ -262,6 +262,18 @@ $flash = clinic_take_flash();
             border-color: transparent;
         }
 
+        .action-link.laser {
+            color: #fff;
+            background: linear-gradient(135deg, #0f766e, #14b8a6);
+            border-color: transparent;
+        }
+
+        .action-link.injection {
+            color: #fff;
+            background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+            border-color: transparent;
+        }
+
         .note-box {
             margin-top: 16px;
             color: var(--muted);
@@ -514,6 +526,8 @@ $flash = clinic_take_flash();
                     <div class="action-list">
                         <a class="action-link" href="add-va.php?id=<?= $patientId ?>">إضافة فحص النظر <span>VA</span></a>
                         <a class="action-link amber" href="add-surgery.php?id=<?= $patientId ?>">إضافة عملية <span>جديد</span></a>
+                        <a class="action-link laser" href="add-laser.php?id=<?= $patientId ?>">ليزر مباشر <span>بدون موعد</span></a>
+                        <a class="action-link injection" href="add-injection.php?id=<?= $patientId ?>">حقن مباشر <span>بدون موعد</span></a>
                     </div>
                 </section>
 

@@ -101,13 +101,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $patientId = (int) ($_POST['patient_id'] ?? 0);
+        $isExternalPatient = (string) ($_POST['is_external_patient'] ?? '') === '1';
+        $externalPatientName = trim((string) ($_POST['external_patient_name'] ?? ''));
         $typeId = (int) ($_POST['procedure_type_id'] ?? 0);
         $qty = max(1, (int) ($_POST['qty'] ?? 1));
         $unitCost = max(0, (float) ($_POST['unit_cost'] ?? 0));
         $notes = trim((string) ($_POST['notes'] ?? ''));
 
-        if ($patientId <= 0 || $typeId <= 0) {
-            $flashMessage = 'يرجى اختيار المريض من نتائج البحث واختيار نوع الإجراء.';
+        if ($typeId <= 0) {
+            $flashMessage = 'يرجى اختيار نوع الإجراء.';
             $flashType = 'error';
         } else {
             $typeStmt = mysqli_prepare($con, "SELECT type_name, category FROM procedure_types WHERE id = ? AND is_active = 1 LIMIT 1");
@@ -121,16 +123,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $flashMessage = 'نوع الإجراء غير متاح.';
                     $flashType = 'error';
                 } else {
-                    $activePatientWhere = clinic_active_patient_where($con, 'add_patient');
-                    $patientStmt = mysqli_prepare($con, "SELECT id, full_name FROM add_patient WHERE id = ? AND $activePatientWhere LIMIT 1");
                     $patientName = '';
-                    if ($patientStmt) {
-                        mysqli_stmt_bind_param($patientStmt, 'i', $patientId);
-                        mysqli_stmt_execute($patientStmt);
-                        $patientResult = mysqli_stmt_get_result($patientStmt);
-                        $patientRow = $patientResult ? mysqli_fetch_assoc($patientResult) : null;
-                        if ($patientRow) {
-                            $patientName = (string) ($patientRow['full_name'] ?? '');
+                    $patientIdForStore = 0;
+
+                    if ($isExternalPatient) {
+                        $patientName = $externalPatientName;
+                        if ($patientName === '') {
+                            $flashMessage = 'يرجى إدخال اسم المراجع الخارجي.';
+                            $flashType = 'error';
+                            goto end_add_entry;
+                        }
+                    } else {
+                        if ($patientId <= 0) {
+                            $flashMessage = 'يرجى اختيار المريض من نتائج البحث أولاً.';
+                            $flashType = 'error';
+                            goto end_add_entry;
+                        }
+
+                        $activePatientWhere = clinic_active_patient_where($con, 'add_patient');
+                        $patientStmt = mysqli_prepare($con, "SELECT id, full_name FROM add_patient WHERE id = ? AND $activePatientWhere LIMIT 1");
+                        if ($patientStmt) {
+                            mysqli_stmt_bind_param($patientStmt, 'i', $patientId);
+                            mysqli_stmt_execute($patientStmt);
+                            $patientResult = mysqli_stmt_get_result($patientStmt);
+                            $patientRow = $patientResult ? mysqli_fetch_assoc($patientResult) : null;
+                            if ($patientRow) {
+                                $patientName = (string) ($patientRow['full_name'] ?? '');
+                                $patientIdForStore = (int) ($patientRow['id'] ?? 0);
+                            }
                         }
                     }
 
@@ -157,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $insertStmt,
                             'sisissiddssi',
                             $selectedDate,
-                            $patientId,
+                            $patientIdForStore,
                             $patientName,
                             $typeId,
                             $typeName,
@@ -179,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 null,
                                 [
                                     'procedure_date' => $selectedDate,
-                                    'patient_id' => $patientId,
+                                    'patient_id' => $patientIdForStore,
                                     'patient_name' => $patientName,
                                     'procedure_type' => $typeName,
                                     'qty' => $qty,
@@ -211,12 +231,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $patientId = (int) ($_POST['patient_id'] ?? 0);
+        $isExternalPatient = (string) ($_POST['is_external_patient'] ?? '') === '1';
+        $externalPatientName = trim((string) ($_POST['external_patient_name'] ?? ''));
         $typeId = (int) ($_POST['procedure_type_id'] ?? 0);
         $qty = max(1, (int) ($_POST['qty'] ?? 1));
         $unitCost = max(0, (float) ($_POST['unit_cost'] ?? 0));
         $notes = trim((string) ($_POST['notes'] ?? ''));
 
-        if ($entryId <= 0 || $patientId <= 0 || $typeId <= 0) {
+        if ($entryId <= 0 || $typeId <= 0) {
             $flashMessage = 'بيانات التعديل غير مكتملة.';
             $flashType = 'error';
         } else {
@@ -233,21 +255,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $flashMessage = 'نوع الإجراء غير متاح.';
                 $flashType = 'error';
             } else {
-                $activePatientWhere = clinic_active_patient_where($con, 'add_patient');
-                $patientStmt = mysqli_prepare($con, "SELECT id, full_name FROM add_patient WHERE id = ? AND $activePatientWhere LIMIT 1");
                 $patientName = '';
-                if ($patientStmt) {
-                    mysqli_stmt_bind_param($patientStmt, 'i', $patientId);
-                    mysqli_stmt_execute($patientStmt);
-                    $patientResult = mysqli_stmt_get_result($patientStmt);
-                    $patientRow = $patientResult ? mysqli_fetch_assoc($patientResult) : null;
-                    if ($patientRow) {
-                        $patientName = (string) ($patientRow['full_name'] ?? '');
+                $patientIdForStore = 0;
+
+                if ($isExternalPatient) {
+                    $patientName = $externalPatientName;
+                    if ($patientName === '') {
+                        $flashMessage = 'يرجى إدخال اسم المراجع الخارجي.';
+                        $flashType = 'error';
+                    }
+                } else {
+                    $activePatientWhere = clinic_active_patient_where($con, 'add_patient');
+                    $patientStmt = mysqli_prepare($con, "SELECT id, full_name FROM add_patient WHERE id = ? AND $activePatientWhere LIMIT 1");
+                    if ($patientStmt) {
+                        mysqli_stmt_bind_param($patientStmt, 'i', $patientId);
+                        mysqli_stmt_execute($patientStmt);
+                        $patientResult = mysqli_stmt_get_result($patientStmt);
+                        $patientRow = $patientResult ? mysqli_fetch_assoc($patientResult) : null;
+                        if ($patientRow) {
+                            $patientName = (string) ($patientRow['full_name'] ?? '');
+                            $patientIdForStore = (int) ($patientRow['id'] ?? 0);
+                        }
                     }
                 }
 
                 if ($patientName === '') {
-                    $flashMessage = 'المريض المحدد غير متاح.';
+                    $flashMessage = $isExternalPatient
+                        ? 'يرجى إدخال اسم المراجع الخارجي.'
+                        : 'المريض المحدد غير متاح.';
                     $flashType = 'error';
                 } else {
                     $typeName = (string) $typeRow['type_name'];
@@ -287,7 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $updateStmt,
                             'sisissiddsii',
                             $selectedDate,
-                            $patientId,
+                            $patientIdForStore,
                             $patientName,
                             $typeId,
                             $typeName,
@@ -309,7 +344,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $oldEntry,
                                 [
                                     'procedure_date' => $selectedDate,
-                                    'patient_id' => $patientId,
+                                    'patient_id' => $patientIdForStore,
                                     'patient_name' => $patientName,
                                     'procedure_type' => $typeName,
                                     'qty' => $qty,
@@ -598,6 +633,23 @@ if ($editId > 0) {
             font-weight: 700;
         }
 
+        .external-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #334155;
+        }
+
+        .external-toggle input {
+            min-height: auto;
+        }
+
+        .external-patient-wrap {
+            margin-top: 8px;
+            display: none;
+        }
+
         .patient-picked-actions {
             margin-top: 6px;
             display: flex;
@@ -744,14 +796,24 @@ if ($editId > 0) {
                     </div>
                     <div class="field">
                         <label for="patient_name">اسم المريض</label>
+                        <?php $isEditingExternal = ((int) ($editingEntry['patient_id'] ?? 0) <= 0) && trim((string) ($editingEntry['patient_name'] ?? '')) !== ''; ?>
+                        <label class="external-toggle" for="is_external_patient">
+                            <input id="is_external_patient" type="checkbox" name="is_external_patient" value="1" <?php echo $isEditingExternal ? 'checked' : ''; ?>>
+                            مراجع خارجي (غير مسجل) - إدخال الاسم يدويًا
+                        </label>
                         <div class="patient-search-wrap">
-                            <input id="patient_name" type="text" name="patient_name" placeholder="اكتب اسم المريض أو الهاتف" autocomplete="off" value="<?php echo htmlspecialchars((string) ($editingEntry['patient_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" required>
+                            <input id="patient_name" type="text" name="patient_name" placeholder="اكتب اسم المريض أو الهاتف" autocomplete="off" value="<?php echo htmlspecialchars((string) ($editingEntry['patient_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
                             <input id="patient_id" type="hidden" name="patient_id" value="<?php echo (int) ($editingEntry['patient_id'] ?? 0); ?>">
                             <div id="patientResults" class="patient-search-results"></div>
+                        </div>
+                        <div id="externalPatientWrap" class="external-patient-wrap" style="<?php echo $isEditingExternal ? 'display:block;' : ''; ?>">
+                            <input id="external_patient_name" type="text" name="external_patient_name" placeholder="اسم المراجع الخارجي" value="<?php echo htmlspecialchars($isEditingExternal ? (string) ($editingEntry['patient_name'] ?? '') : '', ENT_QUOTES, 'UTF-8'); ?>">
                         </div>
                         <div id="pickedPatient" class="patient-picked">
                             <?php if (!empty($editingEntry['patient_id'])): ?>
                                 تم اختيار المريض: <?php echo htmlspecialchars((string) ($editingEntry['patient_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?> (ID: <?php echo (int) ($editingEntry['patient_id'] ?? 0); ?>)
+                            <?php elseif ($isEditingExternal): ?>
+                                مراجع خارجي: <?php echo htmlspecialchars((string) ($editingEntry['patient_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
                             <?php else: ?>
                                 لم يتم اختيار مريض بعد
                             <?php endif; ?>
@@ -894,6 +956,9 @@ if ($editId > 0) {
             const picked = document.getElementById('pickedPatient');
             const openPatientFile = document.getElementById('openPatientFile');
             const clearPatientSelection = document.getElementById('clearPatientSelection');
+            const externalToggle = document.getElementById('is_external_patient');
+            const externalPatientWrap = document.getElementById('externalPatientWrap');
+            const externalPatientName = document.getElementById('external_patient_name');
             let timer = null;
             let currentItems = [];
             let activeIndex = -1;
@@ -908,6 +973,37 @@ if ($editId > 0) {
                 openPatientFile.classList.add('is-disabled');
                 openPatientFile.setAttribute('aria-disabled', 'true');
                 openPatientFile.setAttribute('href', '#');
+            }
+
+            function updatePatientMode() {
+                const isExternal = !!(externalToggle && externalToggle.checked);
+                if (isExternal) {
+                    idInput.value = '';
+                    hideResults();
+                    nameInput.value = '';
+                    nameInput.readOnly = true;
+                    nameInput.placeholder = 'تم تفعيل وضع المراجع الخارجي';
+                    externalPatientWrap.style.display = 'block';
+                    externalPatientName.required = true;
+                    picked.textContent = externalPatientName.value.trim() ? ('مراجع خارجي: ' + externalPatientName.value.trim()) : 'مراجع خارجي (لم يتم إدخال الاسم بعد)';
+                    openPatientFile.classList.add('is-disabled');
+                    openPatientFile.setAttribute('aria-disabled', 'true');
+                    openPatientFile.setAttribute('href', '#');
+                } else {
+                    nameInput.readOnly = false;
+                    nameInput.placeholder = 'اكتب اسم المريض أو الهاتف';
+                    externalPatientWrap.style.display = 'none';
+                    externalPatientName.required = false;
+                    externalPatientName.value = '';
+                    if (idInput.value) {
+                        picked.textContent = 'تم اختيار المريض: ' + (nameInput.value || '') + ' (ID: ' + idInput.value + ')';
+                        openPatientFile.classList.remove('is-disabled');
+                        openPatientFile.setAttribute('aria-disabled', 'false');
+                        openPatientFile.setAttribute('href', 'patient-file.php?id=' + encodeURIComponent(idInput.value));
+                    } else {
+                        clearSelection();
+                    }
+                }
             }
 
             function hideResults() {
@@ -992,6 +1088,9 @@ if ($editId > 0) {
             }
 
             nameInput.addEventListener('input', () => {
+                if (externalToggle && externalToggle.checked) {
+                    return;
+                }
                 clearSelection();
                 const term = nameInput.value.trim();
                 if (term.length < 2) {
@@ -1009,6 +1108,9 @@ if ($editId > 0) {
             });
 
             nameInput.addEventListener('keydown', (event) => {
+                if (externalToggle && externalToggle.checked) {
+                    return;
+                }
                 const hasResults = resultsBox.style.display === 'block' && currentItems.length > 0;
 
                 if (event.key === 'Escape') {
@@ -1047,6 +1149,13 @@ if ($editId > 0) {
             });
 
             clearPatientSelection.addEventListener('click', () => {
+                if (externalToggle && externalToggle.checked) {
+                    externalPatientName.value = '';
+                    picked.textContent = 'مراجع خارجي (لم يتم إدخال الاسم بعد)';
+                    externalPatientName.focus();
+                    return;
+                }
+
                 nameInput.value = '';
                 clearSelection();
                 hideResults();
@@ -1059,7 +1168,29 @@ if ($editId > 0) {
                 }
             });
 
+            externalToggle.addEventListener('change', () => {
+                updatePatientMode();
+            });
+
+            externalPatientName.addEventListener('input', () => {
+                if (externalToggle.checked) {
+                    const val = externalPatientName.value.trim();
+                    picked.textContent = val ? ('مراجع خارجي: ' + val) : 'مراجع خارجي (لم يتم إدخال الاسم بعد)';
+                }
+            });
+
+            updatePatientMode();
+
             nameInput.form.addEventListener('submit', (event) => {
+                if (externalToggle && externalToggle.checked) {
+                    if (!externalPatientName.value.trim()) {
+                        event.preventDefault();
+                        alert('يرجى إدخال اسم المراجع الخارجي.');
+                        externalPatientName.focus();
+                    }
+                    return;
+                }
+
                 if (!idInput.value) {
                     event.preventDefault();
                     alert('يرجى اختيار المريض من نتائج البحث أولاً.');

@@ -52,6 +52,7 @@ if (empty($laserTypes)) {
         --border: #dbe7ef;
         --primary: #2563eb;
         --tone: #d97706;
+        --tone-rgb: 217, 119, 6;
         --teal: #0f766e;
         --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
         --radius: 12px;
@@ -260,7 +261,7 @@ if (empty($laserTypes)) {
     input[type="date"]:focus,
     textarea:focus {
         border-color: var(--tone);
-        box-shadow: 0 0 0 4px rgba(217, 119, 6, .14);
+        box-shadow: 0 0 0 4px rgba(var(--tone-rgb), .14);
     }
 
     textarea {

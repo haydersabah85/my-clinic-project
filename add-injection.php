@@ -53,8 +53,8 @@ if (empty($injectionTypes)) {
         --muted: #64748b;
         --border: #dbe7ef;
         --primary: #2563eb;
-        --tone: #0f766e;
-        --blue: #2563eb;
+        --tone: #2563eb;
+        --teal: #0f766e;
         --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
         --radius: 12px;
     }
@@ -158,8 +158,8 @@ if (empty($injectionTypes)) {
     }
 
     .btn.success {
-        background: var(--blue);
-        border-color: var(--blue);
+        background: var(--teal);
+        border-color: var(--teal);
         color: #ffffff;
     }
 
@@ -262,7 +262,7 @@ if (empty($injectionTypes)) {
     input[type="date"]:focus,
     textarea:focus {
         border-color: var(--tone);
-        box-shadow: 0 0 0 4px rgba(15, 118, 110, .14);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
     }
 
     textarea {

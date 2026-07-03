@@ -429,6 +429,7 @@ $pendingCount = max(0, $totalCount - (int)$summary['confirmed_count']);
                 <a class="nav-btn" href="dashboard.php">Dashboard</a>
                 <a class="nav-btn" href="confirmed-list.php">Confirmed list</a>
                 <a class="nav-btn" href="treatment-types.php">Treatment types</a>
+                <a class="nav-btn" href="main.php">إجراء طارئ مباشر (بدون موعد)</a>
                 <button class="tool-btn" type="button" onclick="window.print()">Print</button>
             </nav>
         </header>

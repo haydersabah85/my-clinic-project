@@ -476,6 +476,13 @@ if ($listStmt) {
 
         @media print {
 
+            body {
+                background: #fff !important;
+                color: #111827 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
             .head,
             .layout,
             .notice {
@@ -491,6 +498,7 @@ if ($listStmt) {
                 font-size: 16px;
                 line-height: 1.5;
                 white-space: pre-wrap;
+                color: #111827 !important;
             }
         }
     </style>
@@ -610,7 +618,7 @@ if ($listStmt) {
             const reportBody = document.getElementById('report_body');
             const medicines = document.getElementById('medicines');
             const recommendations = document.getElementById('recommendations');
-            
+
             const buildBtn = document.getElementById('buildFromSections');
 
             function detectDirection(text) {
@@ -651,7 +659,7 @@ if ($listStmt) {
                     (findings.value || '').trim(),
                     (medicines.value || '').trim(),
                     (recommendations.value || '').trim(),
-                    
+
                 ].filter(Boolean).join('\n\n');
 
                 applyDirection(reportBody);
