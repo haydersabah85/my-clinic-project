@@ -93,6 +93,8 @@ $summary = [
     'followups_pending' => 0,
     'appointments_count' => 0,
     'appointments_not_attend' => 0,
+    'referred_cases_count' => 0,
+    'referred_doctors_count' => 0,
 ];
 
 $visitStatsSql = "
@@ -155,6 +157,8 @@ $summary['followups_count'] = $singleCount("SELECT COUNT(*) AS total FROM follow
 $summary['followups_pending'] = $singleCount("SELECT COUNT(*) AS total FROM followups WHERE status = 'pending' AND followup_date BETWEEN '{$escapedFrom}' AND '{$escapedTo}'");
 $summary['appointments_count'] = $singleCount("SELECT COUNT(*) AS total FROM surgery_appointment WHERE date BETWEEN '{$escapedFrom}' AND '{$escapedTo}'");
 $summary['appointments_not_attend'] = $singleCount("SELECT COUNT(*) AS total FROM surgery_appointment WHERE status = 'discharged' AND date BETWEEN '{$escapedFrom}' AND '{$escapedTo}'");
+$summary['referred_cases_count'] = $singleCount("SELECT COUNT(*) AS total FROM referred_surgery_cases WHERE surgery_date BETWEEN '{$escapedFrom}' AND '{$escapedTo}'");
+$summary['referred_doctors_count'] = $singleCount("SELECT COUNT(DISTINCT referring_doctor_name) AS total FROM referred_surgery_cases WHERE surgery_date BETWEEN '{$escapedFrom}' AND '{$escapedTo}' AND TRIM(referring_doctor_name) <> ''");
 
 $visitTrend = [];
 $trendRes = mysqli_query($con, "
@@ -305,6 +309,45 @@ if ($followupRes) {
     mysqli_free_result($followupRes);
 }
 
+$topReferringDoctors = [];
+$topReferringRes = mysqli_query($con, "
+    SELECT COALESCE(NULLIF(TRIM(referring_doctor_name), ''), 'غير محدد') AS name, COUNT(*) AS total
+    FROM referred_surgery_cases
+    WHERE surgery_date BETWEEN '{$escapedFrom}' AND '{$escapedTo}'
+    GROUP BY COALESCE(NULLIF(TRIM(referring_doctor_name), ''), 'غير محدد')
+    ORDER BY total DESC
+    LIMIT 10
+");
+while ($topReferringRes && ($row = mysqli_fetch_assoc($topReferringRes))) {
+    $topReferringDoctors[] = $row;
+}
+if ($topReferringRes) {
+    mysqli_free_result($topReferringRes);
+}
+
+$referredRows = [];
+$referredRes = mysqli_query($con, "
+    SELECT
+        id,
+        patient_full_name,
+        patient_phone,
+        referring_doctor_name,
+        surgery_type,
+        surgery_date,
+        eye,
+        followup_destination
+    FROM referred_surgery_cases
+    WHERE surgery_date BETWEEN '{$escapedFrom}' AND '{$escapedTo}'
+    ORDER BY surgery_date DESC, id DESC
+    LIMIT 300
+");
+while ($referredRes && ($row = mysqli_fetch_assoc($referredRes))) {
+    $referredRows[] = $row;
+}
+if ($referredRes) {
+    mysqli_free_result($referredRes);
+}
+
 if (isset($_GET['export']) && $_GET['export'] === 'visits_csv') {
     header('Content-Type: text/csv; charset=UTF-8');
     header('Content-Disposition: attachment; filename="visits-report-' . $from . '-to-' . $to . '.csv"');
@@ -343,6 +386,28 @@ if (isset($_GET['export']) && $_GET['export'] === 'procedures_csv') {
             (string) ($row['qty'] ?? ''),
             (string) ($row['unit_cost'] ?? ''),
             (string) ($row['total_cost'] ?? ''),
+        ]);
+    }
+    fclose($out);
+    exit;
+}
+
+if (isset($_GET['export']) && $_GET['export'] === 'referred_csv') {
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="referred-cases-report-' . $from . '-to-' . $to . '.csv"');
+    $out = fopen('php://output', 'w');
+    fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+    fputcsv($out, ['id', 'patient_name', 'patient_phone', 'referring_doctor', 'surgery_type', 'eye', 'surgery_date', 'followup_destination']);
+    foreach ($referredRows as $row) {
+        fputcsv($out, [
+            (string) ($row['id'] ?? ''),
+            (string) ($row['patient_full_name'] ?? ''),
+            (string) ($row['patient_phone'] ?? ''),
+            (string) ($row['referring_doctor_name'] ?? ''),
+            (string) ($row['surgery_type'] ?? ''),
+            (string) ($row['eye'] ?? ''),
+            (string) ($row['surgery_date'] ?? ''),
+            (string) ($row['followup_destination'] ?? ''),
         ]);
     }
     fclose($out);
@@ -836,6 +901,8 @@ if ($trendMax < 1) {
                 <span class="title">الرئيسية</span>
                 <a href="dashboard.php">لوحة التحكم</a>
                 <a href="main.php">المرضى</a>
+                <a href="add-referred-case.php">إضافة حالة محولة</a>
+                <a href="referred-cases.php">الحالات المحولة</a>
                 <a href="visits.php">زيارات اليوم</a>
             </div>
 
@@ -925,6 +992,7 @@ if ($trendMax < 1) {
                         <a class="btn secondary" href="reports.php">إعادة الضبط</a>
                         <a class="btn secondary" href="reports.php?<?php echo hsafe(http_build_query(array_merge($queryBase, ['export' => 'visits_csv']))); ?>">تصدير زيارات CSV</a>
                         <a class="btn secondary" href="reports.php?<?php echo hsafe(http_build_query(array_merge($queryBase, ['export' => 'procedures_csv']))); ?>">تصدير إجراءات CSV</a>
+                        <a class="btn secondary" href="reports.php?<?php echo hsafe(http_build_query(array_merge($queryBase, ['export' => 'referred_csv']))); ?>">تصدير الحالات المحولة CSV</a>
                     </div>
                 </form>
 
@@ -960,6 +1028,10 @@ if ($trendMax < 1) {
                     <article class="card">
                         <div class="title">مواعيد العمليات</div>
                         <div class="value"><?php echo number_format($summary['appointments_count']); ?></div>
+                    </article>
+                    <article class="card">
+                        <div class="title">الحالات المحولة</div>
+                        <div class="value"><?php echo number_format($summary['referred_cases_count']); ?></div>
                     </article>
                 </section>
 
@@ -1132,6 +1204,41 @@ if ($trendMax < 1) {
                             </table>
                         </div>
                     </div>
+                    <div class="split" style="margin-top:10px;">
+                        <div class="card">
+                            <div class="title">أكثر الأطباء المُحيلين</div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>الطبيب</th>
+                                        <th>عدد الحالات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($topReferringDoctors)): ?>
+                                        <tr>
+                                            <td colspan="2">لا توجد بيانات.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($topReferringDoctors as $row): ?>
+                                            <tr>
+                                                <td><?php echo hsafe((string) ($row['name'] ?? '')); ?></td>
+                                                <td><?php echo (int) ($row['total'] ?? 0); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card">
+                            <div class="title">ملخص الحالات المحولة</div>
+                            <div style="margin-top:8px; font-weight:700; line-height:1.9;">
+                                إجمالي الحالات بالفترة: <?php echo number_format($summary['referred_cases_count']); ?><br>
+                                عدد الأطباء المُحيلين: <?php echo number_format($summary['referred_doctors_count']); ?><br>
+                                <a href="referred-cases.php">فتح قائمة الحالات المحولة</a>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card" style="margin-top:10px;">
                         <div class="title">أكثر أنواع الإبر</div>
                         <table>
@@ -1181,6 +1288,43 @@ if ($trendMax < 1) {
                                 <?php endif; ?>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="card" style="margin-top:10px;">
+                        <div class="title">آخر الحالات المحولة ضمن الفترة</div>
+                        <div class="list-table" style="margin-top:8px; max-height:360px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <th>المريض</th>
+                                        <th>الطبيب المُحيل</th>
+                                        <th>العملية</th>
+                                        <th>العين</th>
+                                        <th>الهاتف</th>
+                                        <th>تعديل</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($referredRows)): ?>
+                                        <tr>
+                                            <td colspan="7">لا توجد حالات محولة ضمن الفترة.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($referredRows as $row): ?>
+                                            <tr>
+                                                <td><?php echo hsafe((string) ($row['surgery_date'] ?? '')); ?></td>
+                                                <td><?php echo hsafe((string) ($row['patient_full_name'] ?? '')); ?></td>
+                                                <td><?php echo hsafe((string) ($row['referring_doctor_name'] ?? '')); ?></td>
+                                                <td><?php echo hsafe((string) ($row['surgery_type'] ?? '')); ?></td>
+                                                <td><?php echo hsafe((string) (($row['eye'] ?? '') !== '' ? $row['eye'] : '-')); ?></td>
+                                                <td><?php echo hsafe((string) (($row['patient_phone'] ?? '') !== '' ? $row['patient_phone'] : '-')); ?></td>
+                                                <td><a href="edit-referred-case.php?id=<?php echo (int) ($row['id'] ?? 0); ?>">تعديل</a></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 

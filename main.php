@@ -650,6 +650,7 @@ function patient_status_class(?string $status): string
 </style>
 
 <?php $flash = clinic_take_flash(); ?>
+
 <body>
     <div class="app-shell sidebar-collapsed" id="appShell">
         <aside class="sidebar hidden" id="sidebar">
@@ -667,6 +668,8 @@ function patient_status_class(?string $status): string
                 <span>المرضى</span>
                 <a href="add-patient.php">إضافة مريض</a>
                 <a class="active" href="main.php">بيانات المرضى</a>
+                <a href="add-referred-case.php">إضافة حالة محولة</a>
+                <a href="referred-cases.php">الحالات المحولة</a>
                 <a href="archived-patients.php">أرشيف المرضى</a>
                 <a href="data-quality.php">جودة البيانات</a>
                 <a href="followups.php">المتابعة</a>
@@ -731,6 +734,7 @@ function patient_status_class(?string $status): string
             <section class="toolbar" aria-label="أدوات المرضى">
                 <div class="quick-actions">
                     <a class="action-btn primary" href="add-patient.php">إضافة مريض</a>
+                    <a class="action-btn" href="add-referred-case.php">إضافة حالة محولة</a>
                     <a class="action-btn success" href="visits.php">زيارات اليوم</a>
                     <a class="action-btn" href="archived-patients.php">الأرشيف</a>
                 </div>

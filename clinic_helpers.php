@@ -97,6 +97,39 @@ function clinic_ensure_infrastructure(mysqli $con): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
 
+    mysqli_query($con, "
+        CREATE TABLE IF NOT EXISTS referred_surgery_cases (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            case_uuid CHAR(32) NOT NULL,
+            patient_full_name VARCHAR(180) NOT NULL,
+            patient_age VARCHAR(20) NULL,
+            patient_phone VARCHAR(40) NULL,
+            patient_city VARCHAR(120) NULL,
+            referring_doctor_name VARCHAR(180) NOT NULL,
+            referring_doctor_clinic VARCHAR(180) NULL,
+            referring_doctor_phone VARCHAR(40) NULL,
+            referral_date DATE NULL,
+            surgery_date DATE NOT NULL,
+            surgery_type VARCHAR(180) NOT NULL,
+            eye VARCHAR(10) NULL,
+            surgeon_name VARCHAR(180) NULL,
+            anesthesia_type VARCHAR(120) NULL,
+            materials_used TEXT NULL,
+            operation_notes TEXT NULL,
+            postop_instructions TEXT NULL,
+            followup_plan TEXT NULL,
+            followup_destination ENUM('clinic','referrer','unknown') NOT NULL DEFAULT 'unknown',
+            created_by VARCHAR(120) NULL,
+            sync_status TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_referred_case_uuid (case_uuid),
+            INDEX idx_referred_surgery_date (surgery_date),
+            INDEX idx_referred_referral_date (referral_date),
+            INDEX idx_referred_doctor (referring_doctor_name)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
     clinic_ensure_column($con, 'add_patient', 'is_deleted', 'TINYINT(1) NOT NULL DEFAULT 0');
     clinic_ensure_column($con, 'add_patient', 'deleted_at', 'DATETIME NULL');
     clinic_ensure_column($con, 'add_patient', 'deleted_by', 'VARCHAR(120) NULL');
@@ -913,6 +946,11 @@ function clinic_required_permissions_for_script(string $scriptName): array
         'edit-medicine2.php' => ['prescriptions'],
         'delete-medicine.php' => ['prescriptions'],
         'followup-appointment.php' => ['appointments'],
+        'referred-cases.php' => ['appointments'],
+        'add-referred-case.php' => ['appointments'],
+        'add-referred-case2.php' => ['appointments'],
+        'edit-referred-case.php' => ['appointments'],
+        'edit-referred-case2.php' => ['appointments'],
         'treatment-types.php' => ['appointments'],
         'delete-followup.php' => ['appointments'],
         'save_followup.php' => ['appointments'],

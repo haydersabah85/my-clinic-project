@@ -91,6 +91,17 @@ $monthOperations = mysqli_fetch_assoc(
   ")
 )['total'] ?? 0;
 
+$totalReferredCases = 0;
+$monthReferredCases = 0;
+if (clinic_table_exists($con, 'referred_surgery_cases')) {
+  $totalReferredCases = (int) ((mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM referred_surgery_cases"))['total'] ?? 0));
+  $monthReferredCases = (int) ((mysqli_fetch_assoc(mysqli_query($con, "
+    SELECT COUNT(*) total FROM referred_surgery_cases
+    WHERE MONTH(surgery_date)=MONTH(CURDATE())
+      AND YEAR(surgery_date)=YEAR(CURDATE())
+  "))['total'] ?? 0));
+}
+
 $monthInjections = mysqli_fetch_assoc(
   mysqli_query($con, "
     SELECT COUNT(*) total FROM injection
@@ -439,6 +450,34 @@ if ($openSyncConflicts > 0) {
   .search-box input:focus {
     border-color: var(--primary);
     box-shadow: 0 0 8px rgba(37, 99, 235, .3);
+  }
+
+  .quick-links {
+    margin-top: -8px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .quick-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--card);
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 800;
+    box-shadow: var(--shadow);
+  }
+
+  .quick-link:hover {
+    background: rgba(37, 99, 235, .1);
+    color: var(--primary);
   }
 
   /* نتائج البحث */
@@ -1137,6 +1176,8 @@ if ($openSyncConflicts > 0) {
         <span>👤 المرضى</span>
         <a href="add-patient.php">➕ إضافة مريض</a>
         <a href="main.php">👥 بيانات المرضى</a>
+        <a href="add-referred-case.php">🧾 إضافة حالة محولة</a>
+        <a href="referred-cases.php">📚 الحالات المحولة</a>
         <a href="archived-patients.php">أرشيف المرضى</a>
         <a href="data-quality.php">جودة البيانات</a>
         <a href="followups.php">🔄 المتابعة</a>
@@ -1185,6 +1226,11 @@ if ($openSyncConflicts > 0) {
         <input type="text" id="search" placeholder="🔍 ابحث عن مريض..." onkeyup="searchPatient()">
       </div>
 
+      <div class="quick-links">
+        <a class="quick-link" href="add-referred-case.php">🧾 إضافة حالة محولة</a>
+        <a class="quick-link" href="referred-cases.php">📚 عرض الحالات المحولة</a>
+      </div>
+
       <div id="results"></div>
 
 
@@ -1210,7 +1256,7 @@ if ($openSyncConflicts > 0) {
             <strong>نظرة سريعة على حركة العيادة</strong><br>
             <span>نبذة مختصرة عن النشاط اليومي والشهري للعيادة من زيارات المرضى والمواعيد والعمليات.</span>
           </div>
-          <a href="add-patient.php">➕ إضافة مريض</a>
+          <a href="add-referred-case.php">🧾 إضافة حالة محولة</a>
         </div>
       </div>
 
@@ -1246,6 +1292,11 @@ if ($openSyncConflicts > 0) {
         <div class="card surgery-card">🏥<span><?= $monthOperations ?></span>
           <p>العمليات المنجزة هذا الشهر</p>
           <small>حسب جدول العمليات المنجزة</small>
+        </div>
+
+        <div class="card surgery-card">🧾<span><?= $totalReferredCases ?></span>
+          <p>الحالات المحولة (إجمالي)</p>
+          <small>هذا الشهر: <?= $monthReferredCases ?></small>
         </div>
 
         <div class="card pending-card">⏳<span><?= $pendingOperations ?></span>
