@@ -1168,50 +1168,50 @@ if ($openSyncConflicts > 0) {
       <h3>القائمة</h3>
       <div class="menu-group">
 
-        <a href="dashboard.php">📊 لوحة التحكم</a>
+        <a href="dashboard.php">لوحة التحكم</a>
 
       </div>
 
       <div class="menu-group">
         <span>👤 المرضى</span>
-        <a href="add-patient.php">➕ إضافة مريض</a>
-        <a href="main.php">👥 بيانات المرضى</a>
-        <a href="add-referred-case.php">🧾 إضافة حالة محولة</a>
-        <a href="referred-cases.php">📚 الحالات المحولة</a>
+        <a href="add-patient.php">إضافة مريض</a>
+        <a href="main.php">بيانات المرضى</a>
+        <a href="add-referred-case.php">إضافة حالة محولة</a>
+        <a href="referred-cases.php">الحالات المحولة</a>
         <a href="archived-patients.php">أرشيف المرضى</a>
         <a href="data-quality.php">جودة البيانات</a>
-        <a href="followups.php">🔄 المتابعة</a>
+        <a href="followups.php">المتابعة</a>
       </div>
 
 
       <div class="menu-group">
         <span>📅 المواعيد</span>
         <a href="work-queue.php">قائمة عمل اليوم</a>
-        <a href="visits.php">📅 زيارات اليوم</a>
-        <a href="followup-appointment.php">📌 إعطاء موعد مراجعة</a>
-        <a href="import_expected.php">📥 استيراد المواعيد</a>
-        <a href="expected_appointments.php">📅 المواعيد المتوقعة</a>
+        <a href="visits.php">زيارات اليوم</a>
+        <a href="followup-appointment.php">إعطاء موعد مراجعة</a>
+        <a href="import_expected.php">استيراد المواعيد</a>
+        <a href="expected_appointments.php">المواعيد المتوقعة</a>
 
       </div>
 
       <div class="menu-group">
         <span>💉 العمليات</span>
-        <a href="operation-by-date.php">🏥 مواعيد العمليات</a>
-        <a href="confirmed-list.php">📋 قوائم العمليات</a>
-        <a href="import_surgery_excel.php">📥 استيراد العمليات</a>
+        <a href="operation-by-date.php">مواعيد العمليات</a>
+        <a href="confirmed-list.php">قوائم العمليات</a>
+        <a href="import_surgery_excel.php">استيراد العمليات</a>
       </div>
 
 
       <div class="menu-group">
         <span>⚙️ النظام</span>
-        <a href="treatment-types.php">🧬 إدارة الاجراءات</a>
-        <a href="reports.php">📊 التقارير</a>
-        <a href="common-medicines.php">💊 إدارة الأدوية</a>
+        <a href="treatment-types.php">إدارة الاجراءات</a>
+        <a href="reports.php">التقارير</a>
+        <a href="common-medicines.php">إدارة الأدوية</a>
         <a href="treatment-templates.php">قوالب العلاج</a>
-        <a href="staff-messages.php">📩 رسائل داخلية<?php if ($unreadStaffMessages > 0): ?> (<?= $unreadStaffMessages ?>)<?php endif; ?></a>
+        <a href="staff-messages.php">رسائل داخلية<?php if ($unreadStaffMessages > 0): ?> (<?= $unreadStaffMessages ?>)<?php endif; ?></a>
         <a href="audit-log.php">سجل العمليات</a>
-        <a href="settings.php">⚙️ الإعدادات</a>
-        <a href="logout.php" class="danger">🚪 تسجيل الخروج</a>
+        <a href="settings.php">الإعدادات</a>
+        <a href="logout.php" class="danger">تسجيل الخروج</a>
       </div>
     </aside>
 
@@ -1226,10 +1226,6 @@ if ($openSyncConflicts > 0) {
         <input type="text" id="search" placeholder="🔍 ابحث عن مريض..." onkeyup="searchPatient()">
       </div>
 
-      <div class="quick-links">
-        <a class="quick-link" href="add-referred-case.php">🧾 إضافة حالة محولة</a>
-        <a class="quick-link" href="referred-cases.php">📚 عرض الحالات المحولة</a>
-      </div>
 
       <div id="results"></div>
 
@@ -1256,7 +1252,7 @@ if ($openSyncConflicts > 0) {
             <strong>نظرة سريعة على حركة العيادة</strong><br>
             <span>نبذة مختصرة عن النشاط اليومي والشهري للعيادة من زيارات المرضى والمواعيد والعمليات.</span>
           </div>
-          <a href="add-referred-case.php">🧾 إضافة حالة محولة</a>
+          <a href="add-patient.php">➕ إضافة مريض </a>
         </div>
       </div>
 

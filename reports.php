@@ -898,7 +898,7 @@ if ($trendMax < 1) {
             </div>
 
             <div class="menu-group">
-                <span class="title">الرئيسية</span>
+                <span class="title">📊 الرئيسية</span>
                 <a href="dashboard.php">لوحة التحكم</a>
                 <a href="main.php">المرضى</a>
                 <a href="add-referred-case.php">إضافة حالة محولة</a>
@@ -907,7 +907,7 @@ if ($trendMax < 1) {
             </div>
 
             <div class="menu-group">
-                <span class="title">التقارير</span>
+                <span class="title">📈 التقارير</span>
                 <a class="active" href="reports.php">تقارير شاملة</a>
                 <a href="daily-revenue.php?date=<?php echo urlencode($to); ?>">الإيراد اليومي</a>
                 <a href="dashboard-status.php">حالة الداشبورد</a>
@@ -915,21 +915,21 @@ if ($trendMax < 1) {
             </div>
 
             <div class="menu-group">
-                <span class="title">المواعيد والإجراءات</span>
+                <span class="title">📅 المواعيد والإجراءات</span>
                 <a href="followups.php">المراجعات</a>
                 <a href="operation-by-date.php">مواعيد العمليات</a>
                 <a href="procedure-entries.php?date=<?php echo urlencode($to); ?>">إدخال الإجراءات</a>
             </div>
 
             <div class="menu-group">
-                <span class="title">النظام</span>
+                <span class="title">⚙️ النظام</span>
                 <a href="settings.php">الإعدادات</a>
                 <a href="audit-log.php">سجل التدقيق</a>
                 <a href="logout.php">تسجيل الخروج</a>
             </div>
 
             <div class="menu-group">
-                <span class="title">الإعدادات السريعة</span>
+                <span class="title">🔧 الإعدادات السريعة</span>
                 <button class="dark-mode-btn" id="darkModeBtn" type="button">
                     <span id="darkModeIcon">🌙</span>
                     <span id="darkModeLabel">الوضع الداكن</span>

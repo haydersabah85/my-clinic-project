@@ -660,12 +660,12 @@ function patient_status_class(?string $status): string
             </div>
 
             <div class="menu-group">
-                <span>الرئيسية</span>
+                <span>📊 الرئيسية</span>
                 <a href="dashboard.php">لوحة التحكم</a>
             </div>
 
             <div class="menu-group">
-                <span>المرضى</span>
+                <span>👤 المرضى</span>
                 <a href="add-patient.php">إضافة مريض</a>
                 <a class="active" href="main.php">بيانات المرضى</a>
                 <a href="add-referred-case.php">إضافة حالة محولة</a>
@@ -676,7 +676,7 @@ function patient_status_class(?string $status): string
             </div>
 
             <div class="menu-group">
-                <span>المواعيد</span>
+                <span>📅 المواعيد</span>
                 <a href="work-queue.php">قائمة عمل اليوم</a>
                 <a href="visits.php">زيارات اليوم</a>
                 <a href="followup-appointment.php">إعطاء موعد مراجعة</a>
@@ -684,14 +684,14 @@ function patient_status_class(?string $status): string
             </div>
 
             <div class="menu-group">
-                <span>العمليات</span>
+                <span>💉 العمليات</span>
                 <a href="operation-by-date.php">مواعيد العمليات</a>
                 <a href="confirmed-list.php">قوائم العمليات</a>
                 <a href="import_surgery_excel.php">استيراد العمليات</a>
             </div>
 
             <div class="menu-group">
-                <span>النظام</span>
+                <span>⚙️ النظام</span>
                 <a href="reports.php">التقارير</a>
                 <a href="common-medicines.php">الأدوية الأكثر استعمالا</a>
                 <a href="settings.php">الإعدادات</a>

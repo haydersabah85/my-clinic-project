@@ -97,8 +97,9 @@
       <aside class="sidebar hidden" id="sidebar">
           <h3>القائمة</h3>
           <div class="menu-group">
+              <span>📊 الرئيسية</span>
 
-              <a href="dashboard.php">📊 لوحة التحكم</a>
+              <a href="dashboard.php">لوحة التحكم</a>
 
           </div>
           <div class="menu-group">

@@ -34,7 +34,7 @@ function fetch_confirmed_operations(mysqli $con, string $date, array $config): a
     $table = $config['table'];
     $typeColumn = $config['type_column'];
 
-    $stmt = $con->prepare("
+    $stmt = $con->prepare(" 
         SELECT
             a.id,
             a.patient_id,
@@ -718,7 +718,7 @@ foreach ($operationConfig as $kind => $config) {
 
         @media print {
             @page {
-                size: A4 landscape;
+                size: A4 portrait;
                 margin: 8mm;
             }
 
@@ -745,7 +745,7 @@ foreach ($operationConfig as $kind => $config) {
                 background: #ffffff;
                 padding: 0;
                 color: #000000;
-                font-size: 10px;
+                font-size: 9px;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -784,18 +784,25 @@ foreach ($operationConfig as $kind => $config) {
             .type-group {
                 box-shadow: none;
                 background: #ffffff !important;
-                border-color: #000000;
+                border-color: #d7dee7;
                 break-inside: auto;
                 margin-bottom: 6px;
                 padding: 6px;
             }
 
+            .type-group {
+                page-break-inside: auto;
+                break-inside: auto;
+            }
+
             .section-head {
                 margin-bottom: 6px;
                 padding: 6px 8px;
-                background: #ececec !important;
-                border: 1px solid #000000;
+                background: #f8fafc !important;
+                border: 1px solid #d7dee7;
                 box-shadow: none;
+                page-break-after: avoid;
+                break-after: avoid-page;
             }
 
             .section-head h2,
@@ -818,19 +825,52 @@ foreach ($operationConfig as $kind => $config) {
 
             .type-head {
                 padding: 6px 8px;
-                background: #f3f3f3 !important;
-                border: 1px solid #000000;
+                background: #fafbfd !important;
+                border: 1px solid #e2e8f0;
                 box-shadow: none;
+                page-break-after: avoid;
+                break-after: avoid-page;
+            }
+
+            .type-group table {
+                page-break-before: avoid;
+                break-before: avoid-page;
+            }
+
+            .type-group table tbody tr:first-child {
+                page-break-before: avoid;
+                break-before: avoid-page;
+            }
+
+            .type-group table tbody tr:nth-child(2) {
+                page-break-before: avoid;
+                break-before: avoid-page;
+            }
+
+            .table-wrap {
+                page-break-before: avoid;
+                break-before: avoid-page;
             }
 
             table {
                 min-width: 0;
                 table-layout: fixed;
+                page-break-inside: auto;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tfoot {
+                display: table-footer-group;
             }
 
             .col-postop-note,
             .postop-note-cell {
                 display: table-cell;
+                width: 240px;
+                min-width: 240px;
             }
 
             body[data-theme="dark"] .confirmed-section,
@@ -870,9 +910,9 @@ foreach ($operationConfig as $kind => $config) {
 
             .section-head strong,
             .type-head strong {
-                background: #d9d9d9 !important;
-                color: #000000 !important;
-                border: 1px solid #000000;
+                background: #eef2f7 !important;
+                color: #0f172a !important;
+                border: 1px solid #d7dee7;
             }
 
             .section-head span,
@@ -883,16 +923,26 @@ foreach ($operationConfig as $kind => $config) {
 
             th,
             td {
-                border-color: #000000;
+                border-color: #d7dee7;
                 color: #000000;
-                padding: 4px 5px;
-                font-size: 10px;
-                line-height: 1.25;
+                padding: 3px 4px;
+                font-size: 9px;
+                line-height: 1.2;
                 word-break: break-word;
+            }
+
+            th {
+                background: #f1f5f9 !important;
+                color: #111827 !important;
             }
 
             th:nth-child(8),
             td:nth-child(8) {
+                display: none;
+            }
+
+            th:nth-child(6),
+            td:nth-child(6) {
                 display: none;
             }
 
@@ -904,22 +954,23 @@ foreach ($operationConfig as $kind => $config) {
             .eye-badge {
                 min-width: 24px;
                 padding: 2px 5px;
-                font-size: 10px;
-                border: 1px solid #000000;
-                background: #ffffff !important;
-                color: #000000 !important;
+                font-size: 9px;
+                border: 1px solid #d7dee7;
+                background: #f8fafc !important;
+                color: #0f172a !important;
             }
 
             .postop-note-line {
-                border: 1px solid #000000;
+                border: 1px dashed #cbd5e1;
                 min-height: 34px;
-                border-radius: 0;
+                border-radius: 6px;
             }
 
             tr,
             td,
             th {
                 break-inside: avoid;
+                page-break-inside: avoid;
             }
         }
     </style>
