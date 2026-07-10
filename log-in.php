@@ -145,6 +145,33 @@ if (isset($_POST['login'])) {
 
   .login-logo {
     margin: 0 0 14px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .login-logo .brand-with-logo {
+    max-width: 100%;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--card-soft);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .08);
+  }
+
+  .login-logo .brand-text {
+    min-width: 0;
+  }
+
+  .login-logo .brand-title {
+    color: var(--text);
+    font-size: 16px;
+    white-space: normal;
+  }
+
+  .login-logo .brand-subtitle {
+    color: var(--muted);
+    font-size: 11px;
+    white-space: normal;
   }
 
   .login-box .subtitle {
@@ -335,7 +362,13 @@ if (isset($_POST['login'])) {
   <div class="page-shell">
     <form method="post" class="login-box">
       <div class="login-logo">
-        <img class="clinic-logo-full" src="assets/branding/logo.svg" alt="شعار العيادة">
+        <div class="brand-with-logo">
+          <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
+          <div class="brand-text">
+            <span class="brand-title">عيادة الدكتور حيدر صباح الربيعي</span>
+
+          </div>
+        </div>
       </div>
       <h3>تسجيل الدخول</h3>
       <p class="subtitle">ادخل بحسابك للوصول إلى لوحة التحكم وإدارة ملفات العيادة.</p>
