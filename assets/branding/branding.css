@@ -1,0 +1,65 @@
+.clinic-logo-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.clinic-logo-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.clinic-logo-full {
+  height: 44px;
+  width: auto;
+  max-width: min(100%, 280px);
+  object-fit: contain;
+}
+
+.brand-with-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-with-logo img {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.brand-with-logo .brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-with-logo .brand-title {
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.brand-with-logo .brand-subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.86;
+  line-height: 1.3;
+}
+
+.page-brand-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-brand-inline img {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}

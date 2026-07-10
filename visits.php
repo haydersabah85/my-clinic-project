@@ -101,8 +101,10 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="90">
-    <title>زيارات اليوم </title>
+    <title>زيارات اليوم | عيادة الدكتور حيدر صباح الربيعي</title>
 
+    <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
+    <link rel="stylesheet" href="assets/branding/branding.css">
     <link rel="stylesheet" href="assets/theme.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="assets/theme.js" defer></script>
@@ -252,17 +254,56 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             color: var(--head);
         }
 
-        .menu-group {
-            margin-bottom: 18px;
+        .sidebar-brand-meta {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
         }
 
-        .menu-group span {
-            display: block;
-            margin-bottom: 7px;
-            color: var(--muted);
+        .menu-group {
+            margin-bottom: 12px;
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(44, 140, 119, 0.06);
+        }
+
+        .menu-title,
+        .menu-group summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 10px;
+            margin: 0;
+            padding: 10px 12px;
+            color: var(--ink);
             font-weight: 800;
             font-size: 13px;
             letter-spacing: 0.3px;
+            background: linear-gradient(135deg, rgba(44, 140, 119, 0.16), rgba(15, 118, 110, 0.12));
+            border: 0;
+            list-style: none;
+            cursor: pointer;
+        }
+
+        .menu-group summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .menu-group summary::after {
+            content: "▸";
+            color: var(--muted);
+            transition: transform 0.2s ease;
+        }
+
+        .menu-group[open] summary::after {
+            transform: rotate(90deg);
+        }
+
+        .menu-links {
+            padding: 8px;
         }
 
         .menu-group a {
@@ -818,9 +859,10 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             }
         }
     </style>
+    <link rel="stylesheet" href="assets/ui-unified.css">
 </head>
 
-<body>
+<body class="ui-unified">
 
     <h1>🏥 زيارات اليوم <?php echo date('d/m/Y'); ?></h1>
 
@@ -832,36 +874,52 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
     <div class="container" id="layoutContainer">
 
         <aside class="sidebar hidden" id="sidebar">
-            <h3>القائمة</h3>
+            <div class="brand-with-logo">
+                <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
+                <div class="brand-text">
+                    <span class="brand-title">عيادة الدكتور حيدر صباح الربيعي</span>
+                    <span class="brand-subtitle">لوحة زيارات اليوم</span>
+                </div>
+            </div>
+            <p class="sidebar-brand-meta">تنقل سريع لإدارة الزيارات والإجراءات</p>
 
             <div class="menu-group">
-                <a href="dashboard.php"><i class="fa-solid fa-gauge-high"></i> لوحة التحكم</a>
+                <div class="menu-title">📊 الرئيسية</div>
+                <div class="menu-links">
+                    <a href="dashboard.php"><i class="fa-solid fa-gauge-high"></i> لوحة التحكم</a>
+                </div>
             </div>
 
-            <div class="menu-group">
-                <span>👤 المرضى</span>
-                <a href="add-patient.php"><i class="fa-solid fa-user-plus"></i> إضافة مريض</a>
-                <a href="confirmed-list.php"><i class="fa-solid fa-bed-pulse"></i> قوائم العمليات</a>
-                <a href="followups.php"><i class="fa-solid fa-stethoscope"></i> المتابعة</a>
-            </div>
+            <details class="menu-group" data-menu-key="patients" open>
+                <summary>👤 المرضى</summary>
+                <div class="menu-links">
+                    <a href="add-patient.php"><i class="fa-solid fa-user-plus"></i> إضافة مريض</a>
+                    <a href="confirmed-list.php"><i class="fa-solid fa-bed-pulse"></i> قوائم العمليات</a>
+                    <a href="followups.php"><i class="fa-solid fa-stethoscope"></i> المتابعة</a>
+                </div>
+            </details>
 
-            <div class="menu-group">
-                <span>📅 المواعيد</span>
-                <a href="visits.php"><i class="fa-solid fa-calendar-day"></i> زيارات اليوم</a>
-                <a href="procedure-entries.php"><i class="fa-solid fa-camera-retro"></i> إدخال الإجراءات</a>
-                <a href="operation-by-date.php"><i class="fa-solid fa-calendar-check"></i> مواعيد العمليات</a>
-                <a href="expected_appointments.php"><i class="fa-solid fa-clock"></i> المواعيد المتوقعة</a>
-            </div>
+            <details class="menu-group" data-menu-key="appointments">
+                <summary>📅 المواعيد</summary>
+                <div class="menu-links">
+                    <a href="visits.php"><i class="fa-solid fa-calendar-day"></i> زيارات اليوم</a>
+                    <a href="procedure-entries.php"><i class="fa-solid fa-camera-retro"></i> إدخال الإجراءات</a>
+                    <a href="operation-by-date.php"><i class="fa-solid fa-calendar-check"></i> مواعيد العمليات</a>
+                    <a href="expected_appointments.php"><i class="fa-solid fa-clock"></i> المواعيد المتوقعة</a>
+                </div>
+            </details>
 
-            <div class="menu-group">
-                <span>⚙️ النظام</span>
-                <a href="reports.php"><i class="fa-solid fa-chart-line"></i> التقارير</a>
-                <?php if ($isAdminUser): ?>
-                    <a href="daily-revenue.php"><i class="fa-solid fa-sack-dollar"></i> الإيراد اليومي</a>
-                <?php endif; ?>
-                <a href="settings.php"><i class="fa-solid fa-gear"></i> الإعدادات</a>
-                <a href="logout.php"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</a>
-            </div>
+            <details class="menu-group" data-menu-key="system">
+                <summary>⚙️ النظام</summary>
+                <div class="menu-links">
+                    <a href="reports.php"><i class="fa-solid fa-chart-line"></i> التقارير</a>
+                    <?php if ($isAdminUser): ?>
+                        <a href="daily-revenue.php"><i class="fa-solid fa-sack-dollar"></i> الإيراد اليومي</a>
+                    <?php endif; ?>
+                    <a href="settings.php"><i class="fa-solid fa-gear"></i> الإعدادات</a>
+                    <a href="logout.php"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</a>
+                </div>
+            </details>
         </aside>
 
         <div class="main-content">
@@ -1062,6 +1120,34 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                 '⬅️ إخفاء القائمة';
         }
 
+        function setupSidebarAccordion() {
+            const groups = Array.from(document.querySelectorAll('#sidebar details.menu-group[data-menu-key]'));
+            if (!groups.length) return;
+
+            const storageKey = 'visits_sidebar_open_group';
+            const saved = localStorage.getItem(storageKey);
+            const defaultGroup = groups.find(group => group.hasAttribute('open'));
+
+            groups.forEach(group => {
+                group.open = false;
+            });
+
+            const initialGroup = groups.find(group => group.dataset.menuKey === saved) || defaultGroup || groups[0];
+            if (initialGroup) initialGroup.open = true;
+
+            groups.forEach(group => {
+                group.addEventListener('toggle', () => {
+                    if (!group.open) return;
+                    groups.forEach(other => {
+                        if (other !== group) other.open = false;
+                    });
+                    if (group.dataset.menuKey) {
+                        localStorage.setItem(storageKey, group.dataset.menuKey);
+                    }
+                });
+            });
+        }
+
         document.getElementById('searchInput').addEventListener('keyup', function() {
             const filter = this.value.toLowerCase();
             const rows = document.querySelectorAll('tbody tr');
@@ -1071,6 +1157,8 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                 row.style.display = text.includes(filter) ? '' : 'none';
             });
         });
+
+        setupSidebarAccordion();
     </script>
 
 </body>

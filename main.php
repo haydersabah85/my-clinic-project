@@ -65,15 +65,16 @@ function patient_status_class(?string $status): string
 
 <head>
     <meta charset="UTF-8">
-    <title>بيانات المرضى</title>
+    <title>بيانات المرضى | عيادة الدكتور حيدر صباح الربيعي</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
+    <link rel="stylesheet" href="assets/branding/branding.css">
     <link rel="stylesheet" href="assets/dark-mode.css">
     <script src="assets/theme.js" defer></script>
 </head>
 
 <style>
     :root {
-        --bg: #f4f7fb;
         --panel: #ffffff;
         --panel-soft: #f8fafc;
         --text: #172033;
@@ -165,15 +166,46 @@ function patient_status_class(?string $status): string
     }
 
     .menu-group {
-        margin-bottom: 18px;
+        margin-bottom: 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(37, 99, 235, .03);
     }
 
-    .menu-group span {
-        display: block;
-        color: var(--muted);
-        font-size: 12px;
+    .menu-title,
+    .menu-group summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 10px;
+        padding: 10px 12px;
+        color: var(--text);
+        font-size: 13px;
         font-weight: 900;
-        margin-bottom: 8px;
+        background: linear-gradient(135deg, rgba(37, 99, 235, .12), rgba(15, 118, 110, .08));
+        border: 0;
+        cursor: pointer;
+        list-style: none;
+    }
+
+    .menu-group summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .menu-group summary::after {
+        content: "▸";
+        transition: transform .2s ease;
+        color: #64748b;
+    }
+
+    .menu-group[open] summary::after {
+        transform: rotate(90deg);
+    }
+
+    .menu-links {
+        padding: 8px;
     }
 
     .menu-group a {
@@ -649,54 +681,71 @@ function patient_status_class(?string $status): string
     }
 </style>
 
+<link rel="stylesheet" href="assets/ui-unified.css">
+
 <?php $flash = clinic_take_flash(); ?>
 
-<body>
+<body class="ui-unified">
     <div class="app-shell sidebar-collapsed" id="appShell">
         <aside class="sidebar hidden" id="sidebar">
             <div class="brand">
-                <strong>عيادة الدكتور حيدر</strong>
-                <span>نظام إدارة المرضى والمواعيد</span>
+                <div class="brand-with-logo">
+                    <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
+                    <div class="brand-text">
+                        <span class="brand-title">عيادة الدكتور حيدر صباح الربيعي</span>
+                        <span class="brand-subtitle">نظام إدارة المرضى والمواعيد</span>
+                    </div>
+                </div>
             </div>
 
             <div class="menu-group">
-                <span>📊 الرئيسية</span>
-                <a href="dashboard.php">لوحة التحكم</a>
+                <div class="menu-title">📊 الرئيسية</div>
+                <div class="menu-links">
+                    <a href="dashboard.php">لوحة التحكم</a>
+                </div>
             </div>
 
-            <div class="menu-group">
-                <span>👤 المرضى</span>
-                <a href="add-patient.php">إضافة مريض</a>
-                <a class="active" href="main.php">بيانات المرضى</a>
-                <a href="add-referred-case.php">إضافة حالة محولة</a>
-                <a href="referred-cases.php">الحالات المحولة</a>
-                <a href="archived-patients.php">أرشيف المرضى</a>
-                <a href="data-quality.php">جودة البيانات</a>
-                <a href="followups.php">المتابعة</a>
-            </div>
+            <details class="menu-group" data-menu-key="patients" open>
+                <summary>👤 المرضى</summary>
+                <div class="menu-links">
+                    <a href="add-patient.php">إضافة مريض</a>
+                    <a class="active" href="main.php">بيانات المرضى</a>
+                    <a href="add-referred-case.php">إضافة حالة محولة</a>
+                    <a href="referred-cases.php">الحالات المحولة</a>
+                    <a href="archived-patients.php">أرشيف المرضى</a>
+                    <a href="data-quality.php">جودة البيانات</a>
+                    <a href="followups.php">المتابعة</a>
+                </div>
+            </details>
 
-            <div class="menu-group">
-                <span>📅 المواعيد</span>
-                <a href="work-queue.php">قائمة عمل اليوم</a>
-                <a href="visits.php">زيارات اليوم</a>
-                <a href="followup-appointment.php">إعطاء موعد مراجعة</a>
-                <a href="expected_appointments.php">المواعيد المتوقعة</a>
-            </div>
+            <details class="menu-group" data-menu-key="appointments">
+                <summary>📅 المواعيد</summary>
+                <div class="menu-links">
+                    <a href="work-queue.php">قائمة عمل اليوم</a>
+                    <a href="visits.php">زيارات اليوم</a>
+                    <a href="followup-appointment.php">إعطاء موعد مراجعة</a>
+                    <a href="expected_appointments.php">المواعيد المتوقعة</a>
+                </div>
+            </details>
 
-            <div class="menu-group">
-                <span>💉 العمليات</span>
-                <a href="operation-by-date.php">مواعيد العمليات</a>
-                <a href="confirmed-list.php">قوائم العمليات</a>
-                <a href="import_surgery_excel.php">استيراد العمليات</a>
-            </div>
+            <details class="menu-group" data-menu-key="operations">
+                <summary>💉 العمليات</summary>
+                <div class="menu-links">
+                    <a href="operation-by-date.php">مواعيد العمليات</a>
+                    <a href="confirmed-list.php">قوائم العمليات</a>
+                    <a href="import_surgery_excel.php">استيراد العمليات</a>
+                </div>
+            </details>
 
-            <div class="menu-group">
-                <span>⚙️ النظام</span>
-                <a href="reports.php">التقارير</a>
-                <a href="common-medicines.php">الأدوية الأكثر استعمالا</a>
-                <a href="settings.php">الإعدادات</a>
-                <a href="logout.php" class="danger">تسجيل الخروج</a>
-            </div>
+            <details class="menu-group" data-menu-key="system">
+                <summary>⚙️ النظام</summary>
+                <div class="menu-links">
+                    <a href="reports.php">التقارير</a>
+                    <a href="common-medicines.php">الأدوية الأكثر استعمالا</a>
+                    <a href="settings.php">الإعدادات</a>
+                    <a href="logout.php" class="danger">تسجيل الخروج</a>
+                </div>
+            </details>
         </aside>
 
         <main class="main-area">
@@ -880,6 +929,34 @@ function patient_status_class(?string $status): string
             button.setAttribute("aria-label", sidebar.classList.contains("hidden") ? "إظهار القائمة" : "إخفاء القائمة");
         }
 
+        function setupSidebarAccordion() {
+            const groups = Array.from(document.querySelectorAll("#sidebar details.menu-group[data-menu-key]"));
+            if (!groups.length) return;
+
+            const storageKey = "main_sidebar_open_group";
+            const saved = localStorage.getItem(storageKey);
+            const defaultGroup = groups.find(group => group.hasAttribute("open"));
+
+            groups.forEach(group => {
+                group.open = false;
+            });
+
+            const initialGroup = groups.find(group => group.dataset.menuKey === saved) || defaultGroup || groups[0];
+            if (initialGroup) initialGroup.open = true;
+
+            groups.forEach(group => {
+                group.addEventListener("toggle", () => {
+                    if (!group.open) return;
+                    groups.forEach(other => {
+                        if (other !== group) other.open = false;
+                    });
+                    if (group.dataset.menuKey) {
+                        localStorage.setItem(storageKey, group.dataset.menuKey);
+                    }
+                });
+            });
+        }
+
         filterButtons.forEach(button => {
             button.addEventListener("click", () => {
                 activeStatus = button.dataset.status;
@@ -889,6 +966,7 @@ function patient_status_class(?string $status): string
         });
 
         searchInput.addEventListener("input", applyFilters);
+        setupSidebarAccordion();
     </script>
 </body>
 

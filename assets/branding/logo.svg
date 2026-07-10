@@ -1,0 +1,21 @@
+<svg 
+    xmlns="http://www.w3.org/2000/svg" width="320" height="86" viewBox="0 0 320 86" role="img" aria-labelledby="title desc">
+    <title id="title">Hayder Clinic Logo</title>
+    <desc id="desc">Clinic logo with eye symbol and Arabic text.</desc>
+    <defs>
+        <linearGradient id="gradPrimary" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#2563eb"/>
+            <stop offset="100%" stop-color="#0f766e"/>
+        </linearGradient>
+    </defs>
+    <g transform="translate(10 10)">
+        <rect x="0" y="0" width="68" height="68" rx="18" fill="url(#gradPrimary)"/>
+        <path d="M12 34c6-9 14-14 22-14s16 5 22 14c-6 9-14 14-22 14s-16-5-22-14z" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="34" cy="34" r="7" fill="#ffffff"/>
+        <circle cx="34" cy="34" r="3.2" fill="#0f766e"/>
+    </g>
+    <g transform="translate(90 28)">
+        <text x="0" y="0" direction="rtl" unicode-bidi="plaintext" font-family="Cairo, Tahoma, Arial, sans-serif" font-size="26" font-weight="800" fill="#0f172a">عيادة الدكتور حيدر صباح الربيعي</text>
+        <text x="0" y="28" direction="rtl" unicode-bidi="plaintext" font-family="Cairo, Tahoma, Arial, sans-serif" font-size="13" font-weight="700" fill="#475569">نظام إدارة المرضى والمواعيد</text>
+    </g>
+</svg>

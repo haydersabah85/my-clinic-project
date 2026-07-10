@@ -28,7 +28,8 @@ while ($m = mysqli_fetch_assoc($q)) {
 
 <head>
     <meta charset="UTF-8">
-    <title>عرض الوصفة</title>
+    <title>عرض الوصفة | عيادة الدكتور حيدر صباح الربيعي</title>
+    <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
 
     <link rel="stylesheet" href="assets/dark-mode.css">
     <script src="assets/theme.js" defer></script>

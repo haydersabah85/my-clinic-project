@@ -38,10 +38,12 @@ if (isset($_POST['login'])) {
 
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل الدخول</title>
+  <title>تسجيل الدخول | عيادة الدكتور حيدر صباح الربيعي</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
+  <link rel="stylesheet" href="assets/branding/branding.css">
   <link rel="stylesheet" href="assets/dark-mode.css">
   <script src="assets/theme.js" defer></script>
 </head>
@@ -139,6 +141,10 @@ if (isset($_POST['login'])) {
     font-size: 32px;
     line-height: 1.25;
     color: var(--text);
+  }
+
+  .login-logo {
+    margin: 0 0 14px;
   }
 
   .login-box .subtitle {
@@ -328,6 +334,9 @@ if (isset($_POST['login'])) {
 
   <div class="page-shell">
     <form method="post" class="login-box">
+      <div class="login-logo">
+        <img class="clinic-logo-full" src="assets/branding/logo.svg" alt="شعار العيادة">
+      </div>
       <h3>تسجيل الدخول</h3>
       <p class="subtitle">ادخل بحسابك للوصول إلى لوحة التحكم وإدارة ملفات العيادة.</p>
 
@@ -350,7 +359,12 @@ if (isset($_POST['login'])) {
     </form>
 
     <section class="register-panel">
-      <div class="brand-pill">نظام العيادة الذكي</div>
+      <div class="brand-pill">
+        <span class="page-brand-inline">
+          <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
+          <span>نظام العيادة الذكي</span>
+        </span>
+      </div>
       <h1>حسابات الموظفين، بصلاحيات واضحة ومظهر احترافي</h1>
       <p>
         يمكنك إنشاء حسابات للموظفين من صفحة التسجيل، ثم تحديد دور كل مستخدم وصلاحياته العملية

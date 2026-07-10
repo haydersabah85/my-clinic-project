@@ -47,7 +47,7 @@ while ($m = mysqli_fetch_assoc($q)) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Treatment Only</title>
+    <title>طباعة العلاج فقط | عيادة الدكتور حيدر صباح الربيعي</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
@@ -85,6 +85,14 @@ while ($m = mysqli_fetch_assoc($q)) {
             left: 17mm;
             font-size: 17px;
             line-height: 2;
+        }
+
+        .print-logo {
+            position: absolute;
+            top: 8mm;
+            right: 10mm;
+            width: 30mm;
+            height: auto;
         }
 
         .diagnosis {
@@ -158,6 +166,7 @@ while ($m = mysqli_fetch_assoc($q)) {
     <button onclick="window.print()" class="print-btn">طباعة</button>
 
     <div class="page">
+        <img class="print-logo" src="assets/logo.png" alt="شعار العيادة">
         <div class="rx-area">
             <div class="diagnosis"><?php echo h($p['diagnosis']); ?></div>
 

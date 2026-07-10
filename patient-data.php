@@ -29,7 +29,9 @@ $flash = clinic_take_flash();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بيانات <?= h($patientName) ?></title>
+    <title>بيانات <?= h($patientName) ?> | عيادة الدكتور حيدر صباح الربيعي</title>
+    <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
+    <link rel="stylesheet" href="assets/branding/branding.css">
     <link rel="stylesheet" href="assets/dark-mode.css">
     <script src="assets/theme.js" defer></script>
     <style>
@@ -317,10 +319,15 @@ $flash = clinic_take_flash();
 
         .app-sidebar-toggle {
             position: fixed;
-            top: 14px;
-            right: 14px;
-            z-index: 1300;
-            border: none;
+            top: 16px;
+            right: 16px;
+            z-index: 1305;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 44px;
+            border: 1px solid rgba(255, 255, 255, .26);
             border-radius: 12px;
             padding: 10px 14px;
             font-size: 14px;
@@ -328,8 +335,27 @@ $flash = clinic_take_flash();
             font-family: "Cairo", "Segoe UI", Tahoma, Arial, sans-serif;
             color: #fff;
             background: linear-gradient(135deg, var(--primary), var(--teal));
-            box-shadow: 0 10px 24px rgba(15, 23, 42, .2);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, .24);
+            backdrop-filter: blur(8px);
             cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease, right .24s ease;
+        }
+
+        .app-sidebar-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 28px rgba(15, 23, 42, .3);
+        }
+
+        .app-sidebar-toggle:focus-visible {
+            outline: 2px solid rgba(59, 130, 246, .6);
+            outline-offset: 2px;
+        }
+
+        body.sidebar-open .app-sidebar-toggle {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-6px);
         }
 
         .app-sidebar {
@@ -360,15 +386,46 @@ $flash = clinic_take_flash();
         }
 
         .app-sidebar .menu-group {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            overflow: hidden;
+            background: rgba(37, 99, 235, .04);
         }
 
-        .app-sidebar .menu-group span {
-            display: block;
-            margin-bottom: 7px;
-            color: var(--muted);
+        .app-sidebar .menu-title,
+        .app-sidebar .menu-group summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin: 0;
+            padding: 10px 12px;
+            color: var(--text);
             font-size: 13px;
             font-weight: 900;
+            background: linear-gradient(135deg, rgba(37, 99, 235, .12), rgba(15, 118, 110, .08));
+            border: 0;
+            list-style: none;
+            cursor: pointer;
+        }
+
+        .app-sidebar .menu-group summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .app-sidebar .menu-group summary::after {
+            content: "▸";
+            color: var(--muted);
+            transition: transform .2s ease;
+        }
+
+        .app-sidebar .menu-group[open] summary::after {
+            transform: rotate(90deg);
+        }
+
+        .app-sidebar .menu-links {
+            padding: 8px;
         }
 
         .app-sidebar .menu-group a {
@@ -388,6 +445,14 @@ $flash = clinic_take_flash();
             border-color: rgba(37, 99, 235, .35);
             background: rgba(37, 99, 235, .11);
             transform: translateX(-2px);
+        }
+
+        .app-sidebar .menu-group a.is-current {
+            border-color: rgba(37, 99, 235, .55);
+            background: linear-gradient(135deg, rgba(37, 99, 235, .2), rgba(15, 118, 110, .16));
+            color: #1e3a8a;
+            font-weight: 900;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, .18);
         }
 
         .app-sidebar-backdrop {
@@ -417,35 +482,89 @@ $flash = clinic_take_flash();
             border-color: rgba(96, 165, 250, .38);
             background: rgba(30, 58, 95, .58);
         }
+
+        body[data-theme="dark"] .app-sidebar .menu-group a.is-current {
+            color: #dbeafe;
+            border-color: rgba(96, 165, 250, .62);
+            background: linear-gradient(135deg, rgba(30, 64, 175, .46), rgba(13, 148, 136, .34));
+            box-shadow: 0 8px 16px rgba(15, 23, 42, .42);
+        }
+
+        @media (max-width: 640px) {
+            .app-sidebar-toggle {
+                top: 10px;
+                right: 10px;
+                min-height: 40px;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
+            body.sidebar-open .app-sidebar-toggle {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <button type="button" class="app-sidebar-toggle" id="appSidebarToggle" aria-controls="appSidebar" aria-expanded="false">➡️ القائمة</button>
+    <button type="button" class="app-sidebar-toggle" id="appSidebarToggle" aria-controls="appSidebar" aria-expanded="false">☰ القائمة</button>
 
     <aside class="app-sidebar" id="appSidebar" aria-label="القائمة الجانبية">
-        <h3>القائمة</h3>
-        <div class="menu-group">
-            <a href="dashboard.php">📊 لوحة التحكم</a>
+        <div class="brand-with-logo" style="margin-bottom:10px;">
+            <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
+            <div class="brand-text">
+                <span class="brand-title">عيادة الدكتور حيدر صباح الربيعي</span>
+                <span class="brand-subtitle">ملف المريض والتنقل السريع</span>
+            </div>
         </div>
         <div class="menu-group">
-            <span>👤 المرضى</span>
-            <a href="add-patient.php">➕ إضافة مريض</a>
-            <a href="main.php">👥 كل المرضى</a>
-            <a href="patient-file.php?id=<?= $patientId ?>">📁 ملف المريض</a>
+            <div class="menu-title">📊 الرئيسية</div>
+            <div class="menu-links">
+                <a href="dashboard.php">📊 لوحة التحكم</a>
+            </div>
         </div>
-        <div class="menu-group">
-            <span>📅 المواعيد</span>
-            <a href="visits.php">زيارات اليوم</a>
-            <a href="followup-appointment.php?id=<?= $patientId ?>">موعد مراجعة</a>
-            <a href="operation-by-date.php">مواعيد العمليات</a>
-        </div>
-        <div class="menu-group">
-            <span>⚙️ النظام</span>
-            <a href="reports.php">التقارير</a>
-            <a href="settings.php">الإعدادات</a>
-            <a href="logout.php">تسجيل الخروج</a>
-        </div>
+        <details class="menu-group" data-menu-key="patients" open>
+            <summary>👤 المرضى</summary>
+            <div class="menu-links">
+                <a href="add-patient.php">➕ إضافة مريض</a>
+                <a href="main.php">👥 كل المرضى</a>
+                <a href="patient-file.php?id=<?= $patientId ?>">📁 ملف المريض</a>
+            </div>
+        </details>
+        <details class="menu-group" data-menu-key="patient-actions" open>
+            <summary>🧾 المريض الحالي</summary>
+            <div class="menu-links">
+                <a href="patient-data.php?id_open=<?= $patientId ?>">📌 بيانات المريض</a>
+                <a href="patient-file.php?id=<?= $patientId ?>">📁 ملف المريض</a>
+                <a href="patient_timeline.php?id=<?= $patientId ?>">🕘 التسلسل الطبي</a>
+                <a href="patient_reports.php?id=<?= $patientId ?>">📄 التقارير الطبية</a>
+                <a href="treatment.php?patient_id=<?= $patientId ?>">💊 وصفة العلاج</a>
+                <a href="add-va.php?id=<?= $patientId ?>">👁️ إضافة فحص النظر</a>
+                <a href="add-image.php?id=<?= $patientId ?>">🖼️ إضافة صور</a>
+                <a href="image-comparison.php?id=<?= $patientId ?>">🧪 مقارنة الصور</a>
+            </div>
+        </details>
+        <details class="menu-group" data-menu-key="appointments">
+            <summary>📅 المواعيد</summary>
+            <div class="menu-links">
+                <a href="visits.php">زيارات اليوم</a>
+                <a href="followup-appointment.php?id=<?= $patientId ?>">موعد مراجعة</a>
+                <a href="surgery-appointment.php?id=<?= $patientId ?>">موعد عملية</a>
+                <a href="laser-appointment.php?id=<?= $patientId ?>">موعد ليزر</a>
+                <a href="injection-appointment.php?id=<?= $patientId ?>">موعد حقن</a>
+                <a href="operation-by-date.php">مواعيد العمليات</a>
+            </div>
+        </details>
+        <details class="menu-group" data-menu-key="system">
+            <summary>⚙️ النظام</summary>
+            <div class="menu-links">
+                <a href="reports.php">التقارير</a>
+                <a href="settings.php">الإعدادات</a>
+                <a href="logout.php">تسجيل الخروج</a>
+            </div>
+        </details>
     </aside>
     <div class="app-sidebar-backdrop" id="appSidebarBackdrop"></div>
 
@@ -549,11 +668,55 @@ $flash = clinic_take_flash();
             const backdrop = document.getElementById('appSidebarBackdrop');
             if (!sidebar || !toggle || !backdrop) return;
 
+            const groups = Array.from(document.querySelectorAll('#appSidebar details.menu-group[data-menu-key]'));
+
+            function markCurrentSidebarLink() {
+                const currentPath = window.location.pathname.split('/').pop().toLowerCase();
+                const links = Array.from(document.querySelectorAll('#appSidebar a[href]'));
+
+                links.forEach(link => {
+                    const href = (link.getAttribute('href') || '').split('?')[0].toLowerCase();
+                    if (!href) return;
+                    if (href === currentPath) {
+                        link.classList.add('is-current');
+                    }
+                });
+            }
+
+            function setupSidebarAccordion() {
+                if (!groups.length) return;
+
+                const storageKey = 'patient_data_sidebar_open_group';
+                const saved = localStorage.getItem(storageKey);
+                const defaultGroup = groups.find(group => group.hasAttribute('open'));
+
+                groups.forEach(group => {
+                    group.open = false;
+                });
+
+                const initialGroup = groups.find(group => group.dataset.menuKey === saved) || defaultGroup || groups[0];
+                if (initialGroup) initialGroup.open = true;
+
+                groups.forEach(group => {
+                    group.addEventListener('toggle', () => {
+                        if (!group.open) return;
+                        groups.forEach(other => {
+                            if (other !== group) other.open = false;
+                        });
+                        if (group.dataset.menuKey) {
+                            localStorage.setItem(storageKey, group.dataset.menuKey);
+                        }
+                    });
+                });
+            }
+
             function setSidebar(open, saveState) {
                 sidebar.classList.toggle('is-open', open);
                 backdrop.classList.toggle('is-open', open);
+                document.body.classList.toggle('sidebar-open', open);
                 toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                toggle.textContent = open ? '⬅️ إخفاء القائمة' : '➡️ القائمة';
+                toggle.setAttribute('aria-label', 'فتح القائمة');
+                toggle.textContent = '☰ القائمة';
                 if (saveState) {
                     localStorage.setItem('clinicSidebarState', open ? 'show' : 'hidden');
                 }
@@ -569,6 +732,9 @@ $flash = clinic_take_flash();
             backdrop.addEventListener('click', function() {
                 setSidebar(false, true);
             });
+
+            setupSidebarAccordion();
+            markCurrentSidebarLink();
         })();
     </script>
 </body>

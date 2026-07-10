@@ -155,6 +155,94 @@ $pendingOperations = mysqli_fetch_assoc(
   ")
 )['total'] ?? 0;
 
+// مقارنات يومية وشهرية للبطاقات
+$yesterdayVisits = (int) ((mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM visits WHERE visit_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY)"))['total'] ?? 0));
+$yesterdayDoneVisits = (int) ((mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM visits WHERE visit_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND is_done = 1"))['total'] ?? 0));
+$yesterdayPendingVisits = (int) ((mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM visits WHERE visit_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND is_done = 0"))['total'] ?? 0));
+$yesterdayFollowups = (int) ((mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM followups WHERE followup_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status='pending'"))['total'] ?? 0));
+$yesterdayExpectedVisits = (int) ((mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM expected_appointments WHERE expected_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status='expected'"))['total'] ?? 0));
+
+$previousMonthOperations = (int) ((mysqli_fetch_assoc(mysqli_query($con, "
+  SELECT COUNT(*) total FROM surgery
+  WHERE MONTH(date)=MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+    AND YEAR(date)=YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+"))['total'] ?? 0));
+
+$previousMonthInjections = (int) ((mysqli_fetch_assoc(mysqli_query($con, "
+  SELECT COUNT(*) total FROM injection
+  WHERE MONTH(date)=MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+    AND YEAR(date)=YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+"))['total'] ?? 0));
+
+$previousMonthLasers = (int) ((mysqli_fetch_assoc(mysqli_query($con, "
+  SELECT COUNT(*) total FROM laser
+  WHERE MONTH(date)=MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+    AND YEAR(date)=YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+"))['total'] ?? 0));
+
+$previousMonthReferredCases = 0;
+if (clinic_table_exists($con, 'referred_surgery_cases')) {
+  $previousMonthReferredCases = (int) ((mysqli_fetch_assoc(mysqli_query($con, "
+    SELECT COUNT(*) total FROM referred_surgery_cases
+    WHERE MONTH(surgery_date)=MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+      AND YEAR(surgery_date)=YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+  "))['total'] ?? 0));
+}
+
+$buildTrendMeta = static function (int $current, int $previous, string $compareText): array {
+  if ($current === $previous) {
+    return ['class' => 'trend-flat', 'label' => "• بدون تغيير $compareText"];
+  }
+
+  if ($previous <= 0) {
+    return [
+      'class' => $current > 0 ? 'trend-up' : 'trend-flat',
+      'label' => $current > 0 ? "↗ جديد $compareText" : "• بدون تغيير $compareText"
+    ];
+  }
+
+  $delta = $current - $previous;
+  $pct = (int) round((abs($delta) / $previous) * 100);
+
+  if ($delta > 0) {
+    return ['class' => 'trend-up', 'label' => "↗ +{$pct}% $compareText"];
+  }
+
+  return ['class' => 'trend-down', 'label' => "↘ -{$pct}% $compareText"];
+};
+
+$visitsTrend = $buildTrendMeta((int) $todayVisits, $yesterdayVisits, 'عن أمس');
+$pendingTrend = $buildTrendMeta((int) $todayPendingVisits, $yesterdayPendingVisits, 'عن أمس');
+$doneTrend = $buildTrendMeta((int) $todayDoneVisits, $yesterdayDoneVisits, 'عن أمس');
+$followupTrend = $buildTrendMeta((int) $followups, $yesterdayFollowups, 'عن أمس');
+$expectedTrend = $buildTrendMeta((int) $expectedVisitsToday, $yesterdayExpectedVisits, 'عن أمس');
+
+$operationsTrend = $buildTrendMeta((int) $monthOperations, $previousMonthOperations, 'عن الشهر الماضي');
+$injectionsTrend = $buildTrendMeta((int) $monthInjections, $previousMonthInjections, 'عن الشهر الماضي');
+$lasersTrend = $buildTrendMeta((int) $monthLasers, $previousMonthLasers, 'عن الشهر الماضي');
+$referredTrend = $buildTrendMeta((int) $monthReferredCases, $previousMonthReferredCases, 'عن الشهر الماضي');
+
+$workloadPressureRate = $todayVisits > 0 ? (int) round(($todayPendingVisits / max(1, $todayVisits)) * 100) : 0;
+$workloadPressureRate = max(0, min(100, $workloadPressureRate));
+$workloadPressureClass = $workloadPressureRate > 45 ? 'pressure-high' : ($workloadPressureRate >= 25 ? 'pressure-medium' : 'pressure-low');
+
+$todayCompletionRate = $todayVisits > 0 ? (int) round(($todayDoneVisits / max(1, $todayVisits)) * 100) : 0;
+$todayCompletionRate = max(0, min(100, $todayCompletionRate));
+
+$followupLoadRate = ($followups + $expectedVisitsToday) > 0
+  ? (int) round(($followups / max(1, ($followups + $expectedVisitsToday))) * 100)
+  : 0;
+
+$expectedLoadRate = ($followups + $expectedVisitsToday) > 0
+  ? (int) round(($expectedVisitsToday / max(1, ($followups + $expectedVisitsToday))) * 100)
+  : 0;
+
+$monthMetricMax = max(1, (int) $monthOperations, (int) $monthInjections, (int) $monthLasers, (int) $monthReferredCases);
+$monthOperationsRate = (int) round(($monthOperations / $monthMetricMax) * 100);
+$monthInjectionsRate = (int) round(($monthInjections / $monthMetricMax) * 100);
+$monthLasersRate = (int) round(($monthLasers / $monthMetricMax) * 100);
+$monthReferredRate = (int) round(($monthReferredCases / $monthMetricMax) * 100);
+
 /* ===== Analytics Charts ===== */
 $dailyVisitLabels = [];
 $dailyVisitCounts = [];
@@ -282,14 +370,46 @@ if ($openSyncConflicts > 0) {
   $alerts[] = "<div class='alert alert-danger'>⛔ يوجد $openSyncConflicts تعارض مزامنة مفتوح - <a href='sync_conflicts.php'>إدارة التعارضات</a></div>";
 }
 
+$backupAgeHours = null;
+if ($latestBackupAt && !empty($backupFiles)) {
+  $latestBackupTimestamp = filemtime($backupFiles[0]);
+  if ($latestBackupTimestamp) {
+    $backupAgeHours = (int) floor((time() - $latestBackupTimestamp) / 3600);
+  }
+}
+
+if ($backupAgeHours === null) {
+  $alerts[] = "<div class='alert alert-danger'>🧯 لا توجد نسخة احتياطية محلية حديثة</div>";
+} elseif ($backupAgeHours >= 48) {
+  $alerts[] = "<div class='alert alert-warning'>🕒 آخر نسخة احتياطية قبل {$backupAgeHours} ساعة</div>";
+}
+
+if ($todayVisits > 0 && $todayPendingVisits > $todayDoneVisits) {
+  $alerts[] = "<div class='alert alert-warning'>⌛ حالات الانتظار أعلى من المعاينات المنجزة اليوم</div>";
+}
+
+if ($pendingImageSync >= 20) {
+  $alerts[] = "<div class='alert alert-warning'>🖼️ يوجد {$pendingImageSync} صورة بانتظار المزامنة</div>";
+}
+
+$alertsSummary = [
+  'critical' => (int) $critical,
+  'late' => (int) $late,
+  'soon' => (int) $soon,
+  'openSyncConflicts' => (int) $openSyncConflicts,
+  'pendingImageSync' => (int) $pendingImageSync,
+];
+
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard</title>
+  <title>لوحة التحكم | عيادة الدكتور حيدر صباح الربيعي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
+  <link rel="stylesheet" href="assets/branding/branding.css">
 
   <!-- نستخدم نفس CSS تبعك -->
 
@@ -343,6 +463,36 @@ if ($openSyncConflicts > 0) {
     color: var(--text);
   }
 
+  .header-identity {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-identity .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .header-identity .meta strong {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  .header-identity .meta span {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .header-user {
+    font-weight: 800;
+    color: var(--text);
+  }
+
   /* ===== Layout ===== */
   .layout {
     display: flex;
@@ -352,11 +502,13 @@ if ($openSyncConflicts > 0) {
 
   /* ===== Sidebar ===== */
   .sidebar {
-    width: 180px;
+    width: 260px;
     background: var(--card);
+    border-left: 1px solid rgba(148, 163, 184, .26);
     box-shadow: var(--shadow);
-    padding: 20px;
+    padding: 16px;
     transition: .3s;
+    overflow-y: auto;
   }
 
   .sidebar.hidden {
@@ -367,21 +519,95 @@ if ($openSyncConflicts > 0) {
 
   .sidebar h3 {
     color: var(--primary);
-    margin-bottom: 20px;
+    margin: 0;
     font-weight: bold;
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .sidebar-brand {
+    border: 1px solid rgba(37, 99, 235, .2);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, rgba(37, 99, 235, .14), rgba(15, 118, 110, .1));
+  }
+
+  .sidebar-meta {
+    margin-top: 6px;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .sidebar-kpis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .kpi-chip {
+    border: 1px solid rgba(148, 163, 184, .32);
+    border-radius: 10px;
+    padding: 8px;
+    background: rgba(248, 250, 252, .9);
+    text-align: center;
+  }
+
+  .kpi-chip strong {
+    display: block;
+    color: var(--primary);
+    font-size: 18px;
+  }
+
+  .kpi-chip span {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
   }
 
   .menu-group {
-    margin-bottom: 25px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(148, 163, 184, .28);
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(37, 99, 235, .03);
   }
 
-  .menu-group span {
-    display: block;
+  .menu-title,
+  .menu-group summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 14px;
     font-weight: bold;
-    font-size: 18px;
-    color: var(--muted);
-    margin-bottom: 10px;
+    font-size: 16px;
+    color: var(--text);
+    background: linear-gradient(135deg, rgba(37, 99, 235, .12), rgba(15, 118, 110, .08));
+    border: 0;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .menu-group summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu-group summary::after {
+    content: "▸";
+    font-size: 13px;
+    color: #475569;
+    transition: transform .2s ease;
+  }
+
+  .menu-group[open] summary::after {
+    transform: rotate(90deg);
+  }
+
+  .menu-links {
+    padding: 8px;
   }
 
   .menu-group a {
@@ -391,7 +617,15 @@ if ($openSyncConflicts > 0) {
     margin-bottom: 6px;
     text-decoration: none;
     color: var(--text);
-    transition: .3s;
+    transition: .2s;
+  }
+
+  .menu-group a.is-current {
+    background: linear-gradient(135deg, rgba(37, 99, 235, .22), rgba(15, 118, 110, .16));
+    border: 1px solid rgba(37, 99, 235, .45);
+    color: #1e3a8a;
+    font-weight: 900;
+    box-shadow: 0 8px 16px rgba(37, 99, 235, .15);
   }
 
   .menu-group a:hover {
@@ -402,6 +636,49 @@ if ($openSyncConflicts > 0) {
 
   .menu-group a.danger:hover {
     background: linear-gradient(135deg, var(--danger), #ef4444);
+  }
+
+  body.dark .menu-group {
+    border-color: rgba(96, 165, 250, .22);
+    background: rgba(2, 6, 23, .55);
+  }
+
+  body.dark .sidebar {
+    border-left-color: rgba(96, 165, 250, .2);
+  }
+
+  body.dark .sidebar-brand {
+    border-color: rgba(96, 165, 250, .28);
+    background: linear-gradient(135deg, rgba(30, 64, 175, .34), rgba(13, 148, 136, .22));
+  }
+
+  body.dark .sidebar-meta {
+    color: #cbd5e1;
+  }
+
+  body.dark .kpi-chip {
+    border-color: rgba(96, 165, 250, .24);
+    background: rgba(15, 23, 42, .86);
+  }
+
+  body.dark .kpi-chip span {
+    color: #94a3b8;
+  }
+
+  body.dark .menu-title,
+  body.dark .menu-group summary {
+    background: linear-gradient(135deg, rgba(96, 165, 250, .18), rgba(45, 212, 191, .12));
+  }
+
+  body.dark .menu-group a.is-current {
+    color: #dbeafe;
+    border-color: rgba(96, 165, 250, .65);
+    background: linear-gradient(135deg, rgba(30, 64, 175, .48), rgba(13, 148, 136, .3));
+    box-shadow: 0 8px 16px rgba(15, 23, 42, .42);
+  }
+
+  body.dark .header-identity .meta span {
+    color: #a8bdd1;
   }
 
   /* ===== Content ===== */
@@ -643,6 +920,164 @@ if ($openSyncConflicts > 0) {
     font-weight: 800;
   }
 
+  .workload-panel {
+    margin-bottom: 24px;
+  }
+
+  .workload-stack {
+    display: grid;
+    gap: 16px;
+  }
+
+  .workload-block {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid rgba(37, 99, 235, .12);
+    box-shadow: var(--shadow);
+    padding: 14px;
+  }
+
+  .workload-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .workload-head h3 {
+    margin: 0;
+    color: var(--text);
+    font-size: 17px;
+  }
+
+  .workload-head span {
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .workload-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .workload-grid.today-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .workload-grid.month-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .workload-card {
+    background: linear-gradient(145deg, var(--card), #f8fafc);
+    border: 1px solid rgba(148, 163, 184, .22);
+    border-radius: 12px;
+    padding: 14px;
+    min-height: 152px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .workload-card.is-priority {
+    border-color: rgba(220, 38, 38, .36);
+    box-shadow: 0 10px 22px rgba(220, 38, 38, .12);
+  }
+
+  .workload-label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .workload-value {
+    color: var(--text);
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+
+  .workload-sub {
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .workload-progress {
+    margin-top: auto;
+    height: 8px;
+    background: rgba(148, 163, 184, .24);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .workload-progress>span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+  }
+
+  .workload-progress.warn>span {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+  }
+
+  .workload-progress.danger>span {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+  }
+
+  .workload-trend {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    width: fit-content;
+  }
+
+  .trend-up {
+    background: rgba(22, 163, 74, .14);
+    color: #166534;
+  }
+
+  .trend-down {
+    background: rgba(220, 38, 38, .14);
+    color: #991b1b;
+  }
+
+  .trend-flat {
+    background: rgba(100, 116, 139, .16);
+    color: #334155;
+  }
+
+  .pressure-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    width: fit-content;
+  }
+
+  .pressure-low {
+    background: rgba(22, 163, 74, .14);
+    color: #166534;
+  }
+
+  .pressure-medium {
+    background: rgba(245, 158, 11, .18);
+    color: #92400e;
+  }
+
+  .pressure-high {
+    background: rgba(220, 38, 38, .16);
+    color: #991b1b;
+  }
+
   .cards-grid.workload-cards {
     grid-template-columns: repeat(6, minmax(130px, 1fr));
   }
@@ -729,6 +1164,55 @@ if ($openSyncConflicts > 0) {
 
   body.dark .overview-note span {
     color: #94a3b8;
+  }
+
+  body.dark .workload-block {
+    background: linear-gradient(145deg, var(--card), #020617);
+    border-color: rgba(96, 165, 250, .18);
+  }
+
+  body.dark .workload-card {
+    background: linear-gradient(145deg, var(--card), #020617);
+    border-color: rgba(96, 165, 250, .2);
+  }
+
+  body.dark .workload-label,
+  body.dark .workload-sub {
+    color: #94a3b8;
+  }
+
+  body.dark .workload-value {
+    color: #e2e8f0;
+  }
+
+  body.dark .trend-up {
+    color: #86efac;
+    background: rgba(22, 163, 74, .25);
+  }
+
+  body.dark .trend-down {
+    color: #fca5a5;
+    background: rgba(220, 38, 38, .26);
+  }
+
+  body.dark .trend-flat {
+    color: #cbd5e1;
+    background: rgba(71, 85, 105, .4);
+  }
+
+  body.dark .pressure-low {
+    color: #86efac;
+    background: rgba(22, 163, 74, .25);
+  }
+
+  body.dark .pressure-medium {
+    color: #fcd34d;
+    background: rgba(245, 158, 11, .3);
+  }
+
+  body.dark .pressure-high {
+    color: #fca5a5;
+    background: rgba(220, 38, 38, .28);
   }
 
   /* ===== Analytics ===== */
@@ -910,10 +1394,37 @@ if ($openSyncConflicts > 0) {
   /* ===== Alerts Container ===== */
   .alerts {
     margin: 20px 0;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    gap: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .alerts-head {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .alert-stat {
+    background: var(--card);
+    border: 1px solid rgba(37, 99, 235, .14);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 10px 12px;
+  }
+
+  .alert-stat strong {
+    display: block;
+    color: var(--text);
+    font-size: 20px;
+  }
+
+  .alert-stat span {
+    color: #64748b;
+    font-weight: 800;
+    font-size: 12px;
   }
 
   /* ===== Base Alert ===== */
@@ -929,7 +1440,7 @@ if ($openSyncConflicts > 0) {
     border-right: 5px solid;
     transition: .3s;
     animation: fadeIn 0.4s ease;
-    width: fit-content;
+    width: 100%;
   }
 
 
@@ -1039,6 +1550,12 @@ if ($openSyncConflicts > 0) {
     transition: .3s;
   }
 
+  body.dark #results,
+  body.dark .alert-stat {
+    border-color: rgba(96, 165, 250, .18);
+    background: linear-gradient(145deg, var(--card), #020617);
+  }
+
   .danger-card:hover {
     background: #dc2626;
     color: #fff;
@@ -1085,8 +1602,12 @@ if ($openSyncConflicts > 0) {
       grid-template-columns: 1fr;
     }
 
-    .cards-grid.workload-cards {
-      grid-template-columns: repeat(2, minmax(150px, 1fr));
+    .workload-grid.today-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .workload-grid.month-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .analytics-grid {
@@ -1113,9 +1634,22 @@ if ($openSyncConflicts > 0) {
       width: 100%;
     }
 
+    .sidebar-kpis {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .overview-note {
       align-items: stretch;
       flex-direction: column;
+    }
+
+    .workload-grid.today-grid,
+    .workload-grid.month-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .workload-card {
+      min-height: 140px;
     }
   }
 
@@ -1158,61 +1692,115 @@ if ($openSyncConflicts > 0) {
 
     </div>
 
-    مرحبا <?= $_SESSION['name'] ?> 👋
+    <div class="header-identity">
+      <img class="clinic-logo-mark" src="assets/branding/logo-mark.svg" alt="شعار العيادة">
+      <div class="meta">
+        <strong>عيادة الدكتور حيدر صباح الربيعي</strong>
+        <span class="header-user">مرحبا <?= $_SESSION['name'] ?> 👋</span>
+      </div>
+    </div>
   </header>
 
 
   <div class="layout">
     <!-- ===== Sidebar ===== -->
     <aside class="sidebar hidden" id="sidebar">
-      <h3>القائمة</h3>
-      <div class="menu-group">
+      <div class="sidebar-brand">
+        <div class="brand-with-logo">
+          <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
+          <div class="brand-text">
+            <span class="brand-title">عيادة الدكتور حيدر صباح الربيعي</span>
+            <span class="brand-subtitle">لوحة التنقل السريع</span>
+          </div>
+        </div>
+        <div class="sidebar-meta">وصول مباشر لأهم صفحات النظام اليومية</div>
+      </div>
 
-        <a href="dashboard.php">لوحة التحكم</a>
-
+      <div class="sidebar-kpis" aria-label="ملخص سريع">
+        <div class="kpi-chip">
+          <strong><?= (int) $todayVisits ?></strong>
+          <span>زيارات اليوم</span>
+        </div>
+        <div class="kpi-chip">
+          <strong><?= (int) $todayPendingVisits ?></strong>
+          <span>قيد الانتظار</span>
+        </div>
+        <div class="kpi-chip">
+          <strong><?= (int) $followups ?></strong>
+          <span>متابعات اليوم</span>
+        </div>
+        <div class="kpi-chip">
+          <strong><?= (int) $pendingOperations ?></strong>
+          <span>عمليات قادمة</span>
+        </div>
       </div>
 
       <div class="menu-group">
-        <span>👤 المرضى</span>
-        <a href="add-patient.php">إضافة مريض</a>
-        <a href="main.php">بيانات المرضى</a>
-        <a href="add-referred-case.php">إضافة حالة محولة</a>
-        <a href="referred-cases.php">الحالات المحولة</a>
-        <a href="archived-patients.php">أرشيف المرضى</a>
-        <a href="data-quality.php">جودة البيانات</a>
-        <a href="followups.php">المتابعة</a>
+        <div class="menu-title">🏠 رئيسية</div>
+        <div class="menu-links">
+          <a href="dashboard.php">لوحة التحكم</a>
+        </div>
       </div>
 
-
-      <div class="menu-group">
-        <span>📅 المواعيد</span>
-        <a href="work-queue.php">قائمة عمل اليوم</a>
-        <a href="visits.php">زيارات اليوم</a>
-        <a href="followup-appointment.php">إعطاء موعد مراجعة</a>
-        <a href="import_expected.php">استيراد المواعيد</a>
-        <a href="expected_appointments.php">المواعيد المتوقعة</a>
-
-      </div>
-
-      <div class="menu-group">
-        <span>💉 العمليات</span>
-        <a href="operation-by-date.php">مواعيد العمليات</a>
-        <a href="confirmed-list.php">قوائم العمليات</a>
-        <a href="import_surgery_excel.php">استيراد العمليات</a>
-      </div>
+      <details class="menu-group" data-menu-key="patients" open>
+        <summary>👤 المرضى</summary>
+        <div class="menu-links">
+          <a href="add-patient.php">إضافة مريض</a>
+          <a href="main.php">بيانات المرضى</a>
+          <a href="add-referred-case.php">إضافة حالة محولة</a>
+          <a href="referred-cases.php">الحالات المحولة</a>
+          <a href="archived-patients.php">أرشيف المرضى</a>
+          <a href="data-quality.php">جودة البيانات</a>
+          <a href="followups.php">المتابعة</a>
+        </div>
+      </details>
 
 
-      <div class="menu-group">
-        <span>⚙️ النظام</span>
-        <a href="treatment-types.php">إدارة الاجراءات</a>
-        <a href="reports.php">التقارير</a>
-        <a href="common-medicines.php">إدارة الأدوية</a>
-        <a href="treatment-templates.php">قوالب العلاج</a>
-        <a href="staff-messages.php">رسائل داخلية<?php if ($unreadStaffMessages > 0): ?> (<?= $unreadStaffMessages ?>)<?php endif; ?></a>
-        <a href="audit-log.php">سجل العمليات</a>
-        <a href="settings.php">الإعدادات</a>
-        <a href="logout.php" class="danger">تسجيل الخروج</a>
-      </div>
+      <details class="menu-group" data-menu-key="appointments">
+        <summary>📅 المواعيد</summary>
+        <div class="menu-links">
+          <a href="work-queue.php">قائمة عمل اليوم</a>
+          <a href="visits.php">زيارات اليوم</a>
+          <a href="followup-appointment.php">إعطاء موعد مراجعة</a>
+          <a href="import_expected.php">استيراد المواعيد</a>
+          <a href="expected_appointments.php">المواعيد المتوقعة</a>
+        </div>
+
+      </details>
+
+      <details class="menu-group" data-menu-key="operations">
+        <summary>💉 العمليات</summary>
+        <div class="menu-links">
+          <a href="operation-by-date.php">مواعيد العمليات</a>
+          <a href="confirmed-list.php">قوائم العمليات</a>
+          <a href="import_surgery_excel.php">استيراد العمليات</a>
+        </div>
+      </details>
+
+      <details class="menu-group" data-menu-key="quick-actions">
+        <summary>⚡ إجراءات سريعة</summary>
+        <div class="menu-links">
+          <a href="add-patient.php">➕ إضافة مريض جديد</a>
+          <a href="procedure-entries.php">🧾 إدخال إجراءات اليوم</a>
+          <a href="patient_reports.php">📄 تقارير المرضى</a>
+          <a href="sync_conflicts.php">🔁 تعارضات المزامنة</a>
+        </div>
+      </details>
+
+
+      <details class="menu-group" data-menu-key="system">
+        <summary>⚙️ النظام</summary>
+        <div class="menu-links">
+          <a href="treatment-types.php">إدارة الاجراءات</a>
+          <a href="reports.php">التقارير</a>
+          <a href="common-medicines.php">إدارة الأدوية</a>
+          <a href="treatment-templates.php">قوالب العلاج</a>
+          <a href="staff-messages.php">رسائل داخلية<?php if ($unreadStaffMessages > 0): ?> (<?= $unreadStaffMessages ?>)<?php endif; ?></a>
+          <a href="audit-log.php">سجل العمليات</a>
+          <a href="settings.php">الإعدادات</a>
+          <a href="logout.php" class="danger">تسجيل الخروج</a>
+        </div>
+      </details>
     </aside>
 
     <main class="content">
@@ -1271,46 +1859,108 @@ if ($openSyncConflicts > 0) {
         </div>
       </section>
 
-      <!-- ===== Cards ===== -->
-      <div class="cards-grid workload-cards">
+      <!-- ===== Workload ===== -->
+      <section class="workload-panel" aria-label="Workload cards">
+        <div class="workload-stack">
+          <div class="workload-block">
+            <div class="workload-head">
+              <h3>ملخص اليوم التشغيلي</h3>
+              <span>مقارنة مباشرة مع أمس</span>
+            </div>
+            <div class="workload-grid today-grid">
+              <article class="workload-card">
+                <div class="workload-label">زيارات اليوم</div>
+                <div class="workload-value"><?= (int) $todayVisits ?></div>
+                <div class="workload-sub">تمت <?= (int) $todayDoneVisits ?> / انتظار <?= (int) $todayPendingVisits ?></div>
+                <div class="workload-trend <?= $visitsTrend['class'] ?>"><?= h($visitsTrend['label']) ?></div>
+                <div class="workload-progress"><span style="width: <?= $todayCompletionRate ?>%"></span></div>
+              </article>
 
-        <div class="card visits-card">📅<span><?= $todayVisits ?></span>
-          <p>زيارات اليوم</p>
-          <small>تمت <?= $todayDoneVisits ?> / انتظار <?= $todayPendingVisits ?></small>
+              <article class="workload-card is-priority">
+                <div class="workload-label">ضغط اليوم</div>
+                <div class="workload-value"><?= (int) $workloadPressureRate ?>%</div>
+                <div class="workload-sub">نسبة قيد الانتظار من إجمالي زيارات اليوم</div>
+                <div class="pressure-badge <?= h($workloadPressureClass) ?>">
+                  <?= $workloadPressureRate > 45 ? 'مرتفع' : ($workloadPressureRate >= 25 ? 'متوسط' : 'منخفض') ?>
+                </div>
+                <div class="workload-progress <?= $workloadPressureRate > 45 ? 'danger' : ($workloadPressureRate >= 25 ? 'warn' : '') ?>"><span style="width: <?= $workloadPressureRate ?>%"></span></div>
+              </article>
+
+              <article class="workload-card">
+                <div class="workload-label">المعاينات المنجزة</div>
+                <div class="workload-value"><?= (int) $todayDoneVisits ?></div>
+                <div class="workload-sub">نسبة الإنجاز: <?= (int) $todayCompletionRate ?>%</div>
+                <div class="workload-trend <?= $doneTrend['class'] ?>"><?= h($doneTrend['label']) ?></div>
+                <div class="workload-progress"><span style="width: <?= $todayCompletionRate ?>%"></span></div>
+              </article>
+
+              <article class="workload-card">
+                <div class="workload-label">قيد الانتظار</div>
+                <div class="workload-value"><?= (int) $todayPendingVisits ?></div>
+                <div class="workload-sub">الهدف: إبقاءها أقل من 25% من الزيارات</div>
+                <div class="workload-trend <?= $pendingTrend['class'] ?>"><?= h($pendingTrend['label']) ?></div>
+                <div class="workload-progress warn"><span style="width: <?= $workloadPressureRate ?>%"></span></div>
+              </article>
+
+              <article class="workload-card">
+                <div class="workload-label">متابعات اليوم</div>
+                <div class="workload-value"><?= (int) $followups ?></div>
+                <div class="workload-sub">خلال 7 أيام: <?= (int) $upcomingFollowups ?></div>
+                <div class="workload-trend <?= $followupTrend['class'] ?>"><?= h($followupTrend['label']) ?></div>
+                <div class="workload-progress"><span style="width: <?= max(0, min(100, (int) $followupLoadRate)) ?>%"></span></div>
+              </article>
+
+              <article class="workload-card">
+                <div class="workload-label">المواعيد المتوقعة اليوم</div>
+                <div class="workload-value"><?= (int) $expectedVisitsToday ?></div>
+                <div class="workload-sub">خلال 7 أيام: <?= (int) $expectedVisitsUpcoming ?></div>
+                <div class="workload-trend <?= $expectedTrend['class'] ?>"><?= h($expectedTrend['label']) ?></div>
+                <div class="workload-progress"><span style="width: <?= max(0, min(100, (int) $expectedLoadRate)) ?>%"></span></div>
+              </article>
+            </div>
+          </div>
+
+          <div class="workload-block">
+            <div class="workload-head">
+              <h3>ملخص هذا الشهر</h3>
+              <span>مقارنة مع الشهر الماضي</span>
+            </div>
+            <div class="workload-grid month-grid">
+              <article class="workload-card">
+                <div class="workload-label">العمليات المنجزة</div>
+                <div class="workload-value"><?= (int) $monthOperations ?></div>
+                <div class="workload-sub">حسب جدول العمليات المنجزة</div>
+                <div class="workload-trend <?= $operationsTrend['class'] ?>"><?= h($operationsTrend['label']) ?></div>
+                <div class="workload-progress"><span style="width: <?= max(0, min(100, (int) $monthOperationsRate)) ?>%"></span></div>
+              </article>
+
+              <article class="workload-card">
+                <div class="workload-label">الحقن</div>
+                <div class="workload-value"><?= (int) $monthInjections ?></div>
+                <div class="workload-sub"><?= htmlspecialchars($topInjectionType) ?><?= $topInjectionCount ? " ({$topInjectionCount})" : "" ?></div>
+                <div class="workload-trend <?= $injectionsTrend['class'] ?>"><?= h($injectionsTrend['label']) ?></div>
+                <div class="workload-progress"><span style="width: <?= max(0, min(100, (int) $monthInjectionsRate)) ?>%"></span></div>
+              </article>
+
+              <article class="workload-card">
+                <div class="workload-label">الليزر</div>
+                <div class="workload-value"><?= (int) $monthLasers ?></div>
+                <div class="workload-sub"><?= htmlspecialchars($topLaserType) ?><?= $topLaserCount ? " ({$topLaserCount})" : "" ?></div>
+                <div class="workload-trend <?= $lasersTrend['class'] ?>"><?= h($lasersTrend['label']) ?></div>
+                <div class="workload-progress"><span style="width: <?= max(0, min(100, (int) $monthLasersRate)) ?>%"></span></div>
+              </article>
+
+              <article class="workload-card">
+                <div class="workload-label">الحالات المحولة</div>
+                <div class="workload-value"><?= (int) $monthReferredCases ?></div>
+                <div class="workload-sub">الإجمالي: <?= (int) $totalReferredCases ?></div>
+                <div class="workload-trend <?= $referredTrend['class'] ?>"><?= h($referredTrend['label']) ?></div>
+                <div class="workload-progress"><span style="width: <?= max(0, min(100, (int) $monthReferredRate)) ?>%"></span></div>
+              </article>
+            </div>
+          </div>
         </div>
-
-        <div class="card followup-card">📲<span><?= $followups ?></span>
-          <p>المراجعات + الزيارات المتوقعة اليوم</p>
-          <small>خلال 7 أيام: <?= $upcomingFollowups ?></small>
-        </div>
-
-
-        <div class="card surgery-card">🏥<span><?= $monthOperations ?></span>
-          <p>العمليات المنجزة هذا الشهر</p>
-          <small>حسب جدول العمليات المنجزة</small>
-        </div>
-
-        <div class="card surgery-card">🧾<span><?= $totalReferredCases ?></span>
-          <p>الحالات المحولة (إجمالي)</p>
-          <small>هذا الشهر: <?= $monthReferredCases ?></small>
-        </div>
-
-        <div class="card pending-card">⏳<span><?= $pendingOperations ?></span>
-          <p>العمليات القادمة</p>
-          <small>مواعيد قيد الانتظار</small>
-        </div>
-
-        <div class="card injection-card">💉<span><?= $monthInjections ?></span>
-          <p>حقن هذا الشهر</p>
-          <small><?= htmlspecialchars($topInjectionType) ?><?= $topInjectionCount ? " ({$topInjectionCount})" : "" ?></small>
-        </div>
-
-        <div class="card laser-card">🔦<span><?= $monthLasers ?></span>
-          <p>ليزر هذا الشهر</p>
-          <small><?= htmlspecialchars($topLaserType) ?><?= $topLaserCount ? " ({$topLaserCount})" : "" ?></small>
-        </div>
-
-      </div>
+      </section>
 
       <div class="section-heading">
         <h2>الإحصائيات</h2>
@@ -1394,6 +2044,14 @@ if ($openSyncConflicts > 0) {
       </section>
 
       <!-- ===== Alerts ===== -->
+      <div class="alerts-head" aria-label="ملخص التنبيهات">
+        <div class="alert-stat"><strong><?= (int) $alertsSummary['critical'] ?></strong><span>حالات حرجة</span></div>
+        <div class="alert-stat"><strong><?= (int) $alertsSummary['late'] ?></strong><span>عمليات متأخرة</span></div>
+        <div class="alert-stat"><strong><?= (int) $alertsSummary['soon'] ?></strong><span>عمليات خلال 5 أيام</span></div>
+        <div class="alert-stat"><strong><?= (int) $alertsSummary['openSyncConflicts'] ?></strong><span>تعارضات مزامنة</span></div>
+        <div class="alert-stat"><strong><?= (int) $alertsSummary['pendingImageSync'] ?></strong><span>صور تنتظر المزامنة</span></div>
+      </div>
+
       <section class="alerts">
 
 
@@ -1655,21 +2313,80 @@ if ($openSyncConflicts > 0) {
       drawHorizontalBarChart("injectionTypesChart", "injectionTypesEmpty", dashboardCharts.injectionTypes.labels, dashboardCharts.injectionTypes.values);
     }
 
+    function setupSidebarAccordion() {
+      const groups = Array.from(document.querySelectorAll("#sidebar details.menu-group[data-menu-key]"));
+      if (!groups.length) return;
+
+      const storageKey = "dashboard_sidebar_open_group";
+      const saved = localStorage.getItem(storageKey);
+      const defaultGroup = groups.find(group => group.hasAttribute("open"));
+
+      groups.forEach(group => {
+        group.open = false;
+      });
+
+      const initialGroup = groups.find(group => group.dataset.menuKey === saved) || defaultGroup || groups[0];
+      if (initialGroup) initialGroup.open = true;
+
+      groups.forEach(group => {
+        group.addEventListener("toggle", () => {
+          if (!group.open) return;
+
+          groups.forEach(other => {
+            if (other !== group) other.open = false;
+          });
+
+          if (group.dataset.menuKey) {
+            localStorage.setItem(storageKey, group.dataset.menuKey);
+          }
+        });
+      });
+    }
+
+    function markCurrentSidebarLink() {
+      const currentPath = window.location.pathname.split("/").pop().toLowerCase();
+      const links = Array.from(document.querySelectorAll("#sidebar a[href]"));
+
+      links.forEach(link => {
+        const href = (link.getAttribute("href") || "").split("?")[0].toLowerCase();
+        if (!href) return;
+        if (href === currentPath) {
+          link.classList.add("is-current");
+        }
+      });
+    }
+
+    function updateSidebarToggleLabel() {
+      const sidebar = document.getElementById("sidebar");
+      const btn = document.querySelector(".toggle-sidebar");
+      if (!sidebar || !btn) return;
+      btn.textContent = sidebar.classList.contains("hidden") ? "➡️ إظهار القائمة" : "⬅️ إخفاء القائمة";
+    }
+
+    function restoreSidebarState() {
+      const sidebar = document.getElementById("sidebar");
+      if (!sidebar) return;
+      const saved = localStorage.getItem("dashboard_sidebar_state");
+      if (saved === "show") {
+        sidebar.classList.remove("hidden");
+      }
+      updateSidebarToggleLabel();
+    }
+
     window.addEventListener("load", renderDashboardCharts);
+    window.addEventListener("load", setupSidebarAccordion);
+    window.addEventListener("load", markCurrentSidebarLink);
+    window.addEventListener("load", restoreSidebarState);
     window.addEventListener("resize", renderDashboardCharts);
 
     /* Sidebar Toggle */
     function toggleSidebar() {
       const sidebar = document.getElementById("sidebar");
-      const btn = document.querySelector(".toggle-sidebar");
+      if (!sidebar) return;
 
       sidebar.classList.toggle("hidden");
-
-      if (sidebar.classList.contains("hidden")) {
-        btn.innerHTML = " ⬅️إظهار القائمة";
-      } else {
-        btn.innerHTML = " ➡️إخفاء القائمة";
-      }
+      localStorage.setItem("dashboard_sidebar_state", sidebar.classList.contains("hidden") ? "hidden" : "show");
+      updateSidebarToggleLabel();
     }
 
     /* Dark Mode */

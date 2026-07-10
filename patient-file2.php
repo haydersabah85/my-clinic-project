@@ -46,7 +46,9 @@ $id = (int) $row['id'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ملف <?php echo h($row['full_name']); ?></title>
+    <title>ملف <?php echo h($row['full_name']); ?> | عيادة الدكتور حيدر صباح الربيعي</title>
+    <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
+    <link rel="stylesheet" href="assets/branding/branding.css">
     <link rel="stylesheet" href="assets/dark-mode.css">
     <script src="assets/theme.js" defer></script>
 
@@ -586,10 +588,15 @@ $id = (int) $row['id'];
 
         .app-sidebar-toggle {
             position: fixed;
-            top: 14px;
-            right: 14px;
-            z-index: 1300;
-            border: none;
+            top: 16px;
+            right: 16px;
+            z-index: 1305;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 44px;
+            border: 1px solid rgba(255, 255, 255, 0.26);
             border-radius: 12px;
             padding: 10px 14px;
             font-size: 14px;
@@ -597,8 +604,24 @@ $id = (int) $row['id'];
             font-family: 'Cairo', sans-serif;
             color: #fff;
             background: linear-gradient(135deg, #1d4ed8, #0f766e);
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.24);
+            backdrop-filter: blur(8px);
             cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, right 0.24s ease;
+        }
+
+        .app-sidebar-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 28px rgba(15, 23, 42, 0.3);
+        }
+
+        .app-sidebar-toggle:focus-visible {
+            outline: 2px solid rgba(59, 130, 246, 0.6);
+            outline-offset: 2px;
+        }
+
+        body.sidebar-open .app-sidebar-toggle {
+            right: calc(min(88vw, 286px) + 16px);
         }
 
         .app-sidebar {
@@ -629,15 +652,46 @@ $id = (int) $row['id'];
         }
 
         .app-sidebar .menu-group {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 11px;
+            overflow: hidden;
+            background: rgba(37, 99, 235, 0.04);
         }
 
-        .app-sidebar .menu-group span {
-            display: block;
-            margin-bottom: 7px;
-            color: #64748b;
+        .app-sidebar .menu-title,
+        .app-sidebar .menu-group summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin: 0;
+            padding: 10px 12px;
+            color: #172033;
             font-size: 13px;
             font-weight: 900;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(15, 118, 110, 0.08));
+            border: 0;
+            list-style: none;
+            cursor: pointer;
+        }
+
+        .app-sidebar .menu-group summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .app-sidebar .menu-group summary::after {
+            content: "▸";
+            color: #64748b;
+            transition: transform 0.2s ease;
+        }
+
+        .app-sidebar .menu-group[open] summary::after {
+            transform: rotate(90deg);
+        }
+
+        .app-sidebar .menu-links {
+            padding: 8px;
         }
 
         .app-sidebar .menu-group a {
@@ -657,6 +711,14 @@ $id = (int) $row['id'];
             border-color: rgba(37, 99, 235, 0.35);
             background: rgba(37, 99, 235, 0.11);
             transform: translateX(-2px);
+        }
+
+        .app-sidebar .menu-group a.is-current {
+            border-color: rgba(37, 99, 235, 0.55);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(15, 118, 110, 0.16));
+            color: #1e3a8a;
+            font-weight: 900;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
         }
 
         .app-sidebar-backdrop {
@@ -684,8 +746,10 @@ $id = (int) $row['id'];
             color: #60a5fa;
         }
 
-        body[data-theme="dark"] .app-sidebar .menu-group span {
-            color: #9fb0c2;
+        body[data-theme="dark"] .app-sidebar .menu-title,
+        body[data-theme="dark"] .app-sidebar .menu-group summary {
+            color: #e6edf5;
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(45, 212, 191, 0.12));
         }
 
         body[data-theme="dark"] .app-sidebar .menu-group a {
@@ -696,6 +760,13 @@ $id = (int) $row['id'];
         body[data-theme="dark"] .app-sidebar .menu-group a:hover {
             border-color: rgba(96, 165, 250, 0.38);
             background: rgba(30, 58, 95, 0.58);
+        }
+
+        body[data-theme="dark"] .app-sidebar .menu-group a.is-current {
+            color: #dbeafe;
+            border-color: rgba(96, 165, 250, 0.62);
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.46), rgba(13, 148, 136, 0.34));
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.42);
         }
     </style>
 </head>
@@ -781,29 +852,60 @@ $id = (int) $row['id'];
                     <button type="button" class="app-sidebar-toggle" id="appSidebarToggle" aria-controls="appSidebar" aria-expanded="false">➡️ القائمة</button>
 
                     <aside class="app-sidebar" id="appSidebar" aria-label="القائمة الجانبية">
-                        <h3>القائمة</h3>
-                        <div class="menu-group">
-                            <a href="dashboard.php">📊 لوحة التحكم</a>
+                        <div class="brand-with-logo" style="margin-bottom:10px;">
+                            <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
+                            <div class="brand-text">
+                                <span class="brand-title">عيادة الدكتور حيدر صباح الربيعي</span>
+                                <span class="brand-subtitle">متابعة ملف المريض</span>
+                            </div>
                         </div>
                         <div class="menu-group">
-                            <span>👤 المرضى</span>
-                            <a href="add-patient.php">➕ إضافة مريض</a>
-                            <a href="main.php">👥 كل المرضى</a>
-                            <a href="patient-data.php?id_open=<?= $id ?>">📁 بيانات المريض</a>
+                            <div class="menu-title">📊 الرئيسية</div>
+                            <div class="menu-links">
+                                <a href="dashboard.php">📊 لوحة التحكم</a>
+                            </div>
                         </div>
-                        <div class="menu-group">
-                            <span>📅 المواعيد</span>
-                            <a href="visits.php">زيارات اليوم</a>
-                            <a href="followup-appointment.php?id=<?= $id ?>">موعد مراجعة</a>
-                            <a href="operation-by-date.php">مواعيد العمليات</a>
-                        </div>
-                        <div class="menu-group">
-                            <span>⚙️ النظام</span>
-                            <a href="treatment-types.php">🧬 إدارة الأنواع</a>
-                            <a href="reports.php">التقارير</a>
-                            <a href="settings.php">الإعدادات</a>
-                            <a href="logout.php">تسجيل الخروج</a>
-                        </div>
+                        <details class="menu-group" data-menu-key="patients" open>
+                            <summary>👤 المرضى</summary>
+                            <div class="menu-links">
+                                <a href="add-patient.php">➕ إضافة مريض</a>
+                                <a href="main.php">👥 كل المرضى</a>
+                                <a href="patient-data.php?id_open=<?= $id ?>">📁 بيانات المريض</a>
+                            </div>
+                        </details>
+                        <details class="menu-group" data-menu-key="patient-actions" open>
+                            <summary>🧾 المريض الحالي</summary>
+                            <div class="menu-links">
+                                <a href="patient-file2.php?id=<?= $id ?>">📌 صفحة ملف المريض</a>
+                                <a href="patient-data.php?id_open=<?= $id ?>">📁 بيانات المريض</a>
+                                <a href="patient_timeline.php?id=<?= $id ?>">🕘 التسلسل الطبي</a>
+                                <a href="patient_reports.php?id=<?= $id ?>">📄 التقارير الطبية</a>
+                                <a href="treatment.php?patient_id=<?= $id ?>">💊 وصفة العلاج</a>
+                                <a href="add-va.php?id=<?= $id ?>">👁️ إضافة فحص النظر</a>
+                                <a href="add-image.php?id=<?= $id ?>">🖼️ إضافة صور</a>
+                                <a href="image-comparison.php?id=<?= $id ?>">🧪 مقارنة الصور</a>
+                            </div>
+                        </details>
+                        <details class="menu-group" data-menu-key="appointments">
+                            <summary>📅 المواعيد</summary>
+                            <div class="menu-links">
+                                <a href="visits.php">زيارات اليوم</a>
+                                <a href="followup-appointment.php?id=<?= $id ?>">موعد مراجعة</a>
+                                <a href="surgery-appointment.php?id=<?= $id ?>">موعد عملية</a>
+                                <a href="laser-appointment.php?id=<?= $id ?>">موعد ليزر</a>
+                                <a href="injection-appointment.php?id=<?= $id ?>">موعد حقن</a>
+                                <a href="operation-by-date.php">مواعيد العمليات</a>
+                            </div>
+                        </details>
+                        <details class="menu-group" data-menu-key="system">
+                            <summary>⚙️ النظام</summary>
+                            <div class="menu-links">
+                                <a href="treatment-types.php">🧬 إدارة الأنواع</a>
+                                <a href="reports.php">التقارير</a>
+                                <a href="settings.php">الإعدادات</a>
+                                <a href="logout.php">تسجيل الخروج</a>
+                            </div>
+                        </details>
                     </aside>
                     <div class="app-sidebar-backdrop" id="appSidebarBackdrop"></div>
 
@@ -1130,11 +1232,55 @@ $id = (int) $row['id'];
             const backdrop = document.getElementById('appSidebarBackdrop');
             if (!sidebar || !toggle || !backdrop) return;
 
+            const groups = Array.from(document.querySelectorAll('#appSidebar details.menu-group[data-menu-key]'));
+
+            function markCurrentSidebarLink() {
+                const currentPath = window.location.pathname.split('/').pop().toLowerCase();
+                const links = Array.from(document.querySelectorAll('#appSidebar a[href]'));
+
+                links.forEach(link => {
+                    const href = (link.getAttribute('href') || '').split('?')[0].toLowerCase();
+                    if (!href) return;
+                    if (href === currentPath) {
+                        link.classList.add('is-current');
+                    }
+                });
+            }
+
+            function setupSidebarAccordion() {
+                if (!groups.length) return;
+
+                const storageKey = 'patient_file2_sidebar_open_group';
+                const saved = localStorage.getItem(storageKey);
+                const defaultGroup = groups.find(group => group.hasAttribute('open'));
+
+                groups.forEach(group => {
+                    group.open = false;
+                });
+
+                const initialGroup = groups.find(group => group.dataset.menuKey === saved) || defaultGroup || groups[0];
+                if (initialGroup) initialGroup.open = true;
+
+                groups.forEach(group => {
+                    group.addEventListener('toggle', () => {
+                        if (!group.open) return;
+                        groups.forEach(other => {
+                            if (other !== group) other.open = false;
+                        });
+                        if (group.dataset.menuKey) {
+                            localStorage.setItem(storageKey, group.dataset.menuKey);
+                        }
+                    });
+                });
+            }
+
             function setSidebar(open, saveState) {
                 sidebar.classList.toggle('is-open', open);
                 backdrop.classList.toggle('is-open', open);
+                document.body.classList.toggle('sidebar-open', open);
                 toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                toggle.textContent = open ? '⬅️ إخفاء القائمة' : '➡️ القائمة';
+                toggle.setAttribute('aria-label', open ? 'إخفاء القائمة' : 'فتح القائمة');
+                toggle.textContent = open ? '✕ إغلاق القائمة' : '☰ القائمة';
                 if (saveState) {
                     localStorage.setItem('clinicSidebarState', open ? 'show' : 'hidden');
                 }
@@ -1150,6 +1296,9 @@ $id = (int) $row['id'];
             backdrop.addEventListener('click', function() {
                 setSidebar(false, true);
             });
+
+            setupSidebarAccordion();
+            markCurrentSidebarLink();
         })();
     </script>
 

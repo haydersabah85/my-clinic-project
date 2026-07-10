@@ -98,7 +98,9 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📁 <?php echo htmlspecialchars($row['full_name'] ?? 'ملف مريض'); ?></title>
+    <title>📁 <?php echo htmlspecialchars($row['full_name'] ?? 'ملف مريض'); ?> | عيادة الدكتور حيدر صباح الربيعي</title>
+    <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
+    <link rel="stylesheet" href="assets/branding/branding.css">
     <script src="assets/theme.js" defer></script>
     <style>
         /* ====== الخط والخلفية العامة ====== */
@@ -2062,10 +2064,15 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
         .app-sidebar-toggle {
             position: fixed;
-            top: 14px;
-            right: 14px;
-            z-index: 1300;
-            border: none;
+            top: 16px;
+            right: 16px;
+            z-index: 1305;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 44px;
+            border: 1px solid rgba(255, 255, 255, 0.26);
             border-radius: 12px;
             padding: 10px 14px;
             font-size: 14px;
@@ -2073,8 +2080,27 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             font-family: 'Cairo', sans-serif;
             color: #fff;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.26);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.24);
+            backdrop-filter: blur(8px);
             cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, right 0.24s ease;
+        }
+
+        .app-sidebar-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 28px rgba(15, 23, 42, 0.3);
+        }
+
+        .app-sidebar-toggle:focus-visible {
+            outline: 2px solid rgba(59, 130, 246, 0.6);
+            outline-offset: 2px;
+        }
+
+        body.sidebar-open .app-sidebar-toggle {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-6px);
         }
 
         .app-sidebar {
@@ -2105,15 +2131,46 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         }
 
         .app-sidebar .menu-group {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            overflow: hidden;
+            background: rgba(37, 99, 235, 0.04);
         }
 
-        .app-sidebar .menu-group span {
-            display: block;
-            margin-bottom: 7px;
-            color: var(--muted);
+        .app-sidebar .menu-title,
+        .app-sidebar .menu-group summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin: 0;
+            padding: 10px 12px;
+            color: var(--text);
             font-size: 13px;
             font-weight: 900;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(15, 118, 110, 0.08));
+            border: 0;
+            list-style: none;
+            cursor: pointer;
+        }
+
+        .app-sidebar .menu-group summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .app-sidebar .menu-group summary::after {
+            content: "▸";
+            color: var(--muted);
+            transition: transform 0.2s ease;
+        }
+
+        .app-sidebar .menu-group[open] summary::after {
+            transform: rotate(90deg);
+        }
+
+        .app-sidebar .menu-links {
+            padding: 8px;
         }
 
         .app-sidebar .menu-group a {
@@ -2133,6 +2190,14 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             border-color: rgba(37, 99, 235, 0.35);
             background: rgba(37, 99, 235, 0.11);
             transform: translateX(-2px);
+        }
+
+        .app-sidebar .menu-group a.is-current {
+            border-color: rgba(37, 99, 235, 0.55);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(15, 118, 110, 0.16));
+            color: #1e3a8a;
+            font-weight: 900;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
         }
 
         .app-sidebar-backdrop {
@@ -2162,6 +2227,29 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             border-color: rgba(96, 165, 250, 0.38);
             background: rgba(30, 58, 95, 0.58);
         }
+
+        body[data-theme="dark"] .app-sidebar .menu-group a.is-current {
+            color: #dbeafe;
+            border-color: rgba(96, 165, 250, 0.62);
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.46), rgba(13, 148, 136, 0.34));
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.42);
+        }
+
+        @media (max-width: 640px) {
+            .app-sidebar-toggle {
+                top: 10px;
+                right: 10px;
+                min-height: 40px;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
+            body.sidebar-open .app-sidebar-toggle {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+            }
+        }
     </style>
 </head>
 
@@ -2171,32 +2259,62 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             <?= h($flash['message'] ?? '') ?>
         </div>
     <?php endif; ?>
-    <button type="button" class="app-sidebar-toggle" id="appSidebarToggle" aria-controls="appSidebar" aria-expanded="false">➡️ القائمة</button>
+    <button type="button" class="app-sidebar-toggle" id="appSidebarToggle" aria-controls="appSidebar" aria-expanded="false">☰ القائمة</button>
 
     <aside class="app-sidebar" id="appSidebar" aria-label="القائمة الجانبية">
-        <h3>القائمة</h3>
-        <div class="menu-group">
-            <a href="dashboard.php">📊 لوحة التحكم</a>
+        <div class="brand-with-logo" style="margin-bottom:10px;">
+            <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
+            <div class="brand-text">
+                <span class="brand-title">عيادة الدكتور حيدر صباح الربيعي</span>
+                <span class="brand-subtitle">ملف المريض التفصيلي</span>
+            </div>
         </div>
         <div class="menu-group">
-            <span>👤 المرضى</span>
-            <a href="add-patient.php">➕ إضافة مريض</a>
-            <a href="main.php">👥 كل المرضى</a>
-            <a href="patient-data.php?id_open=<?= $id ?>">📁 بيانات المريض</a>
+            <div class="menu-title">📊 الرئيسية</div>
+            <div class="menu-links">
+                <a href="dashboard.php">📊 لوحة التحكم</a>
+            </div>
         </div>
-        <div class="menu-group">
-            <span>📅 المواعيد</span>
-            <a href="visits.php">زيارات اليوم</a>
-            <a href="followup-appointment.php?id=<?= $id ?>">موعد مراجعة</a>
-            <a href="operation-by-date.php">مواعيد العمليات</a>
-        </div>
-        <div class="menu-group">
-            <span>⚙️ النظام</span>
-            <a href="treatment-types.php">🧬 إدارة الاجراءات</a>
-            <a href="reports.php">التقارير</a>
-            <a href="settings.php">الإعدادات</a>
-            <a href="logout.php">تسجيل الخروج</a>
-        </div>
+        <details class="menu-group" data-menu-key="patients" open>
+            <summary>👤 المرضى</summary>
+            <div class="menu-links">
+                <a href="add-patient.php">➕ إضافة مريض</a>
+                <a href="main.php">👥 كل المرضى</a>
+                <a href="patient-data.php?id_open=<?= $id ?>">📁 بيانات المريض</a>
+            </div>
+        </details>
+        <details class="menu-group" data-menu-key="patient-actions" open>
+            <summary>🧾 المريض الحالي</summary>
+            <div class="menu-links">
+                <a href="patient-file.php?id=<?= $id ?>">📌 صفحة ملف المريض</a>
+                <a href="patient_timeline.php?id=<?= $id ?>">🕘 التسلسل الطبي</a>
+                <a href="patient_reports.php?id=<?= $id ?>">📄 التقارير الطبية</a>
+                <a href="treatment.php?patient_id=<?= $id ?>">💊 وصفة العلاج</a>
+                <a href="add-va.php?id=<?= $id ?>">👁️ إضافة فحص النظر</a>
+                <a href="add-image.php?id=<?= $id ?>">🖼️ إضافة صور</a>
+                <a href="image-comparison.php?id=<?= $id ?>">🧪 مقارنة الصور</a>
+            </div>
+        </details>
+        <details class="menu-group" data-menu-key="appointments">
+            <summary>📅 المواعيد</summary>
+            <div class="menu-links">
+                <a href="visits.php">زيارات اليوم</a>
+                <a href="followup-appointment.php?id=<?= $id ?>">موعد مراجعة</a>
+                <a href="surgery-appointment.php?id=<?= $id ?>">موعد عملية</a>
+                <a href="laser-appointment.php?id=<?= $id ?>">موعد ليزر</a>
+                <a href="injection-appointment.php?id=<?= $id ?>">موعد حقن</a>
+                <a href="operation-by-date.php">مواعيد العمليات</a>
+            </div>
+        </details>
+        <details class="menu-group" data-menu-key="system">
+            <summary>⚙️ النظام</summary>
+            <div class="menu-links">
+                <a href="treatment-types.php">🧬 إدارة الاجراءات</a>
+                <a href="reports.php">التقارير</a>
+                <a href="settings.php">الإعدادات</a>
+                <a href="logout.php">تسجيل الخروج</a>
+            </div>
+        </details>
     </aside>
     <div class="app-sidebar-backdrop" id="appSidebarBackdrop"></div>
 

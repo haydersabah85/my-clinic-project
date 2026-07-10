@@ -69,7 +69,8 @@ while ($usersResult && ($u = mysqli_fetch_assoc($usersResult))) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>إنشاء حساب موظف</title>
+    <title>إنشاء حساب موظف | عيادة الدكتور حيدر صباح الربيعي</title>
+    <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
 
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js" defer></script>

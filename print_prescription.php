@@ -46,7 +46,7 @@ while ($m = mysqli_fetch_assoc($q)) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Prescription A5</title>
+    <title>طباعة الوصفة | عيادة الدكتور حيدر صباح الربيعي</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
@@ -65,6 +65,13 @@ while ($m = mysqli_fetch_assoc($q)) {
             margin: 0;
             background: #f3f6fb;
             color: #172033;
+        }
+
+        .print-logo {
+            width: 34mm;
+            height: auto;
+            margin: 0 auto 4px;
+            display: block;
         }
 
         .page {
@@ -228,8 +235,9 @@ while ($m = mysqli_fetch_assoc($q)) {
         <div class="bottom-curve"></div>
 
         <div class="header">
-            <div>الدكتور</div>
-            <h1>حيدر صباح الربيعي</h1>
+            <img class="print-logo" src="assets/logo.png" alt="شعار العيادة">
+            <div>عيادة</div>
+            <h1>الدكتور حيدر صباح الربيعي</h1>
             <h3>اختصاص طب وجراحة العيون</h3>
             <h3>تخصص دقيق في جراحة الشبكية والسائل الزجاجي</h3>
         </div>

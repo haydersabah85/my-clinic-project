@@ -437,7 +437,7 @@ if ($trendMax < 1) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقارير العيادة</title>
+    <title>تقارير العيادة | عيادة الدكتور حيدر صباح الربيعي</title>
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js" defer></script>
     <link rel="stylesheet" href="assets/dark-mode.css">
@@ -580,15 +580,46 @@ if ($trendMax < 1) {
         }
 
         .menu-group {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(37, 99, 235, .03);
         }
 
-        .menu-group .title {
-            display: block;
-            margin-bottom: 7px;
+        .menu-title,
+        .menu-group summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0;
+            width: 100%;
+            padding: 10px 12px;
             font-size: 12px;
-            color: var(--muted);
+            color: var(--text);
             font-weight: 800;
+            background: linear-gradient(135deg, rgba(37, 99, 235, .12), rgba(15, 118, 110, .08));
+            border: 0;
+            list-style: none;
+            cursor: pointer;
+        }
+
+        .menu-group summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .menu-group summary::after {
+            content: "▸";
+            color: var(--muted);
+            transition: transform .2s ease;
+        }
+
+        .menu-group[open] summary::after {
+            transform: rotate(90deg);
+        }
+
+        .menu-links {
+            padding: 8px;
         }
 
         .menu-group a {
@@ -886,54 +917,72 @@ if ($trendMax < 1) {
             }
         }
     </style>
+    <link rel="stylesheet" href="assets/ui-unified.css">
 </head>
 
-<body>
+<body class="ui-unified">
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
+    <link rel="stylesheet" href="assets/branding/branding.css">
     <div class="app-shell" id="appShell">
         <aside class="sidebar hidden" id="reportsSidebar" aria-label="التنقل">
             <div class="brand">
-                <strong>Clinic Reports</strong>
-                <span>تنقل سريع داخل النظام</span>
+                <div class="brand-with-logo">
+                    <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
+                    <div class="brand-text">
+                        <span class="brand-title">عيادة الدكتور حيدر صباح الربيعي</span>
+                        <span class="brand-subtitle">تقارير شاملة وتحليلات</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="menu-group">
-                <span class="title">📊 الرئيسية</span>
-                <a href="dashboard.php">لوحة التحكم</a>
-                <a href="main.php">المرضى</a>
-                <a href="add-referred-case.php">إضافة حالة محولة</a>
-                <a href="referred-cases.php">الحالات المحولة</a>
-                <a href="visits.php">زيارات اليوم</a>
-            </div>
+            <details class="menu-group" data-menu-key="main">
+                <summary>📊 الرئيسية</summary>
+                <div class="menu-links">
+                    <a href="dashboard.php">لوحة التحكم</a>
+                    <a href="main.php">المرضى</a>
+                    <a href="add-referred-case.php">إضافة حالة محولة</a>
+                    <a href="referred-cases.php">الحالات المحولة</a>
+                    <a href="visits.php">زيارات اليوم</a>
+                </div>
+            </details>
+
+            <details class="menu-group" data-menu-key="reports" open>
+                <summary>📈 التقارير</summary>
+                <div class="menu-links">
+                    <a class="active" href="reports.php">تقارير شاملة</a>
+                    <a href="daily-revenue.php?date=<?php echo urlencode($to); ?>">الإيراد اليومي</a>
+                    <a href="dashboard-status.php">حالة الداشبورد</a>
+                    <a href="data-quality.php">جودة البيانات</a>
+                </div>
+            </details>
+
+            <details class="menu-group" data-menu-key="appointments">
+                <summary>📅 المواعيد والإجراءات</summary>
+                <div class="menu-links">
+                    <a href="followups.php">المراجعات</a>
+                    <a href="operation-by-date.php">مواعيد العمليات</a>
+                    <a href="procedure-entries.php?date=<?php echo urlencode($to); ?>">إدخال الإجراءات</a>
+                </div>
+            </details>
+
+            <details class="menu-group" data-menu-key="system">
+                <summary>⚙️ النظام</summary>
+                <div class="menu-links">
+                    <a href="settings.php">الإعدادات</a>
+                    <a href="audit-log.php">سجل التدقيق</a>
+                    <a href="logout.php">تسجيل الخروج</a>
+                </div>
+            </details>
 
             <div class="menu-group">
-                <span class="title">📈 التقارير</span>
-                <a class="active" href="reports.php">تقارير شاملة</a>
-                <a href="daily-revenue.php?date=<?php echo urlencode($to); ?>">الإيراد اليومي</a>
-                <a href="dashboard-status.php">حالة الداشبورد</a>
-                <a href="data-quality.php">جودة البيانات</a>
-            </div>
-
-            <div class="menu-group">
-                <span class="title">📅 المواعيد والإجراءات</span>
-                <a href="followups.php">المراجعات</a>
-                <a href="operation-by-date.php">مواعيد العمليات</a>
-                <a href="procedure-entries.php?date=<?php echo urlencode($to); ?>">إدخال الإجراءات</a>
-            </div>
-
-            <div class="menu-group">
-                <span class="title">⚙️ النظام</span>
-                <a href="settings.php">الإعدادات</a>
-                <a href="audit-log.php">سجل التدقيق</a>
-                <a href="logout.php">تسجيل الخروج</a>
-            </div>
-
-            <div class="menu-group">
-                <span class="title">🔧 الإعدادات السريعة</span>
-                <button class="dark-mode-btn" id="darkModeBtn" type="button">
-                    <span id="darkModeIcon">🌙</span>
-                    <span id="darkModeLabel">الوضع الداكن</span>
-                </button>
+                <div class="menu-title">🔧 الإعدادات السريعة</div>
+                <div class="menu-links">
+                    <button class="dark-mode-btn" id="darkModeBtn" type="button">
+                        <span id="darkModeIcon">🌙</span>
+                        <span id="darkModeLabel">الوضع الداكن</span>
+                    </button>
+                </div>
             </div>
         </aside>
 
@@ -1421,6 +1470,34 @@ if ($trendMax < 1) {
                 if (overlay) overlay.classList.toggle('active', !collapsed);
             }
 
+            function setupSidebarAccordion() {
+                const groups = Array.from(document.querySelectorAll('#reportsSidebar details.menu-group[data-menu-key]'));
+                if (!groups.length) return;
+
+                const storageKey = 'reports_sidebar_open_group';
+                const saved = localStorage.getItem(storageKey);
+                const defaultGroup = groups.find(group => group.hasAttribute('open'));
+
+                groups.forEach(group => {
+                    group.open = false;
+                });
+
+                const initialGroup = groups.find(group => group.dataset.menuKey === saved) || defaultGroup || groups[0];
+                if (initialGroup) initialGroup.open = true;
+
+                groups.forEach(group => {
+                    group.addEventListener('toggle', () => {
+                        if (!group.open) return;
+                        groups.forEach(other => {
+                            if (other !== group) other.open = false;
+                        });
+                        if (group.dataset.menuKey) {
+                            localStorage.setItem(storageKey, group.dataset.menuKey);
+                        }
+                    });
+                });
+            }
+
             /* Hidden by default – only open if user explicitly opened before */
             const stored = localStorage.getItem('reports_sidebar_collapsed');
             applySidebarState(stored !== '0'); /* default: collapsed (hidden) */
@@ -1471,6 +1548,7 @@ if ($trendMax < 1) {
             }
 
             setTab(active || 'visits');
+            setupSidebarAccordion();
         })();
     </script>
 </body>
