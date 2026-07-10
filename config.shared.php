@@ -10,7 +10,7 @@ if (CLINIC_LANGUAGE_LOADER_ENABLED) {
             return $output;
         }
 
-        $version = '20260615-11';
+        $version = '20260710-04';
         $output = preg_replace(
             '~assets/theme\.js(?:\?[^"\']*)?~i',
             'assets/theme.js?v=' . $version,

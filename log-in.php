@@ -6,6 +6,9 @@ include_once "clinic_helpers.php";
 clinic_ensure_infrastructure($con);
 clinic_ensure_column($con, 'users', 'permissions_json', 'LONGTEXT NULL');
 
+$currentLanguage = clinic_language();
+$isEnglish = $currentLanguage === 'en';
+
 if (isset($_POST['login'])) {
   $username = $_POST['username'];
   $password = $_POST['pass'];
@@ -29,16 +32,16 @@ if (isset($_POST['login'])) {
       exit;
     }
   }
-  $error = "بيانات الدخول غير صحيحة";
+  $error = clinic_t('login_invalid_credentials');
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="<?= $isEnglish ? 'en' : 'ar' ?>" dir="<?= $isEnglish ? 'ltr' : 'rtl' ?>">
 
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل الدخول | عيادة الدكتور حيدر صباح الربيعي</title>
+  <title><?= h(clinic_t('login_page_title')) ?></title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -365,25 +368,25 @@ if (isset($_POST['login'])) {
         <div class="brand-with-logo">
           <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
           <div class="brand-text">
-            <span class="brand-title">عيادة الدكتور حيدر صباح الربيعي</span>
+            <span class="brand-title"><?= h(clinic_t('clinic_name')) ?></span>
 
           </div>
         </div>
       </div>
-      <h3>تسجيل الدخول</h3>
-      <p class="subtitle">ادخل بحسابك للوصول إلى لوحة التحكم وإدارة ملفات العيادة.</p>
+      <h3><?= h(clinic_t('login_heading')) ?></h3>
+      <p class="subtitle"><?= h(clinic_t('login_subtitle')) ?></p>
 
       <div class="form-grid">
         <div class="input-group">
-          <input type="text" name="username" placeholder="اسم المستخدم" required>
+          <input type="text" name="username" placeholder="<?= h(clinic_t('username_label')) ?>" required>
         </div>
 
         <div class="input-group">
-          <input type="password" name="pass" id="password" placeholder="كلمة المرور" required>
+          <input type="password" name="pass" id="password" placeholder="<?= h(clinic_t('password_label')) ?>" required>
           <span class="toggle-pass" onclick="togglePassword()">👁️</span>
         </div>
 
-        <button name="login">دخول</button>
+        <button name="login"><?= h(clinic_t('login_button')) ?></button>
 
         <div class="error">
           <?= h($error ?? '') ?>
@@ -395,31 +398,30 @@ if (isset($_POST['login'])) {
       <div class="brand-pill">
         <span class="page-brand-inline">
           <img src="assets/branding/logo-mark.svg" alt="شعار العيادة">
-          <span>نظام العيادة الذكي</span>
+          <span><?= h(clinic_t('smart_clinic_system')) ?></span>
         </span>
       </div>
-      <h1>حسابات الموظفين، بصلاحيات واضحة ومظهر احترافي</h1>
+      <h1><?= h(clinic_t('staff_accounts_hero')) ?></h1>
       <p>
-        يمكنك إنشاء حسابات للموظفين من صفحة التسجيل، ثم تحديد دور كل مستخدم وصلاحياته العملية
-        قبل منحه الوصول إلى أجزاء النظام المناسبة له.
+        <?= h(clinic_t('staff_accounts_description')) ?>
       </p>
 
       <div class="feature-list">
         <div class="feature-item">
-          <strong>إضافة موظفين بسرعة</strong>
-          <span>ربط مباشر مع صفحة التسجيل لإدارة الحسابات من مكان واحد.</span>
+          <strong><?= h(clinic_t('quick_staff_add_title')) ?></strong>
+          <span><?= h(clinic_t('quick_staff_add_desc')) ?></span>
         </div>
         <div class="feature-item">
-          <strong>صلاحيات مرنة</strong>
-          <span>تحديد ما إذا كان المستخدم يدير المرضى أو المواعيد أو التقارير أو الحسابات.</span>
+          <strong><?= h(clinic_t('flexible_permissions_title')) ?></strong>
+          <span><?= h(clinic_t('flexible_permissions_desc')) ?></span>
         </div>
         <div class="feature-item">
-          <strong>واجهة أنيقة ومناسبة للموبايل</strong>
-          <span>تصميم متجاوب بلمسة حديثة ووضع ليلي متناسق.</span>
+          <strong><?= h(clinic_t('elegant_mobile_ui_title')) ?></strong>
+          <span><?= h(clinic_t('elegant_mobile_ui_desc')) ?></span>
         </div>
       </div>
 
-      <a class="register-link" href="registration.php">فتح صفحة إنشاء حساب موظف</a>
+      <a class="register-link" href="registration.php"><?= h(clinic_t('open_staff_registration_page')) ?></a>
     </section>
   </div>
 

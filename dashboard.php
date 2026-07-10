@@ -4,6 +4,11 @@ include "config.php";
 include "auth.php";
 include_once "clinic_helpers.php";
 
+$isEnglish = clinic_language() === 'en';
+$tr = static function (string $ar, string $en) use ($isEnglish): string {
+  return $isEnglish ? $en : $ar;
+};
+
 clinic_ensure_infrastructure($con);
 clinic_ensure_sync_conflicts($con);
 $flash = clinic_take_flash();
@@ -56,6 +61,10 @@ $todayPendingVisits = mysqli_fetch_assoc(
 
 $followups = mysqli_fetch_assoc(
   mysqli_query($con, "SELECT COUNT(*) total FROM followups WHERE followup_date = CURDATE() AND status='pending'")
+)['total'] ?? 0;
+
+$tomorrowFollowups = mysqli_fetch_assoc(
+  mysqli_query($con, "SELECT COUNT(*) total FROM followups WHERE followup_date = DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND status='pending'")
 )['total'] ?? 0;
 
 $upcomingFollowups = mysqli_fetch_assoc(
@@ -130,7 +139,7 @@ $topLaserRow = mysqli_fetch_assoc(
 
   ")
 );
-$topLaserType = $topLaserRow['laser_type'] ?? 'لا يوجد';
+$topLaserType = $topLaserRow['laser_type'] ?? $tr('لا يوجد', 'None');
 $topLaserCount = (int)($topLaserRow['total'] ?? 0);
 
 $topInjectionRow = mysqli_fetch_assoc(
@@ -144,7 +153,7 @@ $topInjectionRow = mysqli_fetch_assoc(
     LIMIT 1
   ")
 );
-$topInjectionType = $topInjectionRow['injection_type'] ?? 'لا يوجد';
+$topInjectionType = $topInjectionRow['injection_type'] ?? $tr('لا يوجد', 'None');
 $topInjectionCount = (int)($topInjectionRow['total'] ?? 0);
 
 // عمليات قادمة
@@ -189,15 +198,17 @@ if (clinic_table_exists($con, 'referred_surgery_cases')) {
   "))['total'] ?? 0));
 }
 
-$buildTrendMeta = static function (int $current, int $previous, string $compareText): array {
+$buildTrendMeta = static function (int $current, int $previous, string $compareText) use ($tr): array {
   if ($current === $previous) {
-    return ['class' => 'trend-flat', 'label' => "• بدون تغيير $compareText"];
+    return ['class' => 'trend-flat', 'label' => $tr('• بدون تغيير', '• No change') . " $compareText"];
   }
 
   if ($previous <= 0) {
     return [
       'class' => $current > 0 ? 'trend-up' : 'trend-flat',
-      'label' => $current > 0 ? "↗ جديد $compareText" : "• بدون تغيير $compareText"
+      'label' => $current > 0
+        ? $tr('↗ جديد', '↗ New') . " $compareText"
+        : $tr('• بدون تغيير', '• No change') . " $compareText"
     ];
   }
 
@@ -211,16 +222,19 @@ $buildTrendMeta = static function (int $current, int $previous, string $compareT
   return ['class' => 'trend-down', 'label' => "↘ -{$pct}% $compareText"];
 };
 
-$visitsTrend = $buildTrendMeta((int) $todayVisits, $yesterdayVisits, 'عن أمس');
-$pendingTrend = $buildTrendMeta((int) $todayPendingVisits, $yesterdayPendingVisits, 'عن أمس');
-$doneTrend = $buildTrendMeta((int) $todayDoneVisits, $yesterdayDoneVisits, 'عن أمس');
-$followupTrend = $buildTrendMeta((int) $followups, $yesterdayFollowups, 'عن أمس');
-$expectedTrend = $buildTrendMeta((int) $expectedVisitsToday, $yesterdayExpectedVisits, 'عن أمس');
+$compareDayText = $tr('عن أمس', 'vs yesterday');
+$compareMonthText = $tr('عن الشهر الماضي', 'vs last month');
 
-$operationsTrend = $buildTrendMeta((int) $monthOperations, $previousMonthOperations, 'عن الشهر الماضي');
-$injectionsTrend = $buildTrendMeta((int) $monthInjections, $previousMonthInjections, 'عن الشهر الماضي');
-$lasersTrend = $buildTrendMeta((int) $monthLasers, $previousMonthLasers, 'عن الشهر الماضي');
-$referredTrend = $buildTrendMeta((int) $monthReferredCases, $previousMonthReferredCases, 'عن الشهر الماضي');
+$visitsTrend = $buildTrendMeta((int) $todayVisits, $yesterdayVisits, $compareDayText);
+$pendingTrend = $buildTrendMeta((int) $todayPendingVisits, $yesterdayPendingVisits, $compareDayText);
+$doneTrend = $buildTrendMeta((int) $todayDoneVisits, $yesterdayDoneVisits, $compareDayText);
+$followupTrend = $buildTrendMeta((int) $followups, $yesterdayFollowups, $compareDayText);
+$expectedTrend = $buildTrendMeta((int) $expectedVisitsToday, $yesterdayExpectedVisits, $compareDayText);
+
+$operationsTrend = $buildTrendMeta((int) $monthOperations, $previousMonthOperations, $compareMonthText);
+$injectionsTrend = $buildTrendMeta((int) $monthInjections, $previousMonthInjections, $compareMonthText);
+$lasersTrend = $buildTrendMeta((int) $monthLasers, $previousMonthLasers, $compareMonthText);
+$referredTrend = $buildTrendMeta((int) $monthReferredCases, $previousMonthReferredCases, $compareMonthText);
 
 $workloadPressureRate = $todayVisits > 0 ? (int) round(($todayPendingVisits / max(1, $todayVisits)) * 100) : 0;
 $workloadPressureRate = max(0, min(100, $workloadPressureRate));
@@ -296,11 +310,12 @@ foreach ($monthKeys as $monthKey) {
 
 $injectionTypeLabels = [];
 $injectionTypeCounts = [];
+$unspecifiedInjectionType = $tr('غير محدد', 'Unspecified');
 $injectionTypeResult = mysqli_query($con, "
-  SELECT COALESCE(NULLIF(TRIM(injection_type), ''), 'غير محدد') injection_type, COUNT(*) total
+  SELECT COALESCE(NULLIF(TRIM(injection_type), ''), '" . mysqli_real_escape_string($con, $unspecifiedInjectionType) . "') injection_type, COUNT(*) total
   FROM injection
   WHERE date >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 5 MONTH), '%Y-%m-01')
-  GROUP BY COALESCE(NULLIF(TRIM(injection_type), ''), 'غير محدد')
+  GROUP BY COALESCE(NULLIF(TRIM(injection_type), ''), '" . mysqli_real_escape_string($con, $unspecifiedInjectionType) . "')
   ORDER BY total DESC
 ");
 while ($row = mysqli_fetch_assoc($injectionTypeResult)) {
@@ -327,12 +342,18 @@ $upcoming = mysqli_query($con, "
 
 /* ===== تنبيهات ===== */
 $alerts = [];
+$isSecretaryUser = strtolower((string) ($_SESSION['role'] ?? '')) === 'secretary';
+$tomorrowFollowupDate = date('Y-m-d', strtotime('+1 day'));
+$tomorrowFollowupLink = 'followups.php?date_from=' . urlencode($tomorrowFollowupDate) . '&date_to=' . urlencode($tomorrowFollowupDate);
 // حالات حرجة 
 $critical = mysqli_num_rows(mysqli_query($con, "
   SELECT id FROM add_patient 
   WHERE is_critical=1 
 "));
-if ($critical > 0) $alerts[] = "<div class='alert alert-danger'>🚨 يوجد $critical حالات حرجة</div>";
+if ($critical > 0) {
+  $criticalText = $tr("يوجد $critical حالات حرجة", "There are $critical critical cases");
+  $alerts[] = "<div class='alert alert-danger'>🚨 " . h($criticalText) . "</div>";
+}
 
 // عمليات متأخرة
 $late = mysqli_num_rows(mysqli_query($con, "
@@ -340,7 +361,9 @@ $late = mysqli_num_rows(mysqli_query($con, "
   WHERE status='pending' AND date < CURDATE()
 "));
 if ($late > 0) // متأخرة
-  $alerts[] = "<div class='alert alert-danger'>🔴 يوجد $late عملية متأخرة</div>";
+  $alerts[] = "<div class='alert alert-danger'>🔴 "
+    . h($tr("يوجد $late عملية متأخرة", "There are $late overdue operations"))
+    . "</div>";
 
 // عمليات قريبة
 $soon = mysqli_num_rows(mysqli_query($con, "
@@ -348,7 +371,9 @@ $soon = mysqli_num_rows(mysqli_query($con, "
   WHERE status='pending' AND date BETWEEN CURDATE() AND DATE_ADD(CURDATE(),INTERVAL 5 DAY)
 "));
 if ($soon > 0) // قريبة
-  $alerts[] = "<div class='alert alert-warning'>⚠️ يوجد $soon عمليات خلال 5 أيام</div>";
+  $alerts[] = "<div class='alert alert-warning'>⚠️ "
+    . h($tr("يوجد $soon عمليات خلال 5 أيام", "There are $soon operations within 5 days"))
+    . "</div>";
 
 $openSyncConflicts = 0;
 $openSyncConflictsRow = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM sync_conflicts WHERE resolution_status = 'open'"));
@@ -367,7 +392,9 @@ if ($backupFiles) {
 }
 
 if ($openSyncConflicts > 0) {
-  $alerts[] = "<div class='alert alert-danger'>⛔ يوجد $openSyncConflicts تعارض مزامنة مفتوح - <a href='sync_conflicts.php'>إدارة التعارضات</a></div>";
+  $alerts[] = "<div class='alert alert-danger'>⛔ "
+    . h(clinic_t('alert_open_sync_conflicts', ['count' => $openSyncConflicts]))
+    . " - <a href='sync_conflicts.php'>" . h(clinic_t('manage_conflicts')) . "</a></div>";
 }
 
 $backupAgeHours = null;
@@ -379,17 +406,17 @@ if ($latestBackupAt && !empty($backupFiles)) {
 }
 
 if ($backupAgeHours === null) {
-  $alerts[] = "<div class='alert alert-danger'>🧯 لا توجد نسخة احتياطية محلية حديثة</div>";
+  $alerts[] = "<div class='alert alert-danger'>🧯 " . h(clinic_t('alert_no_recent_backup')) . "</div>";
 } elseif ($backupAgeHours >= 48) {
-  $alerts[] = "<div class='alert alert-warning'>🕒 آخر نسخة احتياطية قبل {$backupAgeHours} ساعة</div>";
+  $alerts[] = "<div class='alert alert-warning'>🕒 " . h(clinic_t('alert_backup_age_hours', ['hours' => $backupAgeHours])) . "</div>";
 }
 
 if ($todayVisits > 0 && $todayPendingVisits > $todayDoneVisits) {
-  $alerts[] = "<div class='alert alert-warning'>⌛ حالات الانتظار أعلى من المعاينات المنجزة اليوم</div>";
+  $alerts[] = "<div class='alert alert-warning'>⌛ " . h(clinic_t('alert_waiting_higher_than_done')) . "</div>";
 }
 
 if ($pendingImageSync >= 20) {
-  $alerts[] = "<div class='alert alert-warning'>🖼️ يوجد {$pendingImageSync} صورة بانتظار المزامنة</div>";
+  $alerts[] = "<div class='alert alert-warning'>🖼️ " . h(clinic_t('alert_pending_images_count', ['count' => $pendingImageSync])) . "</div>";
 }
 
 $alertsSummary = [
@@ -398,6 +425,7 @@ $alertsSummary = [
   'soon' => (int) $soon,
   'openSyncConflicts' => (int) $openSyncConflicts,
   'pendingImageSync' => (int) $pendingImageSync,
+  'tomorrowFollowups' => (int) $tomorrowFollowups,
 ];
 
 ?>
@@ -1535,6 +1563,82 @@ $alertsSummary = [
     background: #2563eb;
   }
 
+  .secretary-alert-banner {
+    margin: 14px 0 12px;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    border: 1px solid rgba(37, 99, 235, 0.28);
+    background: linear-gradient(120deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.12));
+    box-shadow: var(--shadow);
+  }
+
+  .secretary-alert-banner.is-urgent {
+    border-color: rgba(220, 38, 38, 0.48);
+    background: linear-gradient(120deg, rgba(248, 113, 113, 0.2), rgba(245, 158, 11, 0.18));
+    animation: secretaryPulse 1.4s ease-in-out infinite;
+  }
+
+  .secretary-alert-banner.is-calm {
+    border-color: rgba(22, 163, 74, 0.35);
+    background: linear-gradient(120deg, rgba(22, 163, 74, 0.14), rgba(16, 185, 129, 0.12));
+  }
+
+  .secretary-alert-text strong {
+    display: block;
+    font-size: 16px;
+    color: var(--text);
+  }
+
+  .secretary-alert-text span {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #475569;
+  }
+
+  .secretary-alert-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 900;
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #0f766e);
+    box-shadow: var(--shadow);
+  }
+
+  .secretary-alert-banner.is-urgent .secretary-alert-btn {
+    background: linear-gradient(135deg, #dc2626, #ea580c);
+  }
+
+  body.dark .secretary-alert-banner {
+    border-color: rgba(96, 165, 250, 0.34);
+    background: linear-gradient(120deg, rgba(30, 64, 175, 0.28), rgba(14, 116, 144, 0.2));
+  }
+
+  body.dark .secretary-alert-banner.is-urgent {
+    border-color: rgba(248, 113, 113, 0.55);
+    background: linear-gradient(120deg, rgba(127, 29, 29, 0.46), rgba(154, 52, 18, 0.34));
+  }
+
+  body.dark .secretary-alert-banner.is-calm {
+    border-color: rgba(74, 222, 128, 0.4);
+    background: linear-gradient(120deg, rgba(5, 46, 22, 0.55), rgba(6, 78, 59, 0.45));
+  }
+
+  body.dark .secretary-alert-text span {
+    color: #cbd5e1;
+  }
+
   /* ===== زر الحالات الحرجة ===== */
   .danger-card {
     display: inline-flex;
@@ -1674,6 +1778,20 @@ $alertsSummary = [
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  @keyframes secretaryPulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.28), var(--shadow);
+    }
+
+    70% {
+      box-shadow: 0 0 0 14px rgba(220, 38, 38, 0), var(--shadow);
+    }
+
+    100% {
+      box-shadow: 0 0 0 0 rgba(220, 38, 38, 0), var(--shadow);
     }
   }
 </style>
@@ -1820,6 +1938,25 @@ $alertsSummary = [
 
 
       <h1>لوحة التحكم</h1>
+
+      <?php if ($isSecretaryUser): ?>
+        <section
+          class="secretary-alert-banner <?= ((int) $tomorrowFollowups > 0) ? 'is-urgent' : 'is-calm' ?>"
+          id="secretaryTomorrowAlert"
+          data-tomorrow-count="<?= (int) $tomorrowFollowups ?>">
+          <div class="secretary-alert-text">
+            <strong>📣 <?= h(clinic_t('secretary_tomorrow_alert_title')) ?></strong>
+            <span>
+              <?php if ((int) $tomorrowFollowups > 0): ?>
+                <?= h(clinic_t('secretary_tomorrow_alert_has', ['count' => (int) $tomorrowFollowups, 'date' => $tomorrowFollowupDate])) ?>
+              <?php else: ?>
+                <?= h(clinic_t('secretary_tomorrow_alert_none', ['date' => $tomorrowFollowupDate])) ?>
+              <?php endif; ?>
+            </span>
+          </div>
+          <a class="secretary-alert-btn" href="<?= h($tomorrowFollowupLink) ?>"><?= h(clinic_t('open_tomorrow_followups')) ?></a>
+        </section>
+      <?php endif; ?>
 
       <div class="section-heading">
         <h2>ملخص اليوم</h2>
@@ -2045,11 +2182,14 @@ $alertsSummary = [
 
       <!-- ===== Alerts ===== -->
       <div class="alerts-head" aria-label="ملخص التنبيهات">
-        <div class="alert-stat"><strong><?= (int) $alertsSummary['critical'] ?></strong><span>حالات حرجة</span></div>
-        <div class="alert-stat"><strong><?= (int) $alertsSummary['late'] ?></strong><span>عمليات متأخرة</span></div>
-        <div class="alert-stat"><strong><?= (int) $alertsSummary['soon'] ?></strong><span>عمليات خلال 5 أيام</span></div>
-        <div class="alert-stat"><strong><?= (int) $alertsSummary['openSyncConflicts'] ?></strong><span>تعارضات مزامنة</span></div>
-        <div class="alert-stat"><strong><?= (int) $alertsSummary['pendingImageSync'] ?></strong><span>صور تنتظر المزامنة</span></div>
+        <div class="alert-stat"><strong><?= (int) $alertsSummary['critical'] ?></strong><span><?= h(clinic_t('critical_cases')) ?></span></div>
+        <div class="alert-stat"><strong><?= (int) $alertsSummary['late'] ?></strong><span><?= h(clinic_t('late_operations')) ?></span></div>
+        <div class="alert-stat"><strong><?= (int) $alertsSummary['soon'] ?></strong><span><?= h(clinic_t('operations_in_5_days')) ?></span></div>
+        <div class="alert-stat"><strong><?= (int) $alertsSummary['openSyncConflicts'] ?></strong><span><?= h(clinic_t('open_sync_conflicts_label')) ?></span></div>
+        <div class="alert-stat"><strong><?= (int) $alertsSummary['pendingImageSync'] ?></strong><span><?= h(clinic_t('pending_sync_images_label')) ?></span></div>
+        <?php if ($isSecretaryUser): ?>
+          <div class="alert-stat"><strong><?= (int) $alertsSummary['tomorrowFollowups'] ?></strong><span><?= h(clinic_t('tomorrow_followups_label')) ?></span></div>
+        <?php endif; ?>
       </div>
 
       <section class="alerts">
@@ -2465,6 +2605,53 @@ $alertsSummary = [
     }
 
     setInterval(refreshDashboardStatus, 60000);
+
+    function playSecretaryAlertSound() {
+      const audioContext = new(window.AudioContext || window.webkitAudioContext)();
+      const tones = [880, 740, 980];
+
+      tones.forEach((frequency, index) => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        const startAt = audioContext.currentTime + index * 0.17;
+        const stopAt = startAt + 0.13;
+
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(frequency, startAt);
+        gain.gain.setValueAtTime(0.0001, startAt);
+        gain.gain.exponentialRampToValueAtTime(0.18, startAt + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start(startAt);
+        osc.stop(stopAt);
+      });
+
+      setTimeout(() => {
+        audioContext.close().catch(() => {});
+      }, 900);
+    }
+
+    window.addEventListener("load", () => {
+      const secretaryAlert = document.getElementById("secretaryTomorrowAlert");
+      if (!secretaryAlert) return;
+
+      const tomorrowCount = Number(secretaryAlert.dataset.tomorrowCount || 0);
+      if (tomorrowCount <= 0) return;
+
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const storageKey = `clinic_secretary_tomorrow_alert_${todayKey}`;
+      if (localStorage.getItem(storageKey) === "shown") return;
+
+      try {
+        playSecretaryAlertSound();
+      } catch (error) {
+        // Some browsers may block autoplayed audio without interaction.
+      }
+
+      localStorage.setItem(storageKey, "shown");
+    });
   </script>
 
 </body>
