@@ -1,14 +1,20 @@
 // Load the shared language toggle on every page that includes theme.js.
 (function () {
-    if (document.querySelector('script[data-clinic-lang]')) return;
+    if (window.__clinicLanguageLoaded) return;
+    if (document.querySelector('script[data-clinic-lang], script[src*="assets/lang.js"], script[src$="/lang.js"]')) return;
 
     var s = document.createElement('script');
     s.dataset.clinicLang = 'true';
     s.defer = true;
-    var base = (document.currentScript && document.currentScript.src)
-        ? document.currentScript.src.replace(/theme\.js(\?.*)?$/, '')
+    var currentSrc = (document.currentScript && document.currentScript.src)
+        ? document.currentScript.src
+        : '';
+    var base = currentSrc
+        ? currentSrc.replace(/theme\.js(\?.*)?$/, '')
         : 'assets/';
-    s.src = base + 'lang.js?v=20260615-11';
+    var versionMatch = currentSrc.match(/[?&]v=([^&#]+)/);
+    var versionQuery = versionMatch ? '?v=' + encodeURIComponent(versionMatch[1]) : '';
+    s.src = base + 'lang.js' + versionQuery;
     document.head.appendChild(s);
 })();
 
