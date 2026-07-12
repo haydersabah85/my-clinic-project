@@ -13,13 +13,25 @@ if (isset($_POST['injection_btn'])) {
     $date = $_POST['date'];
     $injection_uuid = bin2hex(random_bytes(16));
     $getPatient = mysqli_query($con, "
-    SELECT uuid
+    SELECT uuid, notes
     FROM add_patient
     WHERE id = '$patient_id'
 ");
 
     $patientData = mysqli_fetch_assoc($getPatient);
     $patient_uuid = $patientData['uuid'];
+    $patientNotes = (string) ($patientData['notes'] ?? '');
+
+    $cleanedNotes = clinic_remove_no_show_note($patientNotes, 'الحقن', $appointment_date);
+    if ($cleanedNotes !== trim($patientNotes)) {
+        $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
+        $stmt = mysqli_prepare($con, "UPDATE add_patient SET notes = ?, updated_at = NOW() $syncPart WHERE id = ?");
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, 'si', $cleanedNotes, $patient_id);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        }
+    }
 
     $syncFields = $IS_LOCAL ? ", sync_status" : "";
     $syncValues = $IS_LOCAL ? ", 0" : "";

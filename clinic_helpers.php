@@ -1027,6 +1027,41 @@ function clinic_ensure_patient_images_sync_support(mysqli $con): void
     }
 }
 
+function clinic_remove_no_show_note(string $notes, string $treatmentLabel, string $appointmentDate): string
+{
+    $notes = trim($notes);
+    if ($notes === '') {
+        return $notes;
+    }
+
+    $label = trim($treatmentLabel);
+    if ($label === '') {
+        return $notes;
+    }
+
+    $escapedLabel = preg_quote($label, '/');
+    $datePattern = preg_match('/^\d{4}-\d{2}-\d{2}$/', $appointmentDate) ? preg_quote($appointmentDate, '/') : '\\d{4}-\\d{2}-\\d{2}';
+    $pattern = '/^\[لم يحضر موعد ' . $escapedLabel . '(?: ' . $datePattern . ')?\]/u';
+
+    $lines = preg_split('/\R/u', $notes) ?: [];
+    $keptLines = [];
+
+    foreach ($lines as $line) {
+        $line = trim((string) $line);
+        if ($line === '') {
+            continue;
+        }
+
+        if (preg_match($pattern, $line) === 1) {
+            continue;
+        }
+
+        $keptLines[] = $line;
+    }
+
+    return implode(PHP_EOL, $keptLines);
+}
+
 function clinic_current_user(): string
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {

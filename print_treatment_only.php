@@ -166,7 +166,7 @@ while ($m = mysqli_fetch_assoc($q)) {
     <button onclick="window.print()" class="print-btn">طباعة</button>
 
     <div class="page">
-        <img class="print-logo" src="assets/logo.png" alt="شعار العيادة">
+        <!-- <img class="print-logo" src="assets/logo.png" alt="شعار العيادة"> -->
         <div class="rx-area">
             <div class="diagnosis"><?php echo h($p['diagnosis']); ?></div>
 

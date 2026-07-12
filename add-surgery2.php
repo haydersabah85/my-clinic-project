@@ -32,13 +32,25 @@ if (isset($_POST['surgery_btn'])) {
     $syncValues = $IS_LOCAL ? ", 0" : "";
 
     $getPatient = mysqli_query($con, "
-    SELECT uuid
+    SELECT uuid, notes
     FROM add_patient
     WHERE id = '$patient_id'
 ");
 
     $patientData = mysqli_fetch_assoc($getPatient);
     $patient_uuid = $patientData['uuid'];
+    $patientNotes = (string) ($patientData['notes'] ?? '');
+
+    $cleanedNotes = clinic_remove_no_show_note($patientNotes, 'العملية', $appointment_date);
+    if ($cleanedNotes !== trim($patientNotes)) {
+        $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
+        $stmt = mysqli_prepare($con, "UPDATE add_patient SET notes = ?, updated_at = NOW() $syncPart WHERE id = ?");
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, 'si', $cleanedNotes, $patient_id);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        }
+    }
 
     $insert_query = "INSERT INTO surgery (patient_id, patient_uuid, surgery_uuid, eye, surgery_type, iol_type, iol_power, notes, date, updated_at $syncFields)
      VALUES ('$patient_id', '$patient_uuid', '$surgery_uuid', '$eye', '$surgery_type', '$iol_type', $iol_power_sql, '$notes', '$date', NOW() $syncValues)";
