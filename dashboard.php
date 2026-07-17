@@ -438,6 +438,7 @@ $alertsSummary = [
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
   <link rel="stylesheet" href="assets/branding/branding.css">
+  <link rel="stylesheet" href="assets/clinic-ui.css">
 
   <!-- نستخدم نفس CSS تبعك -->
 
@@ -806,12 +807,31 @@ $alertsSummary = [
     background: #f4f4f4;
     margin-bottom: 8px;
     border-radius: 10px;
+    border: 1px solid var(--border-color);
+    color: var(--text);
   }
 
   .result-item span {
     cursor: pointer;
     font-size: 18px;
     transition: 0.3s;
+  }
+
+  .result-patient-name {
+    color: #0f172a;
+    font-weight: 800;
+  }
+
+  .result-patient-name.status-done {
+    color: #166534;
+  }
+
+  .result-patient-name.status-pending {
+    color: #9a3412;
+  }
+
+  .result-patient-name.status-discharged {
+    color: #b91c1c;
   }
 
   .result-item span:hover {
@@ -1660,6 +1680,33 @@ $alertsSummary = [
     background: linear-gradient(145deg, var(--card), #020617);
   }
 
+  body.dark .result-item {
+    color: #e2e8f0;
+    background: #111c2f;
+    border-color: rgba(148, 163, 184, .28);
+  }
+
+  body.dark .result-patient-name {
+    color: #f8fafc;
+  }
+
+  body.dark .result-patient-name.status-done {
+    color: #86efac;
+  }
+
+  body.dark .result-patient-name.status-pending {
+    color: #fdba74;
+  }
+
+  body.dark .result-patient-name.status-discharged {
+    color: #fca5a5;
+  }
+
+  body.dark .result-patient-meta,
+  body.dark .result-patient-notes {
+    color: #cbd5e1 !important;
+  }
+
   .danger-card:hover {
     background: #dc2626;
     color: #fff;
@@ -1798,8 +1845,8 @@ $alertsSummary = [
 
 
 
-<body>
-  <header>
+<body class="clinic-polished">
+  <header class="clinic-page-header dashboard-page-header">
 
     <div>
       <button class="toggle-sidebar" onclick="toggleSidebar()">

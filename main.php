@@ -70,6 +70,7 @@ function patient_status_class(?string $status): string
     <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
     <link rel="stylesheet" href="assets/branding/branding.css">
     <link rel="stylesheet" href="assets/dark-mode.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
     <script src="assets/theme.js" defer></script>
 </head>
 
@@ -685,7 +686,7 @@ function patient_status_class(?string $status): string
 
 <?php $flash = clinic_take_flash(); ?>
 
-<body class="ui-unified">
+<body class="ui-unified clinic-polished">
     <div class="app-shell sidebar-collapsed" id="appShell">
         <aside class="sidebar hidden" id="sidebar">
             <div class="brand">

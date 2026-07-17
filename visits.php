@@ -106,6 +106,7 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
     <link rel="icon" type="image/svg+xml" href="assets/branding/favicon.svg">
     <link rel="stylesheet" href="assets/branding/branding.css">
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="assets/theme.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -185,6 +186,48 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             gap: 10px;
         }
 
+        .visits-page-header {
+            position: relative;
+            flex-direction: row-reverse;
+            overflow: hidden;
+            padding: 20px 22px;
+            border-color: rgba(39, 121, 104, 0.24);
+            background:
+                radial-gradient(circle at 8% 15%, rgba(184, 138, 68, 0.18), transparent 34%),
+                linear-gradient(135deg, var(--panel), rgba(39, 121, 104, 0.1));
+            box-shadow: var(--shadow-strong);
+        }
+
+        .visits-page-header::before {
+            content: "";
+            position: absolute;
+            inset-block: 0;
+            inset-inline-start: 0;
+            width: 5px;
+            background: linear-gradient(180deg, var(--accent-2), var(--accent));
+        }
+
+        .visits-page-header > div:first-child {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .visits-page-header .clinic-page-title {
+            color: var(--head);
+            text-align: right;
+        }
+
+        .visits-page-header .clinic-page-subtitle {
+            color: var(--muted);
+            text-align: right;
+        }
+
+        .visits-page-header .clinic-actions {
+            position: relative;
+            z-index: 1;
+            flex: 0 0 auto;
+        }
+
         .toggle-sidebar,
         .theme-toggle {
             border: 1px solid rgba(35, 68, 59, 0.2);
@@ -198,6 +241,22 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             cursor: pointer;
             box-shadow: var(--shadow);
             transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+        }
+
+        body[data-theme="dark"] .visits-page-header,
+        body.dark .visits-page-header {
+            border-color: rgba(85, 179, 154, 0.3);
+            background:
+                radial-gradient(circle at 8% 15%, rgba(209, 161, 94, 0.14), transparent 34%),
+                linear-gradient(135deg, var(--panel), rgba(85, 179, 154, 0.09));
+        }
+
+        body[data-theme="dark"] .toggle-sidebar,
+        body[data-theme="dark"] .theme-toggle,
+        body.dark .toggle-sidebar,
+        body.dark .theme-toggle {
+            color: var(--ink);
+            border-color: var(--panel-border);
         }
 
         .toggle-sidebar:hover,
@@ -836,6 +895,16 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             .stats {
                 grid-template-columns: repeat(2, minmax(130px, 1fr));
             }
+
+            .visits-page-header {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 16px;
+            }
+
+            .visits-page-header .clinic-actions {
+                justify-content: flex-start;
+            }
         }
 
         @media (prefers-reduced-motion: no-preference) {
@@ -862,13 +931,17 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
     <link rel="stylesheet" href="assets/ui-unified.css">
 </head>
 
-<body class="ui-unified">
+<body class="ui-unified clinic-polished">
 
-    <h1>🏥 زيارات اليوم <?php echo date('d/m/Y'); ?></h1>
-
-    <header>
-        <button class="toggle-sidebar" onclick="toggleSidebar()">➡️ إظهار القائمة</button>
-        <button class="theme-toggle" id="themeToggle" type="button">🌙</button>
+    <header class="clinic-page-header visits-page-header">
+        <div>
+            <h1 class="clinic-page-title">🏥 زيارات اليوم</h1>
+            <p class="clinic-page-subtitle"><?php echo date('d/m/Y'); ?> — إدارة وصول المرضى وحالة الزيارة من مكان واحد</p>
+        </div>
+        <div class="clinic-actions">
+            <button class="toggle-sidebar" onclick="toggleSidebar()">☰ إظهار القائمة</button>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="تبديل الوضع">🌙</button>
+        </div>
     </header>
 
     <div class="container" id="layoutContainer">

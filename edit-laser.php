@@ -50,6 +50,7 @@ if (!$laser_row) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تحديث معلومات الليزر</title>
     <link rel="stylesheet" href="assets/dark-mode.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
     <script src="assets/theme.js" defer></script>
 </head>
 
@@ -148,7 +149,7 @@ if (!$laser_row) {
 </style>
 
 
-<body>
+<body class="clinic-polished">
 
     <main>
         <div class="patient_info">

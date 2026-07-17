@@ -48,13 +48,14 @@ $pendingCount = max(0, $totalCount - (int)$summary['confirmed_count']);
 ?>
 
 <!DOCTYPE html>
-<html lang="ar" dir="ltr">
+<html lang="ar" dir="rtl">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operation Board</title>
+    <title>جدول الإجراءات اليومية</title>
     <link rel="stylesheet" href="assets/dark-mode.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
     <script src="assets/theme.js" defer></script>
 </head>
 
@@ -418,41 +419,41 @@ $pendingCount = max(0, $totalCount - (int)$summary['confirmed_count']);
     }
 </style>
 
-<body>
+<body class="clinic-polished">
     <div class="page">
         <header class="board-header">
             <div class="board-title">
-                <h1>Daily Operations Board</h1>
-                <p>Manage surgery, laser, and injection appointments from one screen.</p>
+                <h1>جدول الإجراءات اليومية</h1>
+                <p>إدارة مواعيد العمليات والليزر والحقن من شاشة واحدة.</p>
             </div>
             <nav class="top-actions">
-                <a class="nav-btn" href="dashboard.php">Dashboard</a>
-                <a class="nav-btn" href="confirmed-list.php">Confirmed list</a>
-                <a class="nav-btn" href="treatment-types.php">Treatment types</a>
+                <a class="nav-btn" href="dashboard.php">لوحة التحكم</a>
+                <a class="nav-btn" href="confirmed-list.php">القائمة المؤكدة</a>
+                <a class="nav-btn" href="treatment-types.php">أنواع الإجراءات</a>
                 <a class="nav-btn" href="main.php">إجراء طارئ مباشر (بدون موعد)</a>
-                <button class="tool-btn" type="button" onclick="window.print()">Print</button>
+                <button class="tool-btn" type="button" onclick="window.print()">طباعة</button>
             </nav>
         </header>
 
         <section class="summary-grid" id="summaryGrid">
-            <div class="summary-card"><span>Selected date</span><strong id="selectedDateLabel"><?= h($selectedDate) ?></strong></div>
-            <div class="summary-card"><span>Surgeries</span><strong id="surgeryCount"><?= (int)$summary['surgery_count'] ?></strong></div>
-            <div class="summary-card"><span>Laser</span><strong id="laserCount"><?= (int)$summary['laser_count'] ?></strong></div>
-            <div class="summary-card"><span>Injections</span><strong id="injectionCount"><?= (int)$summary['injection_count'] ?></strong></div>
-            <div class="summary-card"><span>Pending confirm</span><strong id="pendingCount"><?= $pendingCount ?></strong></div>
+            <div class="summary-card"><span>التاريخ المحدد</span><strong id="selectedDateLabel"><?= h($selectedDate) ?></strong></div>
+            <div class="summary-card"><span>العمليات</span><strong id="surgeryCount"><?= (int)$summary['surgery_count'] ?></strong></div>
+            <div class="summary-card"><span>الليزر</span><strong id="laserCount"><?= (int)$summary['laser_count'] ?></strong></div>
+            <div class="summary-card"><span>الحقن</span><strong id="injectionCount"><?= (int)$summary['injection_count'] ?></strong></div>
+            <div class="summary-card"><span>بانتظار التأكيد</span><strong id="pendingCount"><?= $pendingCount ?></strong></div>
         </section>
 
         <section class="control-panel">
             <div class="date-strip" aria-label="Appointment dates">
                 <?php if (empty($dates)): ?>
                     <button class="date-btn active" type="button" data-date="<?= h($selectedDate) ?>">
-                        <span>No pending dates</span>
+                        <span>لا توجد مواعيد معلقة</span>
                         <strong><?= h($selectedDate) ?></strong>
                     </button>
                 <?php else: ?>
                     <?php foreach ($dates as $dateRow): ?>
                         <button class="date-btn <?= $dateRow['date'] === $selectedDate ? 'active' : '' ?>" type="button" data-date="<?= h($dateRow['date']) ?>">
-                            <span><?= (int)$dateRow['total'] ?> appointments</span>
+                            <span><?= (int)$dateRow['total'] ?> موعد</span>
                             <strong><?= h($dateRow['date']) ?></strong>
                         </button>
                     <?php endforeach; ?>
@@ -460,18 +461,18 @@ $pendingCount = max(0, $totalCount - (int)$summary['confirmed_count']);
             </div>
 
             <div class="tools-row">
-                <input class="search-box" id="daySearch" type="search" placeholder="Search name, phone, serial, eye, or procedure">
-                <div class="status-filters" aria-label="Attendance filters">
-                    <button class="status-filter active" type="button" data-status="all">All</button>
-                    <button class="status-filter" type="button" data-status="waiting">Need confirm</button>
-                    <button class="status-filter" type="button" data-status="confirmed">Confirmed</button>
+                <input class="search-box" id="daySearch" type="search" placeholder="ابحث بالاسم أو الهاتف أو التسلسل أو العين أو الإجراء">
+                <div class="status-filters" aria-label="تصفية حالة الحضور">
+                    <button class="status-filter active" type="button" data-status="all">الكل</button>
+                    <button class="status-filter" type="button" data-status="waiting">بحاجة إلى تأكيد</button>
+                    <button class="status-filter" type="button" data-status="confirmed">مؤكد</button>
                 </div>
-                <button class="tool-btn primary" type="button" id="reloadBtn">Reload selected day</button>
+                <button class="tool-btn primary" type="button" id="reloadBtn">تحديث اليوم المحدد</button>
             </div>
         </section>
 
         <main id="operations_result">
-            <div class="loading-state">Loading selected day...</div>
+            <div class="loading-state">جارٍ تحميل اليوم المحدد...</div>
         </main>
     </div>
 

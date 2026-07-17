@@ -68,6 +68,7 @@ if (empty($types)) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>حجز موعد عملية</title>
   <link rel="stylesheet" href="assets/dark-mode.css">
+  <link rel="stylesheet" href="assets/clinic-ui.css">
   <script src="assets/theme.js" defer></script>
 </head>
 
@@ -253,7 +254,7 @@ if (empty($types)) {
 </style>
 
 
-<body>
+<body class="clinic-polished">
 
   <h1>عيادة الدكتور حيدر صباح الربيعي</h1>
   <h2>حجز موعد عملية</h2>

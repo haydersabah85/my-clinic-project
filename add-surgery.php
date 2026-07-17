@@ -68,6 +68,7 @@ if (empty($iolTypes)) {
     <title>إضافة عملية</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/dark-mode.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
     <script src="assets/theme.js" defer></script>
 </head>
 
@@ -368,7 +369,7 @@ if (empty($iolTypes)) {
     }
 </style>
 
-<body>
+<body class="clinic-polished">
     <main class="page">
         <header class="topbar">
             <div class="title-block">

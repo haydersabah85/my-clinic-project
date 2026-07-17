@@ -45,6 +45,7 @@ if (empty($surgeryTypes)) {
     <title>إضافة حالة محولة</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/dark-mode.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
     <script src="assets/theme.js" defer></script>
     <style>
         :root {
@@ -242,7 +243,7 @@ if (empty($surgeryTypes)) {
     </style>
 </head>
 
-<body>
+<body class="clinic-polished">
     <main class="page">
         <header class="topbar">
             <div class="title">

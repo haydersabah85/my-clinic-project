@@ -32,6 +32,7 @@ if (isset($_GET['id_edit'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>تعديل فحص النظر</title>
     <link rel="stylesheet" href="assets/dark-mode.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
     <script src="assets/theme.js" defer></script>
 </head>
 
@@ -359,7 +360,7 @@ h3 {
 
 </style>
 
-<body>
+<body class="clinic-polished">
   <h1>تعديل فحص النظر</h1>
 
   <div class="patient-info">

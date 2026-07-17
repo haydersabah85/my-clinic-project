@@ -74,10 +74,10 @@ function fetch_operation_rows(mysqli $con, string $date, string $kind): array
 function render_operation_column(string $title, string $kind, array $rows, string $date): void
 {
     echo "<section class='op-column $kind'>";
-    echo "<div class='op-column-head'><div><span>" . count($rows) . " cases</span><h2>" . h($title) . "</h2></div></div>";
+    echo "<div class='op-column-head'><div><span>" . count($rows) . " حالة</span><h2>" . h($title) . "</h2></div></div>";
 
     if (empty($rows)) {
-        echo "<p class='empty-column'>No pending " . h(strtolower($title)) . " appointments for this date.</p>";
+        echo "<p class='empty-column'>لا توجد مواعيد معلقة لهذا الإجراء في التاريخ المحدد.</p>";
         echo "</section>";
         return;
     }
@@ -86,7 +86,7 @@ function render_operation_column(string $title, string $kind, array $rows, strin
     foreach ($rows as $row) {
         $groupName = trim((string)($row['operation_type'] ?? ''));
         if ($groupName === '') {
-            $groupName = 'Unspecified';
+            $groupName = 'غير محدد';
         }
         $groups[$groupName][] = $row;
     }
@@ -122,10 +122,10 @@ function render_operation_column(string $title, string $kind, array $rows, strin
             $readyTotal = 8;
             $readinessClass = $readyCount === $readyTotal ? 'confirmed' : 'waiting';
             $readinessText = $readyCount === $readyTotal
-                ? 'Readiness complete'
-                : "Readiness $readyCount/$readyTotal";
+                ? 'الجاهزية مكتملة'
+                : "الجاهزية $readyCount/$readyTotal";
             $statusClass = $confirmed ? 'confirmed' : 'waiting';
-            $statusText = $confirmed ? 'Confirmed' : 'Needs confirmation';
+            $statusText = $confirmed ? 'مؤكد' : 'بحاجة إلى تأكيد';
             $searchText = strtolower(implode(' ', [
                 $row['serial_no'],
                 $row['full_name'],
@@ -151,22 +151,22 @@ function render_operation_column(string $title, string $kind, array $rows, strin
             echo "<h3>" . h($row['full_name']) . "</h3>";
             echo "<div class='op-type'>" . h($row['operation_type'] ?: '-') . "</div>";
             echo "<div class='op-meta'>";
-            echo "<div><span>Eye</span><strong><span class='eye-badge $eyeClass'>" . h($eye ?: '-') . "</span></strong></div>";
-            echo "<div><span>Phone</span><strong>" . h($row['phone'] ?: '-') . "</strong></div>";
-            echo "<div><span>Alt phone</span><strong>" . h($row['phone_alt'] ?: '-') . "</strong></div>";
+            echo "<div><span>العين</span><strong><span class='eye-badge $eyeClass'>" . h($eye ?: '-') . "</span></strong></div>";
+            echo "<div><span>الهاتف</span><strong>" . h($row['phone'] ?: '-') . "</strong></div>";
+            echo "<div><span>الهاتف البديل</span><strong>" . h($row['phone_alt'] ?: '-') . "</strong></div>";
             echo "</div>";
-            echo "<p class='op-note'>" . nl2br(h($row['notes'] ?: 'No notes.')) . "</p>";
+            echo "<p class='op-note'>" . nl2br(h($row['notes'] ?: 'لا توجد ملاحظات.')) . "</p>";
             echo "<div class='op-actions'>";
             if (!$confirmed) {
-                echo "<a class='action confirm' href='confirm-attendance.php?id=" . h($row['id']) . "&date=" . h($date) . "'>Confirm</a>";
+                echo "<a class='action confirm' href='confirm-attendance.php?id=" . h($row['id']) . "&date=" . h($date) . "'>تأكيد</a>";
             }
             echo "<a class='action done' href='" . h($row['_decision'])
                 . "?id=" . h($row['patient_id'])
                 . "&appointment_id=" . h($row['id'])
                 . "&appointment_date=" . h($date)
-                . "'>Add result</a>";
-            echo "<a class='action edit' href='" . h($row['_edit']) . "?id=" . h($row['id']) . "'>Edit</a>";
-            echo "<a class='action delete' onclick=\"return confirm('Delete this appointment?')\" href='" . h($row['_delete']) . "?id=" . h($row['id']) . "'>Delete</a>";
+                . "'>إضافة النتيجة</a>";
+            echo "<a class='action edit' href='" . h($row['_edit']) . "?id=" . h($row['id']) . "'>تعديل</a>";
+            echo "<a class='action delete' onclick=\"return confirm('هل تريد حذف هذا الموعد؟')\" href='" . h($row['_delete']) . "?id=" . h($row['id']) . "'>حذف</a>";
             echo "</div>";
             echo "</article>";
             $counter++;
@@ -726,12 +726,12 @@ $summary = [
             <span>Selected operation date</span>
             <h2><?= h($date) ?></h2>
         </div>
-        <span><?= $totalCount ?> pending appointments, <?= $confirmedCount ?> confirmed</span>
+        <span><?= $totalCount ?> موعد معلق، <?= $confirmedCount ?> مؤكد</span>
     </div>
 
     <div class="columns">
-        <?php render_operation_column('Surgery', 'surgery', $surgeryRows, $date); ?>
-        <?php render_operation_column('Laser', 'laser', $laserRows, $date); ?>
-        <?php render_operation_column('Injection', 'injection', $injectionRows, $date); ?>
+        <?php render_operation_column('العمليات', 'surgery', $surgeryRows, $date); ?>
+        <?php render_operation_column('الليزر', 'laser', $laserRows, $date); ?>
+        <?php render_operation_column('الحقن', 'injection', $injectionRows, $date); ?>
     </div>
 </section>

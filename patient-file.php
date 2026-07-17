@@ -209,22 +209,74 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             max-width: 1800px;
             margin: 0 auto 24px;
             display: flex;
-            align-items: stretch;
+            align-items: center;
             gap: 14px;
+            padding: 10px 12px;
+            padding-inline-start: 124px;
+            border: 1px solid rgba(255, 255, 255, 0.34);
+            border-radius: 22px;
+            background:
+                radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.2), transparent 28%),
+                linear-gradient(135deg, #1d4ed8, #2563eb 52%, #0891b2);
+            box-shadow: 0 16px 36px rgba(37, 99, 235, 0.2);
+        }
+
+        .header-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+            padding: 7px 8px;
+            border: 0;
+            background: transparent;
+        }
+
+        .header-file-icon {
+            display: grid;
+            place-items: center;
+            width: 52px;
+            height: 52px;
+            flex: 0 0 52px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.34);
+            background: rgba(255, 255, 255, 0.17);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            font-size: 25px;
+        }
+
+        .header-title-wrap {
+            min-width: 0;
+        }
+
+        .header-eyebrow {
+            display: block;
+            color: #dbeafe;
+            font-size: 12px;
+            font-weight: 800;
         }
 
         header h1 {
-            flex: 1;
-            margin: 0;
-            padding: 24px 32px;
-            border-radius: 28px;
-            background: linear-gradient(135deg, #1d4ed8, #2563eb, #0ea5e9);
+            margin: 1px 0 2px;
             color: #ffffff;
-            text-align: center;
-            font-size: 34px;
+            font-size: clamp(21px, 2.3vw, 29px);
+            font-weight: 900;
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }
+
+        .header-patient-id {
+            display: block;
+            color: #e0f2fe;
+            font-size: 12px;
             font-weight: 800;
-            letter-spacing: -0.5px;
-            box-shadow: 0 20px 45px rgba(37, 99, 235, 0.22);
+        }
+
+        .patient-page-header .header-theme-toggle {
+            border: 1px solid rgba(255, 255, 255, 0.32);
+            background: rgba(255, 255, 255, 0.16);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 10px 22px rgba(15, 23, 42, 0.16);
+            backdrop-filter: blur(8px);
         }
 
         /* ==================================================
@@ -271,6 +323,121 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             font-weight: 800;
         }
 
+        .patient-info-value {
+            color: var(--primary-dark) !important;
+            font-weight: 900 !important;
+        }
+
+        .patient-info-actions,
+        .patient-clinical-actions {
+            display: flex;
+            align-items: stretch;
+            gap: 9px;
+            flex-wrap: wrap;
+            flex: 1 1 calc(50% - 9px);
+            align-content: flex-start;
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(248, 250, 252, 0.78);
+        }
+
+        .patient-action-title {
+            flex: 1 1 100%;
+            margin: 0 0 2px;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .patient-info-actions a,
+        .patient-clinical-actions a,
+        .copy-phone-btn {
+            flex: 1 1 145px;
+            min-height: 42px;
+            border-radius: 11px;
+            padding: 9px 13px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .patient-info-actions a {
+            background: linear-gradient(135deg, #475569, #334155);
+        }
+
+        .patient-clinical-actions a {
+            box-shadow: none;
+        }
+
+        .patient-clinical-actions .schedule-surgery {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            width: fit-content;
+        }
+
+        .patient-clinical-actions .schedule-laser {
+            background: linear-gradient(135deg, #0891b2, #0e7490);
+            width: fit-content;
+        }
+
+        .patient-clinical-actions .schedule-injection {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            width: fit-content;
+        }
+
+        .patient-clinical-actions .schedule-followup {
+            background: linear-gradient(135deg, #cd812b, #ec880d);
+            width: fit-content;
+        }
+
+        .copy-phone-btn {
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text);
+        }
+
+        .critical-patient-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .record-jumpbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: -8px 0 22px;
+            padding: 10px;
+            overflow-x: auto;
+            background: rgba(255, 255, 255, .92);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            scrollbar-width: thin;
+        }
+
+        .record-jumpbar a {
+            flex: 0 0 auto;
+            min-height: 36px;
+            padding: 7px 11px;
+            border-radius: 9px;
+            background: #eef2ff;
+            color: #3730a3;
+            box-shadow: none;
+            font-size: 12px;
+        }
+
+        .record-section {
+            scroll-margin-top: 150px;
+        }
+
         @media (max-width: 768px) {
             .patient_info {
                 flex-direction: column;
@@ -279,6 +446,21 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
             .patient_info p {
                 width: 100%;
+            }
+
+            .patient-info-actions,
+            .patient-clinical-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+                flex-basis: 100%;
+            }
+
+            .patient-action-title {
+                grid-column: 1 / -1;
+            }
+
+            .record-jumpbar {
+                margin-top: 0;
             }
 
         }
@@ -326,11 +508,12 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
 
         .nav {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            position: relative;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.94));
+            backdrop-filter: blur(16px);
             border: 1px solid rgba(226, 232, 240, 0.8);
             border-radius: 24px;
-            padding: 18px 24px;
+            padding: 14px 16px;
             margin-bottom: 28px;
             box-shadow: var(--shadow-md);
 
@@ -338,7 +521,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
-            gap: 18px;
+            gap: 10px;
         }
 
         /* ==================================================
@@ -362,12 +545,58 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             transition: all 0.25s ease;
         }
 
+        .nav .icon-btn {
+            width: 52px;
+            min-width: 52px;
+            height: 52px;
+            padding: 0;
+            gap: 0;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 50%;
+            font-size: 22px;
+            isolation: isolate;
+        }
+
+        .nav .icon-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 55%);
+            pointer-events: none;
+        }
+
+        .nav-icon {
+            display: grid;
+            place-items: center;
+            min-height: 0;
+            line-height: 1;
+        }
+
+        .nav .nav-action-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
         .icon-btn:hover {
             transform: translateY(-3px) scale(1.05);
         }
 
         .edit-icon {
             background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: #fff;
+        }
+
+        .done-icon {
+            background: linear-gradient(135deg, #16a34a, #047857);
             color: #fff;
         }
 
@@ -404,6 +633,16 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         .recipe-btn {
             background: linear-gradient(135deg, #10b981, #059669);
             color: #fff;
+        }
+
+        body[data-theme="dark"] .nav {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.97), rgba(17, 34, 50, 0.94));
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+
+        body[data-theme="dark"] .nav .icon-btn {
+            border-color: rgba(255, 255, 255, 0.16);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
         }
 
         /* Tooltips */
@@ -454,20 +693,34 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             }
 
             header h1 {
-                font-size: 24px;
-                padding: 18px;
-                border-radius: 20px;
+                font-size: 20px;
             }
 
             header {
                 gap: 10px;
+                margin-top: 52px;
+                padding: 8px;
+                padding-inline-start: 8px;
+                border-radius: 18px;
             }
 
             .header-theme-toggle {
-                width: 56px;
-                min-width: 56px;
-                border-radius: 18px;
+                width: 52px;
+                min-width: 52px;
+                height: 52px;
+                border-radius: 16px;
                 font-size: 20px;
+            }
+
+            .header-main {
+                padding: 7px;
+            }
+
+            .header-file-icon {
+                width: 46px;
+                height: 46px;
+                flex-basis: 46px;
+                border-radius: 14px;
             }
 
             .patient_info {
@@ -486,6 +739,14 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                 height: 48px;
                 font-size: 20px;
                 border-radius: 14px;
+            }
+
+            .nav .icon-btn {
+                width: 48px;
+                min-width: 48px;
+                height: 48px;
+                padding: 0;
+                font-size: 20px;
             }
 
             .patient_info>a {
@@ -742,9 +1003,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         }
 
         .first-visit-summary {
-            position: sticky;
-            top: 12px;
-            z-index: 5;
+            position: relative;
             margin: 0 auto;
             width: min(920px, 100%);
             padding: 10px 12px;
@@ -1166,6 +1425,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             white-space: pre-wrap;
             overflow-wrap: anywhere;
         }
+        
 
         .visit-note-item {
             margin: 0;
@@ -1477,71 +1737,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             transform: translateY(-2px);
         }
 
-        /* ==================================================
-   QUICK LINKS
-================================================== */
-
-        /* ==================================================
-   QUICK LINKS - SINGLE ROW
-================================================== */
-        .links {
-            margin-top: 28px;
-            display: flex;
-            flex-wrap: nowrap;
-            /* صف واحد */
-            justify-content: center;
-            gap: 14px;
-            overflow-x: auto;
-            /* يسمح بالتمرير الأفقي إذا لم تكفِ المساحة */
-            padding-bottom: 6px;
-            scrollbar-width: thin;
-        }
-
-        /* تحسين شريط التمرير في المتصفحات المعتمدة على WebKit */
-        .links::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .links::-webkit-scrollbar-thumb {
-            background: rgba(148, 163, 184, 0.5);
-            border-radius: 999px;
-        }
-
-        .links a {
-            flex: 0 0 auto;
-            /* يمنع تمدد الأزرار */
-            min-width: 170px;
-            min-height: 58px;
-            padding: 14px 18px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #ea580c, #c2410c);
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 800;
-            white-space: nowrap;
-            box-shadow: 0 10px 20px rgba(234, 88, 12, 0.18);
-            transition: all 0.2s ease;
-        }
-
-        .links a:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(234, 88, 12, 0.24);
-        }
-
-        /* على الشاشات الصغيرة نسمح بالالتفاف لتبقى القراءة مريحة */
-        @media (max-width: 768px) {
-            .links {
-                flex-wrap: wrap;
-                overflow-x: visible;
-                justify-content: stretch;
-            }
-
-            .links a {
-                flex: 1 1 calc(50% - 14px);
-                min-width: 0;
-            }
-        }
-
+       
         /* ==========================================
    MODAL BACKDROP
 ========================================== */
@@ -1627,9 +1823,6 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                 font-size: 12px;
             }
 
-            .links {
-                grid-template-columns: 1fr;
-            }
         }
 
         /* ==================================================
@@ -1637,53 +1830,158 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 ================================================== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 18px;
-            margin-bottom: 28px;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 22px;
         }
 
         .stat-card {
+            --stat-accent: #2563eb;
+            --stat-soft: #dbeafe;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 11px;
+            min-width: 0;
             background: rgba(255, 255, 255, 0.96);
             border: 1px solid rgba(226, 232, 240, 0.8);
-            border-radius: 22px;
-            padding: 20px 16px;
-            text-align: center;
-            box-shadow: var(--shadow-md);
+            border-inline-start: 4px solid var(--stat-accent);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: right;
+            text-decoration: none;
+            box-shadow: var(--shadow-sm);
             transition: all 0.25s ease;
         }
 
         .stat-card:hover {
             transform: translateY(-3px);
+            border-color: var(--stat-accent);
+            box-shadow: var(--shadow-md);
         }
 
         .stat-icon {
-            display: block;
-            font-size: 28px;
-            margin-bottom: 8px;
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            border-radius: 13px;
+            background: var(--stat-soft);
+            font-size: 21px;
+        }
+
+        .stat-content {
+            min-width: 0;
         }
 
         .stat-value {
             display: block;
-            font-size: 30px;
-            font-weight: 800;
-            color: var(--primary-dark);
+            font-size: 23px;
+            font-weight: 900;
+            color: var(--stat-accent);
             line-height: 1.2;
         }
 
         .stat-label {
             display: block;
-            margin-top: 4px;
-            font-size: 14px;
-            font-weight: 700;
+            margin-top: 2px;
+            font-size: 12px;
+            font-weight: 800;
             color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* تثبيت نموذج الزيارة أثناء التمرير */
-        @media (min-width: 1201px) {
-            .patient_visits {
-                position: sticky;
-                top: 20px;
+        .stat-visits {
+            --stat-accent: #2563eb;
+            --stat-soft: #dbeafe;
+        }
+
+        .stat-va {
+            --stat-accent: #0891b2;
+            --stat-soft: #cffafe;
+        }
+
+        .stat-surgeries {
+            --stat-accent: #7c3aed;
+            --stat-soft: #ede9fe;
+        }
+
+        .stat-lasers {
+            --stat-accent: #ea580c;
+            --stat-soft: #ffedd5;
+        }
+
+        .stat-injections {
+            --stat-accent: #059669;
+            --stat-soft: #d1fae5;
+        }
+
+        .stat-retina {
+            --stat-accent: #db2777;
+            --stat-soft: #fce7f3;
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 9px;
+            }
+
+            .stat-card {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .stat-icon {
+                width: 38px;
+                height: 38px;
+                flex-basis: 38px;
+                font-size: 19px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+        }
+
+        .back-to-top {
+            position: fixed;
+            left: 18px;
+            bottom: 18px;
+            z-index: 900;
+            width: 46px;
+            height: 46px;
+            padding: 0;
+            border: 0;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #2563eb, #0891b2);
+            color: #fff;
+            font-size: 20px;
+            box-shadow: var(--shadow-md);
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: opacity .2s ease, visibility .2s ease, transform .2s ease;
+        }
+
+        .back-to-top.is-visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
 
         /* ==================================================
@@ -1788,16 +2086,24 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             box-shadow: var(--shadow-lg);
         }
 
-        body[data-theme="dark"] header h1 {
-            background: linear-gradient(135deg, #0f2d5c, #155e9f, #0f766e);
-            box-shadow: 0 22px 55px rgba(0, 0, 0, 0.36);
-            border: 1px solid rgba(147, 197, 253, 0.22);
+        body[data-theme="dark"] .patient-page-header {
+            background:
+                radial-gradient(circle at 12% 20%, rgba(45, 212, 191, 0.13), transparent 30%),
+                linear-gradient(135deg, #0f2d5c, #155e75 58%, #0f766e);
+            border-color: rgba(147, 197, 253, 0.22);
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32);
         }
 
-        body[data-theme="dark"] .header-theme-toggle {
-            background: linear-gradient(135deg, #075985, #0f766e);
+        body[data-theme="dark"] .header-main {
+            background: transparent;
+            box-shadow: none;
+            border: 0;
+        }
+
+        body[data-theme="dark"] .patient-page-header .header-theme-toggle {
+            background: rgba(2, 6, 23, 0.24);
             border: 1px solid rgba(147, 197, 253, 0.22);
-            box-shadow: 0 22px 55px rgba(0, 0, 0, 0.32);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 24px rgba(0, 0, 0, 0.2);
         }
 
         body[data-theme="dark"] .patient_info,
@@ -1947,6 +2253,27 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             color: var(--text);
         }
 
+        body[data-theme="dark"] .copy-phone-btn,
+        body[data-theme="dark"] .record-jumpbar {
+            background: rgba(15, 23, 42, .94);
+            color: var(--text);
+        }
+
+        body[data-theme="dark"] .patient-info-actions,
+        body[data-theme="dark"] .patient-clinical-actions {
+            background: rgba(15, 23, 42, .58);
+        }
+
+        body[data-theme="dark"] .record-jumpbar a {
+            background: rgba(99, 102, 241, .18);
+            color: #c7d2fe;
+        }
+
+        body[data-theme="dark"] .critical-patient-badge {
+            background: rgba(239, 68, 68, .18);
+            color: #fecaca;
+        }
+
         body[data-theme="dark"] .patient_info span:first-child {
             color: #a8bdd1;
         }
@@ -1959,26 +2286,16 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             color: #93c5fd;
         }
 
-        body[data-theme="dark"] .stat-card {
-            position: relative;
-            overflow: hidden;
-        }
-
-        body[data-theme="dark"] .stat-card::before {
-            content: "";
-            position: absolute;
-            inset: 0 0 auto 0;
-            height: 4px;
-            background: linear-gradient(90deg, #60a5fa, #2dd4bf);
-        }
-
         body[data-theme="dark"] .stat-card:hover {
             box-shadow: var(--shadow-lg);
         }
 
         body[data-theme="dark"] .stat-value {
-            color: #93c5fd;
-            text-shadow: 0 0 18px rgba(147, 197, 253, 0.22);
+            color: var(--stat-accent);
+        }
+
+        body[data-theme="dark"] .stat-icon {
+            background: rgba(255, 255, 255, 0.08);
         }
 
         body[data-theme="dark"] .stat-label,
@@ -2032,11 +2349,6 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
         body[data-theme="dark"] .prescription-list {
             color: #dce7f3;
-        }
-
-        body[data-theme="dark"] .links a {
-            background: linear-gradient(135deg, #0f766e, #0e7490);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
         }
 
         body[data-theme="dark"] .modal {
@@ -2318,35 +2630,57 @@ if (!function_exists('pf_extract_first_visit_summary')) {
     </aside>
     <div class="app-sidebar-backdrop" id="appSidebarBackdrop"></div>
 
-    <header>
-        <h1> ملف المريض: <?php echo htmlspecialchars($row['full_name']); ?></h1>
+    <header class="patient-page-header">
+        <div class="header-main">
+            <span class="header-file-icon" aria-hidden="true">📁</span>
+            <div class="header-title-wrap">
+                <span class="header-eyebrow">ملف المريض</span>
+                <h1><?php echo htmlspecialchars($row['full_name']); ?></h1>
+                <span class="header-patient-id">رقم الملف #<?php echo (int) $row['id']; ?></span>
+            </div>
+        </div>
         <button class="theme-toggle header-theme-toggle" id="themeToggle" type="button" title="تبديل المظهر">🌙</button>
     </header>
 
     <div class="page-container">
 
-        <div class="patient_info"></span>
+        <section class="patient_info" aria-label="بيانات المريض الأساسية">
 
             <p><span>ID:</span>
-                <span style="color:darkmagenta; font-weight: bold; "><?php echo htmlspecialchars($row['id']); ?></span>
+                <span class="patient-info-value"><?php echo htmlspecialchars($row['id']); ?></span>
             </p>
 
             <p><span>الاسم:</span>
-                <span style="color:darkmagenta; font-weight: bold; "><?php echo htmlspecialchars($row['full_name']); ?></span>
+                <span class="patient-info-value"><?php echo htmlspecialchars($row['full_name']); ?></span>
             </p>
 
             <p><span>العمر:</span>
-                <span style="color:darkmagenta; font-weight: bold; "><?php echo htmlspecialchars($row['age']); ?></span>
+                <span class="patient-info-value"><?php echo htmlspecialchars($row['age']); ?></span>
             </p>
 
             <p><span>رقم الموبايل:</span>
-                <span style="color:darkmagenta; font-weight: bold; "><?php echo htmlspecialchars($row['phone_no']); ?></span>
+                <span class="patient-info-value"><?php echo htmlspecialchars($row['phone_no']); ?></span>
             </p>
-            <a href="edit-patient.php?id_edit=<?php echo $row['id']; ?>">تعديل البيانات</a>
-            <a href="patient-data.php?id_open=<?php echo $row['id']; ?>"
-                style="background: linear-gradient(135deg, #e85a27, #bb4c18); 
-        color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none;">📁 بيانات المريض</a>
-        </div>
+            <?php if (!empty($row['is_critical'])): ?>
+                <span class="critical-patient-badge">🚨 مريض مهم / يحتاج انتباهاً</span>
+            <?php endif; ?>
+            <div class="patient-info-actions">
+                <h3 class="patient-action-title">إدارة ملف المريض</h3>
+                <a href="edit-patient.php?id_edit=<?php echo (int) $row['id']; ?>">✏️ تعديل البيانات</a>
+                <a href="patient-data.php?id_open=<?php echo (int) $row['id']; ?>">📁 البيانات الأساسية</a>
+                <?php if (!empty(trim((string) ($row['phone_no'] ?? '')))): ?>
+                    <button class="copy-phone-btn" type="button" data-copy-phone="<?= h($row['phone_no']) ?>">📋 نسخ رقم الهاتف</button>
+                <?php endif; ?>
+            </div>
+            <nav class="patient-clinical-actions" aria-label="حجز إجراء للمريض">
+                <h3 class="patient-action-title">حجز موعد</h3>
+                
+                <a class="schedule-surgery" href="surgery-appointment.php?id=<?= (int) $id ?>">حجز عملية 🩺</a>
+                <a class="schedule-laser" href="laser-appointment.php?id=<?= (int) $id ?>">حجز ليزر 🔦 </a>
+                <a class="schedule-injection" href="injection-appointment.php?id=<?= (int) $id ?>"> حجز حقن 💉</a>
+                <a class="schedule-followup" href="followup-appointment.php?id=<?= (int) $id ?>">حجز مراجعة 📅</a>
+            </nav>
+        </section>
 
         <div class="nav">
             <?php
@@ -2356,39 +2690,43 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
             <a href="marked_as_done.php?id=<?= $id ?>"
                 class="icon-btn done-icon"
-                data-title="تمت الزيارة">✅</a>
+                data-title="تمت المعاينة"
+                aria-label="تمت المعاينة">
+                <span class="nav-icon" aria-hidden="true">✅</span>
+                <span class="nav-action-label">تمت المعاينة</span>
+            </a>
 
             <a href="mark_critical.php?id=<?= $id ?>"
                 class="icon-btn warning-icon <?= $critical_class ?>"
                 data-title="تعليم كمريض حرج">
-                🚨
+                <span class="nav-icon" aria-hidden="true">🚨</span><span class="nav-action-label">مريض حرج</span>
             </a>
 
             <a href="#" class="icon-btn followup-btn"
                 data-title="إضافة متابعة"
                 onclick="openFollowup(event)">
-                📌
+                <span class="nav-icon" aria-hidden="true">📌</span><span class="nav-action-label">إضافة متابعة</span>
             </a>
 
             <a href="visits.php"
                 class="icon-btn visits-icon"
                 data-title="زيارات اليوم">
-                🏥 </a>
+                <span class="nav-icon" aria-hidden="true">🏥</span><span class="nav-action-label">زيارات اليوم</span></a>
 
             <a href="retina-chart.php?patient_id=<?php echo $row['id']; ?>"
                 class="icon-btn retina-icon"
                 data-title="رسم الشبكية">
-                ◎ </a>
+                <span class="nav-icon" aria-hidden="true">◎</span><span class="nav-action-label">رسم الشبكية</span></a>
 
             <a href="dashboard.php"
                 class="icon-btn home-icon"
                 data-title="الصفحة الرئيسية">
-                🏠 </a>
+                <span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-action-label">الرئيسية</span></a>
 
             <a href="treatment.php?patient_id=<?php echo $row['id']; ?>"
                 class="icon-btn recipe-btn"
                 data-title="وصفة العلاج">
-                💊
+                <span class="nav-icon" aria-hidden="true">💊</span><span class="nav-action-label">العلاج</span>
             </a>
         </div>
 
@@ -2403,44 +2741,46 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         ?>
 
         <div class="stats-grid">
-            <div class="stat-card">
+            <a class="stat-card stat-visits" href="#clinical-timeline" aria-label="الانتقال إلى الزيارات">
                 <span class="stat-icon">📝</span>
-                <span class="stat-value"><?= $visits_count ?></span>
-                <span class="stat-label">الزيارات</span>
-            </div>
+                <span class="stat-content"><span class="stat-value"><?= $visits_count ?></span><span class="stat-label">الزيارات</span></span>
+            </a>
 
-            <div class="stat-card">
+            <a class="stat-card stat-va" href="#clinical-timeline" aria-label="الانتقال إلى فحوصات النظر">
                 <span class="stat-icon">👁️</span>
-                <span class="stat-value"><?= $va_count ?></span>
-                <span class="stat-label">فحص النظر</span>
-            </div>
+                <span class="stat-content"><span class="stat-value"><?= $va_count ?></span><span class="stat-label">فحص النظر</span></span>
+            </a>
 
-            <div class="stat-card">
+            <a class="stat-card stat-surgeries" href="#surgery-history" aria-label="الانتقال إلى سجل العمليات">
                 <span class="stat-icon">🩺</span>
-                <span class="stat-value"><?= $surgery_count ?></span>
-                <span class="stat-label">العمليات</span>
-            </div>
+                <span class="stat-content"><span class="stat-value"><?= $surgery_count ?></span><span class="stat-label">العمليات</span></span>
+            </a>
 
-            <div class="stat-card">
+            <a class="stat-card stat-lasers" href="#laser-history" aria-label="الانتقال إلى جلسات الليزر">
                 <span class="stat-icon">🔦</span>
-                <span class="stat-value"><?= $laser_count ?></span>
-                <span class="stat-label">الليزر</span>
-            </div>
+                <span class="stat-content"><span class="stat-value"><?= $laser_count ?></span><span class="stat-label">الليزر</span></span>
+            </a>
 
-            <div class="stat-card">
+            <a class="stat-card stat-injections" href="#injection-history" aria-label="الانتقال إلى سجل الحقن">
                 <span class="stat-icon">💉</span>
-                <span class="stat-value"><?= $injection_count ?></span>
-                <span class="stat-label">الحقن</span>
-            </div>
+                <span class="stat-content"><span class="stat-value"><?= $injection_count ?></span><span class="stat-label">الحقن</span></span>
+            </a>
 
-            <div class="stat-card">
+            <a class="stat-card stat-retina" href="#clinical-timeline" aria-label="الانتقال إلى رسومات الشبكية">
                 <span class="stat-icon">◎</span>
-                <span class="stat-value"><?= $retina_count ?></span>
-                <span class="stat-label">رسومات الشبكية</span>
-            </div>
+                <span class="stat-content"><span class="stat-value"><?= $retina_count ?></span><span class="stat-label">رسومات الشبكية</span></span>
+            </a>
         </div>
+        <nav class="record-jumpbar" aria-label="انتقال سريع داخل ملف المريض">
+            <a href="#clinical-timeline">التسلسل السريري</a>
+            <a href="#laser-history">الليزر</a>
+            <a href="#surgery-history">العمليات</a>
+            <a href="#injection-history">الحقن</a>
+            <a href="#visit-editor">إضافة زيارة</a>
+            <a href="#medicine-history">الأدوية</a>
+        </nav>
         <div class="previous_data">
-            <div class="previous_visits">
+            <div class="previous_visits record-section" id="clinical-timeline">
                 <h3 class="section-title">التسلسل السريري</h3>
                 <div class="chart-board">
                     <div class="chart-toolbar">
@@ -2704,7 +3044,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
 
 
-            <div class="previous_lasers">
+            <div class="previous_lasers record-section" id="laser-history">
                 <h3 class="section-title">🔦 جلسات الليزر</h3>
 
                 <div class="procedure-list">
@@ -2747,7 +3087,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
 
 
-            <div class="previous_surgeries">
+            <div class="previous_surgeries record-section" id="surgery-history">
                 <h3 class="section-title">🩺 سجل العمليات</h3>
 
                 <div class="procedure-list">
@@ -2801,7 +3141,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
 
 
-            <div class="previous_injections">
+            <div class="previous_injections record-section" id="injection-history">
                 <h3 class="section-title">💉 سجل الحقن</h3>
 
                 <div class="procedure-list">
@@ -2843,7 +3183,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
 
 
-            <div class="patient_visits">
+            <div class="patient_visits record-section" id="visit-editor">
                 <h3 class="section-title">📝 إضافة أو تعديل زيارة</h3>
                 <form action="patient-visits.php?id=<?php echo $id ?>" method="POST">
                     <input type="hidden" id="id" name="id">
@@ -2857,7 +3197,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             </div>
 
 
-            <div class="previous_medicines">
+            <div class="previous_medicines record-section" id="medicine-history">
                 <h3 class="section-title">💊 الأدوية المصروفة</h3>
 
 
@@ -3087,6 +3427,23 @@ LIMIT 20
         </script>
 
         <script>
+            document.querySelectorAll('[data-copy-phone]').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const phone = this.dataset.copyPhone || '';
+                    if (!phone) return;
+                    try {
+                        await navigator.clipboard.writeText(phone);
+                        const originalText = this.textContent;
+                        this.textContent = '✅ تم نسخ الرقم';
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                        }, 1800);
+                    } catch (error) {
+                        window.prompt('انسخ رقم الهاتف:', phone);
+                    }
+                });
+            });
+
             window.onload = function() {
                 const notes = document.getElementById('notes');
                 const visitId = document.getElementById('id');
@@ -3151,19 +3508,6 @@ LIMIT 20
                 }
 
             }
-        </script>
-
-
-        <div class="links">
-            <a href="surgery-appointment.php?id=<?php echo htmlspecialchars($row['id']); ?>">موعد عملية</a>
-            <a href="laser-appointment.php?id=<?php echo htmlspecialchars($row['id']); ?>">موعد ليزر</a>
-            <a href="injection-appointment.php?id=<?php echo htmlspecialchars($row['id']); ?>">موعد حقن</a>
-            <a href="add-va.php?id=<?php echo htmlspecialchars($row['id']); ?>">اضافة فحص النظر</a>
-            <a href="show-image.php?id=<?php echo htmlspecialchars($row['id']); ?>"> عرض الصور</a>
-            <a href="patient_reports.php?id=<?php echo htmlspecialchars($row['id']); ?>">التقارير الطبية</a>
-        </div>
-
-        <script>
         </script>
         <script src="assets/patient-file-sidebar.js" defer></script>
 

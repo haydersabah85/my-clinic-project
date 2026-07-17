@@ -49,6 +49,7 @@ if (isset($_GET['id_edit'])) {
     <script src="assets/theme.js" defer></script>
 
     <link rel="stylesheet" href="assets/dark-mode.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
 </head>
 
 <style>
@@ -276,7 +277,7 @@ if (isset($_GET['id_edit'])) {
 </style>
 
 
-<body>
+<body class="clinic-polished">
 
     <h1>بيانات المريض</h1>
 

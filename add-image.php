@@ -137,10 +137,11 @@ if ($patient_result && mysqli_num_rows($patient_result) > 0) {
         }
     </style>
     <link rel="stylesheet" href="assets/dark-mode.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
     <script src="assets/theme.js" defer></script>
 </head>
 
-<body>
+<body class="clinic-polished">
     <h2>🖼️ رفع صورة للمريض</h2>
     <form id="upload_form" action="add-image2.php?id=<?php echo urlencode($patient_id); ?>" method="post" enctype="multipart/form-data">
         <label>اسم المريض:</label>

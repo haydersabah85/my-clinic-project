@@ -58,6 +58,7 @@ if (!$surgery_row) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تحديث معلومات العملية</title>
     <link rel="stylesheet" href="assets/dark-mode.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
     <script src="assets/theme.js" defer></script>
 </head>
 
@@ -162,7 +163,7 @@ if (!$surgery_row) {
 </style>
 
 
-<body>
+<body class="clinic-polished">
 
     <main>
         <div class="patient_info">
@@ -187,7 +188,7 @@ if (!$surgery_row) {
     </main>
     <h3>تحديث معلومات العملية</h3>
 
-    <body>
+    <body class="clinic-polished">
         <form class="surgery" action="edit-surgery2.php?id_update=<?php echo $surgery_row['id']; ?>" method="POST">
             <div class="surgical_info">
                 <input type="hidden" name="patient_id" value="<?php echo $surgery_row['patient_id']; ?>">

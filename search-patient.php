@@ -67,16 +67,16 @@ if (!$result || mysqli_num_rows($result) === 0) {
 }
 
 while ($row = mysqli_fetch_assoc($result)) {
-    $color = "";
+    $statusClass = "";
     if ($row['status'] == "done") {
-        $color = "green";
+        $statusClass = "status-done";
     } elseif ($row['status'] == "discharged") {
-        $color = "red";
+        $statusClass = "status-discharged";
     } elseif ($row['status'] == "pending") {
-        $color = "orange";
+        $statusClass = "status-pending";
     } elseif (!empty($row['last_surgery_date'])) {
         // Mark patient as completed operation even when it was recorded without an appointment.
-        $color = "green";
+        $statusClass = "status-done";
     }
 
     $lastVisitText = !empty($row['last_visit_date'])
@@ -93,20 +93,20 @@ while ($row = mysqli_fetch_assoc($result)) {
 
     echo "
         <div class='result-item'>
-            <span class='clinic-user-content' data-no-translate
+            <span class='clinic-user-content result-patient-name " . $statusClass . "' data-no-translate
                   onclick=\"window.location.href='" . $patientUrl . "'\"
-                  style='color: $color; cursor:pointer; font-weight: bold;'>
+                  style='cursor:pointer;'>
                 " . h($row['full_name']) . "
             </span>
 
-            <span class='clinic-user-content' data-no-translate
+            <span class='clinic-user-content result-patient-notes' data-no-translate
                   onclick=\"window.location.href='" . $patientUrl . "'\"
-                  style='color: $color; cursor:pointer; font-size: 14px;'>
+                  style='cursor:pointer; font-size: 14px;'>
                  " . h($row['notes']) . "
             </span>
 
             <span onclick=\"window.location.href='" . $patientUrl . "'\">
-                 <small style='color: #888; font-size: 12px;'>" . $lastVisitText . "</small>
+                 <small class='result-patient-meta' style='color: #64748b; font-size: 12px;'>" . $lastVisitText . "</small>
                  <small style='color: #0f766e; font-size: 12px; display:block;'>" . $nextFollowupText . "</small>
                  <small style='color: #64748b; font-size: 12px; display:block;'>
                     العمر: <span class='clinic-user-content' data-no-translate>" . h($row['age']) . "</span>

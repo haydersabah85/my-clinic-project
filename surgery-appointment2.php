@@ -10,12 +10,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_surgery'])) {
     clinic_require_csrf();
     $patient_id = (int) ($_GET['id'] ?? 0);
     
-    $eye = $_POST['eye'];
-    $surgery_type = $_POST['surgery_type'];
-    $phone = $_POST['phone'];
-    $phone_alt = $_POST['phone_alt'];
-    $date = $_POST['date'];
-    $notes = $_POST['notes'];
+    $eye = trim((string) ($_POST['eye'] ?? ''));
+    $surgery_type = trim((string) ($_POST['surgery_type'] ?? ''));
+    $phone = preg_replace('/\D+/', '', (string) ($_POST['phone'] ?? ''));
+    $phone_alt = preg_replace('/\D+/', '', (string) ($_POST['phone_alt'] ?? ''));
+    $date = trim((string) ($_POST['date'] ?? ''));
+    $notes = trim((string) ($_POST['notes'] ?? ''));
+    $validDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) && DateTimeImmutable::createFromFormat('!Y-m-d', $date)?->format('Y-m-d') === $date;
+    if ($patient_id <= 0 || !in_array($eye, ['OD', 'OS', 'OU'], true) || $surgery_type === '' || $phone === '' || !$validDate) {
+        clinic_set_flash('error', 'يرجى إكمال نوع العملية والعين والهاتف والتاريخ بصورة صحيحة.');
+        header('Location: surgery-appointment.php?id=' . $patient_id);
+        exit;
+    }
     $readinessKeys = [
         'patient_verified', 'eye_verified', 'procedure_verified', 'consent_ready',
         'iol_ready', 'allergy_checked', 'investigations_ready', 'payment_reviewed'

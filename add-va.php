@@ -24,6 +24,7 @@ if (isset($_GET['id'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>اضافة فحص النظر</title>
     <link rel="stylesheet" href="assets/dark-mode.css">
+    <link rel="stylesheet" href="assets/clinic-ui.css">
 </head>
 
 <script src="assets/theme.js" defer></script>
@@ -396,7 +397,7 @@ if (isset($_GET['id'])) {
   }
 </style>
 
-<body>
+<body class="clinic-polished">
   <h1>اضافة فحص النظر</h1>
 
   <div class="patient-info">
