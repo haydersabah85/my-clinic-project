@@ -6,7 +6,7 @@ include_once 'clinic_helpers.php';
 
 clinic_ensure_infrastructure($con);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_surgery'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     clinic_require_csrf();
     $patient_id = (int) ($_GET['id'] ?? 0);
 
@@ -90,4 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_surgery'])) {
         header('Location: surgery-appointment.php?id=' . $patient_id);
         exit;
     }
+} else {
+    http_response_code(405);
+    exit('Method not allowed.');
 }

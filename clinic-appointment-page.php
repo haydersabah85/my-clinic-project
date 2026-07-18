@@ -34,7 +34,7 @@ function clinic_render_appointment_page(array $config): void
     <link rel="stylesheet" href="assets/clinic-ui.css">
     <link rel="stylesheet" href="assets/appointment-form.css">
     <script src="assets/theme.js" defer></script>
-    <script src="assets/clinic-actions.js" defer></script>
+    <script src="assets/clinic-actions.js?v=20260718-01" defer></script>
 </head>
 <body class="clinic-polished" style="--appointment-accent:<?= h($accent) ?>;--appointment-accent-soft:<?= h($config['accent_soft'] ?? 'rgba(37,99,235,.12)') ?>">
 <main class="appointment-page">

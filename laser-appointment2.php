@@ -6,7 +6,7 @@ include_once 'clinic_helpers.php';
 clinic_ensure_infrastructure($con);
 $patientId = (int) ($_GET['id'] ?? 0);
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['submit_laser'])) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     exit('Method not allowed.');
 }
