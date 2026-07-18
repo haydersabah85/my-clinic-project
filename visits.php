@@ -207,7 +207,7 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             background: linear-gradient(180deg, var(--accent-2), var(--accent));
         }
 
-        .visits-page-header > div:first-child {
+        .visits-page-header>div:first-child {
             flex: 1;
             min-width: 0;
         }
