@@ -5,6 +5,38 @@ function h($value): string
     return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
+function clinic_normalize_digits(string $value): string
+{
+    return strtr($value, [
+        '٠' => '0',
+        '١' => '1',
+        '٢' => '2',
+        '٣' => '3',
+        '٤' => '4',
+        '٥' => '5',
+        '٦' => '6',
+        '٧' => '7',
+        '٨' => '8',
+        '٩' => '9',
+        '۰' => '0',
+        '۱' => '1',
+        '۲' => '2',
+        '۳' => '3',
+        '۴' => '4',
+        '۵' => '5',
+        '۶' => '6',
+        '۷' => '7',
+        '۸' => '8',
+        '۹' => '9',
+    ]);
+}
+
+function clinic_sanitize_phone(?string $value): string
+{
+    $normalized = clinic_normalize_digits((string) $value);
+    return preg_replace('/\D+/', '', $normalized) ?? '';
+}
+
 function clinic_table_exists(mysqli $con, string $table): bool
 {
     $table = mysqli_real_escape_string($con, $table);

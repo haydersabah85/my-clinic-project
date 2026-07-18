@@ -14,9 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['submit_injection']))
 clinic_require_csrf();
 $eye = trim((string) ($_POST['eye'] ?? ''));
 $type = trim((string) ($_POST['injection_type'] ?? ''));
-$phone = preg_replace('/\D+/', '', (string) ($_POST['phone'] ?? ''));
-$phoneAlt = preg_replace('/\D+/', '', (string) ($_POST['phone_alt'] ?? ''));
-$date = trim((string) ($_POST['date'] ?? ''));
+$phone = clinic_sanitize_phone((string) ($_POST['phone'] ?? ''));
+$phoneAlt = clinic_sanitize_phone((string) ($_POST['phone_alt'] ?? ''));
+$date = clinic_normalize_digits(trim((string) ($_POST['date'] ?? '')));
 $notes = trim((string) ($_POST['notes'] ?? ''));
 $validDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) && DateTimeImmutable::createFromFormat('!Y-m-d', $date)?->format('Y-m-d') === $date;
 

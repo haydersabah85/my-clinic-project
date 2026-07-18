@@ -9,12 +9,12 @@ clinic_ensure_infrastructure($con);
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_surgery'])) {
     clinic_require_csrf();
     $patient_id = (int) ($_GET['id'] ?? 0);
-    
+
     $eye = trim((string) ($_POST['eye'] ?? ''));
     $surgery_type = trim((string) ($_POST['surgery_type'] ?? ''));
-    $phone = preg_replace('/\D+/', '', (string) ($_POST['phone'] ?? ''));
-    $phone_alt = preg_replace('/\D+/', '', (string) ($_POST['phone_alt'] ?? ''));
-    $date = trim((string) ($_POST['date'] ?? ''));
+    $phone = clinic_sanitize_phone((string) ($_POST['phone'] ?? ''));
+    $phone_alt = clinic_sanitize_phone((string) ($_POST['phone_alt'] ?? ''));
+    $date = clinic_normalize_digits(trim((string) ($_POST['date'] ?? '')));
     $notes = trim((string) ($_POST['notes'] ?? ''));
     $validDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) && DateTimeImmutable::createFromFormat('!Y-m-d', $date)?->format('Y-m-d') === $date;
     if ($patient_id <= 0 || !in_array($eye, ['OD', 'OS', 'OU'], true) || $surgery_type === '' || $phone === '' || !$validDate) {
@@ -23,8 +23,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_surgery'])) {
         exit;
     }
     $readinessKeys = [
-        'patient_verified', 'eye_verified', 'procedure_verified', 'consent_ready',
-        'iol_ready', 'allergy_checked', 'investigations_ready', 'payment_reviewed'
+        'patient_verified',
+        'eye_verified',
+        'procedure_verified',
+        'consent_ready',
+        'iol_ready',
+        'allergy_checked',
+        'investigations_ready',
+        'payment_reviewed'
     ];
     $readiness = [];
     foreach ($readinessKeys as $key) {
@@ -33,18 +39,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_surgery'])) {
     $readinessJson = json_encode($readiness, JSON_UNESCAPED_UNICODE);
     $syncFields = $IS_LOCAL ? ", sync_status" : "";
     $syncValues = $IS_LOCAL ? ", 0" : "";
- 
-   $serialStmt = mysqli_prepare($con, "SELECT MAX(serial_no) AS max_serial FROM surgery_appointment WHERE date = ?");
-   mysqli_stmt_bind_param($serialStmt, 's', $date);
-   mysqli_stmt_execute($serialStmt);
-   $result_serial = mysqli_stmt_get_result($serialStmt);
-   $row_serial = mysqli_fetch_assoc($result_serial);
 
-   if ($row_serial['max_serial']) {
-    $serial_no = $row_serial['max_serial'] + 1;
-   } else {
-    $serial_no = 1;
-   }
+    $serialStmt = mysqli_prepare($con, "SELECT MAX(serial_no) AS max_serial FROM surgery_appointment WHERE date = ?");
+    mysqli_stmt_bind_param($serialStmt, 's', $date);
+    mysqli_stmt_execute($serialStmt);
+    $result_serial = mysqli_stmt_get_result($serialStmt);
+    $row_serial = mysqli_fetch_assoc($result_serial);
+
+    if ($row_serial['max_serial']) {
+        $serial_no = $row_serial['max_serial'] + 1;
+    } else {
+        $serial_no = 1;
+    }
 
     $syncPart = $IS_LOCAL ? ", sync_status = 0" : "";
     $phoneStmt = mysqli_prepare($con, "UPDATE add_patient SET phone_no = ?, phone_no_alt = ?, updated_at = NOW() $syncPart WHERE id = ?");
@@ -85,4 +91,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_surgery'])) {
         exit;
     }
 }
-?>
