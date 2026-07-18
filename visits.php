@@ -711,6 +711,25 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             font-size: 13px;
         }
 
+        .inline-post-form {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+
+        .next-patient-banner .banner-actions .inline-post-submit {
+            border: 0;
+            cursor: pointer;
+            text-decoration: none;
+            background: #b45309;
+            color: #fff;
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 800;
+        }
+
         .name-link.next-patient-name {
             color: #b45309;
             font-weight: 900;
@@ -808,6 +827,62 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             box-shadow: 0 6px 14px rgba(15, 23, 42, 0.22);
             transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
             font-size: 15px;
+        }
+
+        .actions .inline-post-form {
+            display: inline-flex;
+            vertical-align: middle;
+        }
+
+        .actions .inline-post-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 38px;
+            height: 38px;
+            margin: 0 3px;
+            border-radius: 12px;
+            color: #ffffff;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.22);
+            transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .actions .inline-post-submit::after {
+            content: attr(data-label);
+            position: absolute;
+            inset-inline-start: 50%;
+            transform: translateX(-50%);
+            top: -34px;
+            background: rgba(17, 24, 39, 0.92);
+            color: #fff;
+            font-size: 11px;
+            padding: 5px 8px;
+            border-radius: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.16s ease;
+            z-index: 8;
+        }
+
+        .actions .inline-post-submit:hover::after {
+            opacity: 1;
+        }
+
+        .actions .inline-post-submit:hover {
+            transform: translateY(-2px) scale(1.04);
+            filter: brightness(1.06);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.3);
+        }
+
+        .actions .inline-post-submit:active {
+            transform: translateY(0) scale(0.97);
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.22);
         }
 
         .actions a:hover {
@@ -1059,7 +1134,12 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                         </div>
                         <div class="banner-actions">
                             <a href="patient-file.php?id=<?= (int) $nextPatientAlert['patient_id'] ?>">فتح الملف</a>
-                            <a href="notify-next-patient.php?action=clear&back=visits.php?status=<?= urlencode($status_filter) ?>">تم الاستدعاء</a>
+                            <form class="inline-post-form" action="notify-next-patient.php" method="post">
+                                <?= clinic_csrf_input() ?>
+                                <input type="hidden" name="action" value="clear">
+                                <input type="hidden" name="back" value="<?= h('visits.php?status=' . $status_filter) ?>">
+                                <button type="submit" class="inline-post-submit">تم الاستدعاء</button>
+                            </form>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -1156,10 +1236,21 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                                             onclick="return confirm('هل أنت متأكد من حذف هذه الزيارة؟');">
                                             <i class="fa-solid fa-trash-can"></i>
                                         </a>
-                                        <a class="notify-next <?= ((int) $row['patient_id'] === $nextPatientId) ? 'is-active' : '' ?>" data-label="تنبيه الطبيب" title="تنبيه الطبيب بالمريض القادم"
-                                            href="notify-next-patient.php?action=set&patient_id=<?= (int) $row['patient_id'] ?>&queue=<?= urlencode('زيارات اليوم') ?>&meta=<?= urlencode('التسلسل: ' . ((string) ($row['daily_serial'] ?? '-'))) ?>&back=<?= urlencode('visits.php?status=' . $status_filter) ?>">
-                                            <i class="fa-solid fa-bell-concierge"></i>
-                                        </a>
+                                        <form class="inline-post-form" action="notify-next-patient.php" method="post">
+                                            <?= clinic_csrf_input() ?>
+                                            <input type="hidden" name="action" value="set">
+                                            <input type="hidden" name="patient_id" value="<?= (int) $row['patient_id'] ?>">
+                                            <input type="hidden" name="queue" value="<?= h('زيارات اليوم') ?>">
+                                            <input type="hidden" name="meta" value="<?= h('التسلسل: ' . ((string) ($row['daily_serial'] ?? '-'))) ?>">
+                                            <input type="hidden" name="back" value="<?= h('visits.php?status=' . $status_filter) ?>">
+                                            <button
+                                                class="inline-post-submit notify-next <?= ((int) $row['patient_id'] === $nextPatientId) ? 'is-active' : '' ?>"
+                                                data-label="تنبيه الطبيب"
+                                                title="تنبيه الطبيب بالمريض القادم"
+                                                type="submit">
+                                                <i class="fa-solid fa-bell-concierge"></i>
+                                            </button>
+                                        </form>
                                     </td>
                                     <td>
                                         <?php

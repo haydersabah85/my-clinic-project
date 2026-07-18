@@ -22,15 +22,18 @@ if ($back === '') {
 }
 
 $backPath = basename((string) (parse_url($back, PHP_URL_PATH) ?: 'work-queue.php'));
-if (!in_array($backPath, ['work-queue.php', 'dashboard.php'], true)) {
+if (!in_array($backPath, ['work-queue.php', 'dashboard.php', 'visits.php'], true)) {
     $backPath = 'work-queue.php';
 }
 $safeBack = $backPath;
 $backQuery = [];
 parse_str((string) parse_url($back, PHP_URL_QUERY), $backQuery);
 $backDate = trim((string) ($backQuery['date'] ?? ''));
+$backStatus = trim((string) ($backQuery['status'] ?? ''));
 if ($backPath === 'work-queue.php' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $backDate)) {
     $safeBack .= '?date=' . rawurlencode($backDate);
+} elseif ($backPath === 'visits.php' && in_array($backStatus, ['all', 'pending', 'done'], true)) {
+    $safeBack .= '?status=' . rawurlencode($backStatus);
 }
 
 if ($action === 'clear') {

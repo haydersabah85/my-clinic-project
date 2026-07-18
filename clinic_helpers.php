@@ -176,6 +176,65 @@ function clinic_ensure_infrastructure(mysqli $con): void
 
     clinic_ensure_surgery_iol_power_column($con);
     clinic_ensure_treatment_type_tables($con);
+    clinic_ensure_appointment_tables($con);
+}
+
+function clinic_ensure_appointment_table(mysqli $con, string $table, string $typeColumn, bool $withReadiness = false): void
+{
+    if (!preg_match('/^[a-z_]+$/', $table) || !preg_match('/^[a-z_]+$/', $typeColumn)) {
+        return;
+    }
+
+    mysqli_query($con, "
+        CREATE TABLE IF NOT EXISTS `$table` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            patient_id INT NOT NULL,
+            eye VARCHAR(10) NOT NULL,
+            `$typeColumn` VARCHAR(180) NOT NULL,
+            phone VARCHAR(40) NOT NULL,
+            phone_alt VARCHAR(40) NULL,
+            date DATE NOT NULL,
+            notes TEXT NULL,
+            serial_no INT NOT NULL DEFAULT 0,
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            attendance_status TINYINT(1) NOT NULL DEFAULT 0,
+            sync_status TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_{$table}_patient (patient_id),
+            INDEX idx_{$table}_date (date),
+            INDEX idx_{$table}_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
+    clinic_ensure_column($con, $table, 'patient_id', 'INT NOT NULL');
+    clinic_ensure_column($con, $table, 'eye', 'VARCHAR(10) NOT NULL DEFAULT "OD"');
+    clinic_ensure_column($con, $table, $typeColumn, 'VARCHAR(180) NOT NULL DEFAULT ""');
+    clinic_ensure_column($con, $table, 'phone', 'VARCHAR(40) NOT NULL DEFAULT ""');
+    clinic_ensure_column($con, $table, 'phone_alt', 'VARCHAR(40) NULL');
+    clinic_ensure_column($con, $table, 'date', 'DATE NOT NULL');
+    clinic_ensure_column($con, $table, 'notes', 'TEXT NULL');
+    clinic_ensure_column($con, $table, 'serial_no', 'INT NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, $table, 'status', 'VARCHAR(20) NOT NULL DEFAULT "pending"');
+    clinic_ensure_column($con, $table, 'attendance_status', 'TINYINT(1) NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, $table, 'sync_status', 'TINYINT(1) NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, $table, 'created_at', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
+    clinic_ensure_column($con, $table, 'updated_at', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+
+    clinic_ensure_index($con, $table, "idx_{$table}_patient", '`patient_id`');
+    clinic_ensure_index($con, $table, "idx_{$table}_date", '`date`');
+    clinic_ensure_index($con, $table, "idx_{$table}_status", '`status`');
+
+    if ($withReadiness) {
+        clinic_ensure_column($con, $table, 'readiness_json', 'TEXT NULL');
+    }
+}
+
+function clinic_ensure_appointment_tables(mysqli $con): void
+{
+    clinic_ensure_appointment_table($con, 'surgery_appointment', 'surgery_type', true);
+    clinic_ensure_appointment_table($con, 'laser_appointment', 'laser_type');
+    clinic_ensure_appointment_table($con, 'injection_appointment', 'injection_type');
 }
 
 function clinic_ensure_surgery_iol_power_column(mysqli $con): void
