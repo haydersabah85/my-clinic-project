@@ -268,7 +268,17 @@ function clinic_sync_pull_from_online_worker(mysqli $localDb, bool $forceFullPul
     $onlinePass = $GLOBALS['onlineDb']['pass'] ?? '';
     $onlineName = $GLOBALS['onlineDb']['name'] ?? '';
 
-    $online = @mysqli_connect($onlineHost, $onlineUser, $onlinePass, $onlineName);
+    try {
+        $online = @mysqli_connect($onlineHost, $onlineUser, $onlinePass, $onlineName);
+    } catch (Throwable $e) {
+        return [
+            'ok' => false,
+            'error' => 'Online connection failed: ' . $e->getMessage(),
+            'results' => [],
+            'total_pulled' => 0,
+            'total_applied' => 0,
+        ];
+    }
     if (!($online instanceof mysqli)) {
         return [
             'ok' => false,

@@ -25,6 +25,17 @@
     const submitter = event.submitter || form.querySelector("[type='submit']");
     if (!submitter) return;
 
+    // Disabled controls are omitted from the submitted form data. Preserve the
+    // clicked button's name/value before disabling it because several handlers
+    // use that value to identify the intended action.
+    if (submitter.name) {
+      const submitterValue = document.createElement("input");
+      submitterValue.type = "hidden";
+      submitterValue.name = submitter.name;
+      submitterValue.value = submitter.value;
+      form.appendChild(submitterValue);
+    }
+
     submitter.dataset.originalText = submitter.textContent;
     submitter.textContent = submitter.getAttribute("data-loading-text") || "Saving...";
     submitter.disabled = true;
@@ -41,4 +52,3 @@
     form.requestSubmit();
   });
 })();
-

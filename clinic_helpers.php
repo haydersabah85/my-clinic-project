@@ -792,35 +792,46 @@ function clinic_auto_pull_tick(mysqli $con, bool $isLocal): void
     clinic_set_app_setting($con, 'auto_pull_lock_until_ts', (string) ($now + 240));
     clinic_set_app_setting($con, 'auto_pull_last_attempt_at', date('Y-m-d H:i:s', $now));
 
-    include_once __DIR__ . '/sync_from_online_worker.php';
-    $result = clinic_sync_pull_from_online_worker($con, false, 5000);
+    try {
+        try {
+            include_once __DIR__ . '/sync_from_online_worker.php';
+            $result = clinic_sync_pull_from_online_worker($con, false, 5000);
+        } catch (Throwable $e) {
+            $result = [
+                'ok' => false,
+                'error' => 'Auto pull exception: ' . $e->getMessage(),
+                'total_pulled' => 0,
+                'total_applied' => 0,
+            ];
+        }
 
-    $totalPulled = (int) ($result['total_pulled'] ?? 0);
-    $totalApplied = (int) ($result['total_applied'] ?? 0);
+        $totalPulled = (int) ($result['total_pulled'] ?? 0);
+        $totalApplied = (int) ($result['total_applied'] ?? 0);
 
-    if (!empty($result['ok'])) {
-        clinic_set_app_setting($con, 'auto_pull_last_success_at', date('Y-m-d H:i:s'));
-        clinic_set_app_setting($con, 'auto_pull_last_status', 'ok');
-        clinic_set_app_setting($con, 'auto_pull_last_summary', "pulled={$totalPulled},applied={$totalApplied}");
+        if (!empty($result['ok'])) {
+            clinic_set_app_setting($con, 'auto_pull_last_success_at', date('Y-m-d H:i:s'));
+            clinic_set_app_setting($con, 'auto_pull_last_status', 'ok');
+            clinic_set_app_setting($con, 'auto_pull_last_summary', "pulled={$totalPulled},applied={$totalApplied}");
 
-        clinic_audit(
-            $con,
-            'auto_sync_pull_from_online',
-            'sync',
-            null,
-            null,
-            [
-                'total_pulled' => $totalPulled,
-                'total_applied' => $totalApplied,
-            ]
-        );
-    } else {
-        $error = (string) ($result['error'] ?? 'unknown_error');
-        clinic_set_app_setting($con, 'auto_pull_last_status', 'error');
-        clinic_set_app_setting($con, 'auto_pull_last_summary', $error);
+            clinic_audit(
+                $con,
+                'auto_sync_pull_from_online',
+                'sync',
+                null,
+                null,
+                [
+                    'total_pulled' => $totalPulled,
+                    'total_applied' => $totalApplied,
+                ]
+            );
+        } else {
+            $error = (string) ($result['error'] ?? 'unknown_error');
+            clinic_set_app_setting($con, 'auto_pull_last_status', 'error');
+            clinic_set_app_setting($con, 'auto_pull_last_summary', $error);
+        }
+    } finally {
+        clinic_set_app_setting($con, 'auto_pull_lock_until_ts', '0');
     }
-
-    clinic_set_app_setting($con, 'auto_pull_lock_until_ts', '0');
 }
 
 function clinic_is_write_endpoint(string $scriptName, string $requestMethod): bool
