@@ -25,6 +25,9 @@ if (!$p) {
     die('Prescription not found.');
 }
 
+$linked_followup = clinic_get_prescription_followup($con, $p);
+$followup_print_line = clinic_followup_print_line($linked_followup);
+
 $itemsStmt = $con->prepare("
     SELECT pi.*
     FROM prescription_items pi
@@ -97,10 +100,29 @@ while ($m = mysqli_fetch_assoc($q)) {
 
         .diagnosis {
             text-align: center;
-            font-size: 21px;
+            font-size: 19px;
             font-weight: bold;
             color: #63089c;
             margin-bottom: 8mm;
+        }
+
+        .next-followup {
+            margin: 0 0 6mm;
+            padding: 8px 12px;
+            border: 1px dashed #1565c0;
+            border-radius: 10px;
+            background: rgba(21, 101, 192, 0.06);
+            color: #0f3d91;
+            font-size: 14px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .next-followup-note {
+            margin-top: 4px;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .medicine {
@@ -168,6 +190,16 @@ while ($m = mysqli_fetch_assoc($q)) {
     <div class="page">
         <!-- <img class="print-logo" src="assets/logo.png" alt="شعار العيادة"> -->
         <div class="rx-area">
+           
+            <?php if ($followup_print_line !== '') { ?>
+                <div class="next-followup">
+                    <?php echo h($followup_print_line); ?>
+                    <?php if (!empty($linked_followup['note'])) { ?>
+                        <div class="next-followup-note"><?php echo h($linked_followup['note']); ?></div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+            
             <div class="diagnosis"><?php echo h($p['diagnosis']); ?></div>
 
             <?php while ($row = mysqli_fetch_assoc($items)) { ?>

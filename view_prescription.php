@@ -1,7 +1,12 @@
 ﻿<?php
 include 'config.php';
+include_once 'clinic_helpers.php';
+
+clinic_ensure_infrastructure($con);
 
 $id = (int)$_GET['id'];
+
+$linked_followup = null;
 
 $p = mysqli_fetch_assoc(mysqli_query($con, "
 SELECT p.*, pa.full_name as patient_name
@@ -21,6 +26,26 @@ $medicine_names = [];
 $q = mysqli_query($con, "SELECT id, medicine_name, medicine_form FROM medicines");
 while ($m = mysqli_fetch_assoc($q)) {
     $medicine_names[$m['id']] = $m['medicine_name'] . " " . $m['medicine_form'];
+}
+
+if (!empty($p['followup_id'])) {
+    $followup_stmt = mysqli_prepare($con, "
+        SELECT followup_date, followup_reason, note
+        FROM followups
+        WHERE id = ? AND patient_id = ?
+        LIMIT 1
+    ");
+    mysqli_stmt_bind_param($followup_stmt, "ii", $p['followup_id'], $p['patient_id']);
+    mysqli_stmt_execute($followup_stmt);
+    $linked_followup = mysqli_fetch_assoc(mysqli_stmt_get_result($followup_stmt)) ?: null;
+}
+
+if (!$linked_followup && (!empty($p['next_followup_date']) || !empty($p['next_followup_reason']) || !empty($p['next_followup_note']))) {
+    $linked_followup = [
+        'followup_date' => $p['next_followup_date'] ?? '',
+        'followup_reason' => $p['next_followup_reason'] ?? '',
+        'note' => $p['next_followup_note'] ?? '',
+    ];
 }
 ?>
 <!DOCTYPE html>
@@ -76,6 +101,15 @@ while ($m = mysqli_fetch_assoc($q)) {
         <p><b>التشخيص:</b>
             <?php echo $p['diagnosis']; ?>
         </p>
+
+        <?php if ($linked_followup) { ?>
+            <p><b>المراجعة القادمة:</b>
+                <?php echo htmlspecialchars($linked_followup['followup_date'] ?: '-', ENT_QUOTES, 'UTF-8'); ?>
+                <?php if (!empty($linked_followup['followup_reason'])) echo ' - ' . htmlspecialchars($linked_followup['followup_reason'], ENT_QUOTES, 'UTF-8'); ?>
+                <?php if (!empty($linked_followup['note'])) echo '<br><span style="color:#475569;">' . htmlspecialchars($linked_followup['note'], ENT_QUOTES, 'UTF-8') . '</span>'; ?>
+            </p>
+            <p><a href="followups.php" style="color:#1565c0;font-weight:700;">عرضها ضمن قائمة المراجعات</a></p>
+        <?php } ?>
 
         <hr>
 

@@ -1,6 +1,12 @@
 <?php
 include 'config.php';
 include 'auth.php';
+include_once 'clinic_helpers.php';
+
+clinic_ensure_infrastructure($con);
+
+$frequency_options = clinic_prescription_frequency_options();
+$duration_options = clinic_prescription_duration_options();
 
 $prescription_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
@@ -22,10 +28,50 @@ if (!$prescription) {
     die("خطأ: الوصفة غير موجودة");
 }
 
+$linked_followup = [
+    'followup_date' => $prescription['next_followup_date'] ?? '',
+    'followup_reason' => $prescription['next_followup_reason'] ?? '',
+    'note' => $prescription['next_followup_note'] ?? '',
+];
+
+if (!empty($prescription['followup_id'])) {
+    $followup_stmt = mysqli_prepare($con, "
+        SELECT followup_date, followup_reason, note
+        FROM followups
+        WHERE id = ? AND patient_id = ?
+        LIMIT 1
+    ");
+    mysqli_stmt_bind_param($followup_stmt, "ii", $prescription['followup_id'], $prescription['patient_id']);
+    mysqli_stmt_execute($followup_stmt);
+    $followup_row = mysqli_fetch_assoc(mysqli_stmt_get_result($followup_stmt));
+    if ($followup_row) {
+        $linked_followup = $followup_row;
+    }
+}
+
 $medicines = [];
 $medicine_result = mysqli_query($con, "SELECT id, medicine_name, medicine_form FROM medicines ORDER BY medicine_name ASC");
 while ($medicine = mysqli_fetch_assoc($medicine_result)) {
     $medicines[] = $medicine;
+}
+
+$templates = [];
+$template_result = mysqli_query($con, "
+    SELECT id, template_name, diagnosis, payload_json, followup_after_days, followup_reason, followup_note
+    FROM treatment_templates
+    ORDER BY template_name ASC
+");
+while ($template = mysqli_fetch_assoc($template_result)) {
+    $payload = json_decode((string) ($template['payload_json'] ?? ''), true);
+    $templates[] = [
+        'id' => (int) $template['id'],
+        'name' => $template['template_name'],
+        'diagnosis' => $template['diagnosis'] ?? '',
+        'items' => is_array($payload['items'] ?? null) ? array_values($payload['items']) : [],
+        'followup_after_days' => $payload['followup_after_days'] ?? $template['followup_after_days'],
+        'followup_reason' => $payload['followup_reason'] ?? ($template['followup_reason'] ?? ''),
+        'followup_note' => $payload['followup_note'] ?? ($template['followup_note'] ?? ''),
+    ];
 }
 
 $items = [];
@@ -261,6 +307,47 @@ function selected($value, $current): string
             font-size: 17px;
         }
 
+        .followup-card {
+            margin-top: 18px;
+            padding: 16px;
+            border: 1px solid #d9e5f2;
+            border-radius: 16px;
+            background: #f8fafc;
+        }
+
+        .followup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .followup-hint {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-weight: 700;
+        }
+
+        .template-box {
+            margin-bottom: 18px;
+            padding: 16px;
+            border: 1px dashed #bfd1ea;
+            border-radius: 16px;
+            background: #f8fbff;
+        }
+
+        .template-actions {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .template-help {
+            margin: 10px 0 0;
+            color: #64748b;
+            font-weight: 700;
+        }
+
         .remove-btn {
             width: 42px;
             height: 42px;
@@ -336,8 +423,53 @@ function selected($value, $current): string
                 </div>
             </div>
 
+            <div class="template-box">
+                <label for="template_id">قالب علاج جاهز</label>
+                <div class="template-actions">
+                    <select id="template_id">
+                        <option value="">اختر قالبًا محفوظًا</option>
+                        <?php foreach ($templates as $template): ?>
+                            <option value="<?= (int) $template['id'] ?>"><?= htmlspecialchars($template['name'], ENT_QUOTES, 'UTF-8') ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="button" class="add-btn" onclick="applySelectedTemplate()">تطبيق القالب</button>
+                </div>
+                <p class="template-help">عند تطبيق القالب سيتم استبدال الأدوية الحالية بمحتوى القالب، مع تعبئة التشخيص وموعد المراجعة الافتراضي.</p>
+            </div>
+
             <label for="diagnosis">التشخيص</label>
             <textarea id="diagnosis" name="diagnosis" rows="3"><?= htmlspecialchars($prescription['diagnosis'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+
+            <div class="followup-card">
+                <h2 class="section-title" style="margin-top:0;">موعد المراجعة القادم</h2>
+                <p class="followup-hint">عند تعبئة التاريخ والسبب سيتم تحديث موعد المراجعة المرتبط بهذه الوصفة تلقائيًا.</p>
+                <div class="followup-grid">
+                    <div>
+                        <label for="followup_date">تاريخ المراجعة</label>
+                        <input type="date" id="followup_date" name="followup_date" value="<?= htmlspecialchars($linked_followup['followup_date'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                    </div>
+                    <div>
+                        <label for="followup_reason">سبب المراجعة</label>
+                        <input type="text" id="followup_reason" name="followup_reason" placeholder="مثال: تقييم الاستجابة للعلاج" value="<?= htmlspecialchars($linked_followup['followup_reason'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label for="followup_note">ملاحظات للمراجعة</label>
+                        <textarea id="followup_note" name="followup_note" rows="2" placeholder="فحوص أو تعليمات للموعد القادم"><?= htmlspecialchars($linked_followup['note'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <datalist id="frequency-options">
+                <?php foreach ($frequency_options as $option): ?>
+                    <option value="<?= htmlspecialchars($option, ENT_QUOTES, 'UTF-8') ?>"></option>
+                <?php endforeach; ?>
+            </datalist>
+
+            <datalist id="duration-options">
+                <?php foreach ($duration_options as $option): ?>
+                    <option value="<?= htmlspecialchars($option, ENT_QUOTES, 'UTF-8') ?>"></option>
+                <?php endforeach; ?>
+            </datalist>
 
             <h2 class="section-title">الأدوية</h2>
             <div id="medicines-container">
@@ -346,14 +478,14 @@ function selected($value, $current): string
                         <select name="medicine_id[]" required>
                             <?= medicineOptions($medicines, $item['medicine_id']) ?>
                         </select>
-                        <input type="text" name="frequency[]" placeholder="عدد المرات" value="<?= htmlspecialchars($item['frequency'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="text" name="frequency[]" list="frequency-options" placeholder="عدد مرات الاستعمال" value="<?= htmlspecialchars($item['frequency'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                         <input type="text" name="dose[]" placeholder="الجرعة" value="<?= htmlspecialchars($item['dose'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
-                        <input type="text" name="duration[]" placeholder="المدة" value="<?= htmlspecialchars($item['duration'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="text" name="duration[]" list="duration-options" placeholder="مدة العلاج" value="<?= htmlspecialchars($item['duration'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                         <select name="eye[]">
                             <option value="">العين</option>
-                            <option value="right"<?= selected('right', $item['eye'] ?? '') ?>>العين اليمنى</option>
-                            <option value="left"<?= selected('left', $item['eye'] ?? '') ?>>العين اليسرى</option>
-                            <option value="both"<?= selected('both', $item['eye'] ?? '') ?>>العينين</option>
+                            <option value="right" <?= selected('right', $item['eye'] ?? '') ?>>العين اليمنى</option>
+                            <option value="left" <?= selected('left', $item['eye'] ?? '') ?>>العين اليسرى</option>
+                            <option value="both" <?= selected('both', $item['eye'] ?? '') ?>>العينين</option>
                         </select>
                         <input type="text" name="instructions[]" placeholder="ملاحظات" value="<?= htmlspecialchars($item['instructions'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                         <button type="button" class="remove-btn" onclick="removeRow(this)">×</button>
@@ -371,9 +503,9 @@ function selected($value, $current): string
             <select name="medicine_id[]" required>
                 <?= medicineOptions($medicines) ?>
             </select>
-            <input type="text" name="frequency[]" placeholder="عدد المرات">
+            <input type="text" name="frequency[]" list="frequency-options" placeholder="عدد مرات الاستعمال">
             <input type="text" name="dose[]" placeholder="الجرعة">
-            <input type="text" name="duration[]" placeholder="المدة">
+            <input type="text" name="duration[]" list="duration-options" placeholder="مدة العلاج">
             <select name="eye[]">
                 <option value="">العين</option>
                 <option value="right">العين اليمنى</option>
@@ -386,16 +518,56 @@ function selected($value, $current): string
     </template>
 
     <script>
+        const treatmentTemplates = <?php echo json_encode($templates, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+
+        function buildMedicineRow(item = {}) {
+            const template = document.getElementById("medicine-row-template");
+            const fragment = template.content.cloneNode(true);
+            const row = fragment.querySelector('.medicine-row');
+            row.querySelector('[name="medicine_id[]"]').value = item.medicine_id || '';
+            row.querySelector('[name="frequency[]"]').value = item.frequency || '';
+            row.querySelector('[name="dose[]"]').value = item.dose || '';
+            row.querySelector('[name="duration[]"]').value = item.duration || '';
+            row.querySelector('[name="eye[]"]').value = item.eye || '';
+            row.querySelector('[name="instructions[]"]').value = item.instructions || '';
+            return fragment;
+        }
+
         function addMedicine() {
             const container = document.getElementById("medicines-container");
-            const template = document.getElementById("medicine-row-template");
-            container.appendChild(template.content.cloneNode(true));
+            container.appendChild(buildMedicineRow());
         }
 
         function removeRow(btn) {
             const rows = document.querySelectorAll(".medicine-row");
             if (rows.length > 1) {
                 btn.closest(".medicine-row").remove();
+            }
+        }
+
+        function applySelectedTemplate() {
+            const selector = document.getElementById('template_id');
+            const template = treatmentTemplates.find(item => String(item.id) === selector.value);
+            if (!template) {
+                return;
+            }
+
+            document.getElementById('diagnosis').value = template.diagnosis || '';
+            document.getElementById('followup_reason').value = template.followup_reason || '';
+            document.getElementById('followup_note').value = template.followup_note || '';
+
+            if (template.followup_after_days !== null && template.followup_after_days !== '' && !Number.isNaN(Number(template.followup_after_days))) {
+                const nextDate = new Date();
+                nextDate.setDate(nextDate.getDate() + Number(template.followup_after_days));
+                document.getElementById('followup_date').value = nextDate.toISOString().split('T')[0];
+            }
+
+            const container = document.getElementById('medicines-container');
+            container.innerHTML = '';
+            if (Array.isArray(template.items) && template.items.length > 0) {
+                template.items.forEach(item => container.appendChild(buildMedicineRow(item)));
+            } else {
+                addMedicine();
             }
         }
     </script>

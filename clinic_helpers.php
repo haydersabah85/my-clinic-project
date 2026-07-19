@@ -173,6 +173,18 @@ function clinic_ensure_infrastructure(mysqli $con): void
     clinic_ensure_index($con, 'add_patient', 'idx_add_patient_phone', '`phone_no`');
     clinic_ensure_index($con, 'visits', 'idx_visits_patient_date', '`patient_id`, `visit_date`');
     clinic_ensure_index($con, 'followups', 'idx_followups_status_date', '`status`, `followup_date`');
+    clinic_ensure_column($con, 'treatment_templates', 'payload_json', 'LONGTEXT NULL');
+    clinic_ensure_column($con, 'treatment_templates', 'followup_after_days', 'INT NULL');
+    clinic_ensure_column($con, 'treatment_templates', 'followup_reason', 'VARCHAR(255) NULL');
+    clinic_ensure_column($con, 'treatment_templates', 'followup_note', 'TEXT NULL');
+
+    clinic_ensure_column($con, 'prescriptions', 'followup_id', 'INT NULL');
+    clinic_ensure_column($con, 'prescriptions', 'next_followup_date', 'DATE NULL');
+    clinic_ensure_column($con, 'prescriptions', 'next_followup_reason', 'VARCHAR(255) NULL');
+    clinic_ensure_column($con, 'prescriptions', 'next_followup_note', 'TEXT NULL');
+    clinic_ensure_column($con, 'followups', 'source_type', 'VARCHAR(50) NULL');
+    clinic_ensure_column($con, 'followups', 'source_id', 'INT NULL');
+    clinic_ensure_index($con, 'followups', 'idx_followups_source', '`source_type`, `source_id`');
 
     clinic_ensure_surgery_iol_power_column($con);
     clinic_ensure_treatment_type_tables($con);
@@ -1368,6 +1380,187 @@ function clinic_audit(mysqli $con, string $action, string $table, ?int $record_i
     ");
     mysqli_stmt_bind_param($stmt, "sssiss", $user, $action, $table, $record_id, $old, $new);
     @mysqli_stmt_execute($stmt);
+}
+
+function clinic_prescription_frequency_options(): array
+{
+    return [
+        'مرة يوميا',
+        'مرتان يوميا',
+        '3 مرات يوميا',
+        '4 مرات يوميا',
+        'كل 6 ساعات',
+        'كل 8 ساعات',
+        'عند اللزوم',
+        'قبل النوم',
+    ];
+}
+
+function clinic_prescription_duration_options(): array
+{
+    return [
+        '3 أيام',
+        '5 أيام',
+        '7 أيام',
+        '10 أيام',
+        '14 يوم',
+        'شهر',
+        '6 أسابيع',
+        '3 أشهر',
+        'مستمر حتى المراجعة',
+    ];
+}
+
+function clinic_get_prescription_followup(mysqli $con, array $prescription): ?array
+{
+    if (!empty($prescription['followup_id']) && !empty($prescription['patient_id'])) {
+        $followup_stmt = mysqli_prepare($con, '
+            SELECT followup_date, followup_reason, note
+            FROM followups
+            WHERE id = ? AND patient_id = ?
+            LIMIT 1
+        ');
+        $followup_id = (int) $prescription['followup_id'];
+        $patient_id = (int) $prescription['patient_id'];
+        mysqli_stmt_bind_param($followup_stmt, 'ii', $followup_id, $patient_id);
+        mysqli_stmt_execute($followup_stmt);
+        $followup = mysqli_fetch_assoc(mysqli_stmt_get_result($followup_stmt));
+        if ($followup) {
+            return $followup;
+        }
+    }
+
+    if (!empty($prescription['next_followup_date']) || !empty($prescription['next_followup_reason']) || !empty($prescription['next_followup_note'])) {
+        return [
+            'followup_date' => $prescription['next_followup_date'] ?? '',
+            'followup_reason' => $prescription['next_followup_reason'] ?? '',
+            'note' => $prescription['next_followup_note'] ?? '',
+        ];
+    }
+
+    return null;
+}
+
+function clinic_arabic_day_name(string $date): string
+{
+    $timestamp = strtotime($date);
+    if (!$timestamp) {
+        return '';
+    }
+
+    $days = [
+        'Sunday' => 'الأحد',
+        'Monday' => 'الاثنين',
+        'Tuesday' => 'الثلاثاء',
+        'Wednesday' => 'الأربعاء',
+        'Thursday' => 'الخميس',
+        'Friday' => 'الجمعة',
+        'Saturday' => 'السبت',
+    ];
+
+    $english = date('l', $timestamp);
+    return $days[$english] ?? $english;
+}
+
+function clinic_followup_print_line(?array $followup): string
+{
+    if (!$followup || empty($followup['followup_date'])) {
+        return '';
+    }
+
+    $date = (string) $followup['followup_date'];
+    $day = clinic_arabic_day_name($date);
+    $text = 'الفحص القادم يوم ' . $day . ' بتاريخ ' . $date;
+
+    if (!empty($followup['followup_reason'])) {
+        $text .= ' - ' . trim((string) $followup['followup_reason']);
+    }
+
+    return $text;
+}
+
+function clinic_sync_prescription_followup(
+    mysqli $con,
+    int $patient_id,
+    int $prescription_id,
+    int $current_followup_id,
+    string $followup_date,
+    string $followup_reason,
+    string $followup_note,
+    bool $isLocal
+): int {
+    $followup_date = trim($followup_date);
+    $followup_reason = trim($followup_reason);
+    $followup_note = trim($followup_note);
+    $hasFollowup = ($followup_date !== '' || $followup_reason !== '' || $followup_note !== '');
+
+    if ($hasFollowup && ($followup_date === '' || $followup_reason === '')) {
+        throw new InvalidArgumentException('يجب إدخال تاريخ المراجعة وسببها معًا');
+    }
+
+    $existing = null;
+    if ($current_followup_id > 0 && clinic_table_exists($con, 'followups')) {
+        $existing_stmt = mysqli_prepare($con, '
+            SELECT id, status, source_type, source_id
+            FROM followups
+            WHERE id = ? AND patient_id = ?
+            LIMIT 1
+        ');
+        mysqli_stmt_bind_param($existing_stmt, 'ii', $current_followup_id, $patient_id);
+        mysqli_stmt_execute($existing_stmt);
+        $existing = mysqli_fetch_assoc(mysqli_stmt_get_result($existing_stmt)) ?: null;
+    }
+
+    $canReuseExisting = $existing
+        && (($existing['status'] ?? 'pending') === 'pending')
+        && (($existing['source_type'] ?? '') === '' || ($existing['source_type'] ?? '') === 'prescription');
+
+    if (!$hasFollowup) {
+        if ($canReuseExisting) {
+            $delete_stmt = mysqli_prepare($con, 'DELETE FROM followups WHERE id = ? AND patient_id = ?');
+            mysqli_stmt_bind_param($delete_stmt, 'ii', $current_followup_id, $patient_id);
+            mysqli_stmt_execute($delete_stmt);
+        }
+
+        return 0;
+    }
+
+    if ($canReuseExisting) {
+        if ($isLocal) {
+            $update_stmt = mysqli_prepare($con, '
+                UPDATE followups
+                SET followup_date = ?, followup_reason = ?, note = ?, source_type = "prescription", source_id = ?, updated_at = NOW(), sync_status = 0
+                WHERE id = ? AND patient_id = ?
+            ');
+            mysqli_stmt_bind_param($update_stmt, 'sssiii', $followup_date, $followup_reason, $followup_note, $prescription_id, $current_followup_id, $patient_id);
+        } else {
+            $update_stmt = mysqli_prepare($con, '
+                UPDATE followups
+                SET followup_date = ?, followup_reason = ?, note = ?, source_type = "prescription", source_id = ?, updated_at = NOW()
+                WHERE id = ? AND patient_id = ?
+            ');
+            mysqli_stmt_bind_param($update_stmt, 'sssiii', $followup_date, $followup_reason, $followup_note, $prescription_id, $current_followup_id, $patient_id);
+        }
+        mysqli_stmt_execute($update_stmt);
+        return $current_followup_id;
+    }
+
+    if ($isLocal) {
+        $insert_stmt = mysqli_prepare($con, '
+            INSERT INTO followups (patient_id, followup_date, followup_reason, note, source_type, source_id, updated_at, sync_status)
+            VALUES (?, ?, ?, ?, "prescription", ?, NOW(), 0)
+        ');
+        mysqli_stmt_bind_param($insert_stmt, 'isssi', $patient_id, $followup_date, $followup_reason, $followup_note, $prescription_id);
+    } else {
+        $insert_stmt = mysqli_prepare($con, '
+            INSERT INTO followups (patient_id, followup_date, followup_reason, note, source_type, source_id, updated_at)
+            VALUES (?, ?, ?, ?, "prescription", ?, NOW())
+        ');
+        mysqli_stmt_bind_param($insert_stmt, 'isssi', $patient_id, $followup_date, $followup_reason, $followup_note, $prescription_id);
+    }
+    mysqli_stmt_execute($insert_stmt);
+
+    return (int) mysqli_insert_id($con);
 }
 
 function clinic_active_patient_where(mysqli $con, string $alias = 'add_patient'): string

@@ -24,6 +24,9 @@ if (!$p) {
     die('Prescription not found.');
 }
 
+$linked_followup = clinic_get_prescription_followup($con, $p);
+$followup_print_line = clinic_followup_print_line($linked_followup);
+
 $itemsStmt = $con->prepare("
     SELECT pi.*
     FROM prescription_items pi
@@ -160,6 +163,24 @@ while ($m = mysqli_fetch_assoc($q)) {
             text-align: center;
         }
 
+        .next-followup {
+            margin: 10px 0 6px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: rgba(21, 101, 192, 0.08);
+            color: #0f3d91;
+            font-size: 14px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .next-followup-note {
+            margin-top: 4px;
+            color: #41546f;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
         .medicine {
             margin-bottom: 6px;
             font-size: 17px;
@@ -253,6 +274,14 @@ while ($m = mysqli_fetch_assoc($q)) {
 
             <div class="rx-symbol">Rx:</div>
             <div class="diagnosis"><?php echo h($p['diagnosis']); ?></div>
+            <?php if ($followup_print_line !== '') { ?>
+                <div class="next-followup">
+                    <?php echo h($followup_print_line); ?>
+                    <?php if (!empty($linked_followup['note'])) { ?>
+                        <div class="next-followup-note"><?php echo h($linked_followup['note']); ?></div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
             <hr style="border: 1px dashed #504d4d; margin: 10px 0;">
 
             <?php while ($row = mysqli_fetch_assoc($items)) { ?>
