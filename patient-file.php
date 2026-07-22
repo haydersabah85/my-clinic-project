@@ -767,6 +767,11 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         .previous_visits {
             grid-column: 1 / -1;
         }
+        
+        #clinical-timeline {
+            overflow: auto;
+            max-height: 600px;
+        }
 
         /* بطاقات الأقسام */
         .previous_visits,
@@ -833,7 +838,9 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             gap: 8px;
             letter-spacing: -0.2px;
         }
+#clinical-timeline {
 
+}
         /* ==================================================
    TABLES
 ================================================== */
@@ -1223,6 +1230,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         .chart-board {
             display: grid;
             gap: 16px;
+
         }
 
         .chart-toolbar {
@@ -1235,7 +1243,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             border: 1px solid var(--border);
             border-radius: 16px;
             background: #f8fafc;
-            position: sticky;
+            
             top: 12px;
             z-index: 3;
             direction: rtl;
@@ -2604,14 +2612,14 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                 <a href="treatment.php?patient_id=<?= $id ?>">💊 وصفة العلاج</a>
                 <a href="add-va.php?id=<?= $id ?>">👁️ إضافة فحص النظر</a>
                 <a href="add-image.php?id=<?= $id ?>">🖼️ إضافة صور</a>
-                <a href="image-comparison.php?id=<?= $id ?>">🧪 مقارنة الصور</a>
+                <a href="show-image.php?id=<?= $id ?>">🧪 عرض الصور</a>
             </div>
         </details>
         <details class="menu-group" data-menu-key="appointments">
             <summary>📅 المواعيد</summary>
             <div class="menu-links">
                 <a href="visits.php">زيارات اليوم</a>
-                <a href="followup-appointment.php?id=<?= $id ?>">موعد مراجعة</a>
+                <a href="next-visit-appointment.php?id=<?= $id ?>">موعد الفحص القادم</a>
                 <a href="surgery-appointment.php?id=<?= $id ?>">موعد عملية</a>
                 <a href="laser-appointment.php?id=<?= $id ?>">موعد ليزر</a>
                 <a href="injection-appointment.php?id=<?= $id ?>">موعد حقن</a>
