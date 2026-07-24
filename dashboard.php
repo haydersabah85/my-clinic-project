@@ -1926,6 +1926,7 @@ $alertsSummary = [
         <div class="menu-links">
           <a href="work-queue.php">قائمة عمل اليوم</a>
           <a href="visits.php">زيارات اليوم</a>
+          <a href="exam-requests.php">طلبات الفحوصات</a>
           <a href="followup-appointment.php">إعطاء موعد مراجعة</a>
           <a href="import_expected.php">استيراد المواعيد</a>
           <a href="expected_appointments.php">المواعيد المتوقعة</a>

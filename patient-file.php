@@ -767,10 +767,10 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         .previous_visits {
             grid-column: 1 / -1;
         }
-        
+
         #clinical-timeline {
-            overflow: auto;
-            max-height: 600px;
+            overflow: visible;
+            max-height: none;
         }
 
         /* بطاقات الأقسام */
@@ -790,6 +790,10 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             box-shadow: var(--shadow-md);
             overflow: auto;
             direction: ltr;
+        }
+
+        .previous_visits {
+            overflow: hidden;
         }
 
         /* ارتفاعات مناسبة */
@@ -838,9 +842,15 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             gap: 8px;
             letter-spacing: -0.2px;
         }
-#clinical-timeline {
 
-}
+        #clinical-timeline .chart-board {
+            max-height: clamp(460px, 72vh, 960px);
+            overflow: auto;
+            padding-inline-end: 4px;
+            scrollbar-gutter: stable;
+            overscroll-behavior: contain;
+        }
+
         /* ==================================================
    TABLES
 ================================================== */
@@ -994,6 +1004,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             max-height: none;
             overflow: visible;
             padding-left: 4px;
+            padding-bottom: 2px;
         }
 
         .timeline-summary {
@@ -1233,6 +1244,12 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
         }
 
+        @media (max-width: 768px) {
+            #clinical-timeline .chart-board {
+                max-height: min(70vh, 620px);
+            }
+        }
+
         .chart-toolbar {
             display: flex;
             align-items: center;
@@ -1243,7 +1260,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             border: 1px solid var(--border);
             border-radius: 16px;
             background: #f8fafc;
-            
+            position: sticky;
             top: 12px;
             z-index: 3;
             direction: rtl;
@@ -1278,6 +1295,35 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             background: #0f766e;
             border-color: #0f766e;
             color: #ffffff;
+        }
+
+        .timeline-load-more-wrap {
+            display: flex;
+            justify-content: center;
+            padding-top: 6px;
+        }
+
+        .timeline-load-more {
+            min-height: 42px;
+            border: 1px solid #0f766e;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #0f766e;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+            padding: 9px 16px;
+            transition: all 0.2s ease;
+        }
+
+        .timeline-load-more:hover {
+            background: #0f766e;
+            color: #ffffff;
+        }
+
+        .timeline-load-more[hidden] {
+            display: none;
         }
 
         .encounter-card {
@@ -1433,7 +1479,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             white-space: pre-wrap;
             overflow-wrap: anywhere;
         }
-        
+
 
         .visit-note-item {
             margin: 0;
@@ -1745,7 +1791,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             transform: translateY(-2px);
         }
 
-       
+
         /* ==========================================
    MODAL BACKDROP
 ========================================== */
@@ -2240,6 +2286,17 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             color: #ffffff;
         }
 
+        body[data-theme="dark"] .timeline-load-more {
+            background: rgba(2, 6, 23, 0.42);
+            border-color: rgba(45, 212, 191, 0.55);
+            color: #99f6e4;
+        }
+
+        body[data-theme="dark"] .timeline-load-more:hover {
+            background: #0f766e;
+            color: #ffffff;
+        }
+
         body[data-theme="dark"] .encounter-toggle {
             background: rgba(15, 23, 42, 0.82);
             border-color: rgba(147, 197, 253, 0.22);
@@ -2611,6 +2668,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                 <a href="patient_reports.php?id=<?= $id ?>">📄 التقارير الطبية</a>
                 <a href="treatment.php?patient_id=<?= $id ?>">💊 وصفة العلاج</a>
                 <a href="add-va.php?id=<?= $id ?>">👁️ إضافة فحص النظر</a>
+                <a href="exam-requests.php?patient_id=<?= $id ?>">🧾 طلب فحص OCT</a>
                 <a href="add-image.php?id=<?= $id ?>">🖼️ إضافة صور</a>
                 <a href="show-image.php?id=<?= $id ?>">🧪 عرض الصور</a>
             </div>
@@ -2682,10 +2740,11 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             </div>
             <nav class="patient-clinical-actions" aria-label="حجز إجراء للمريض">
                 <h3 class="patient-action-title">حجز موعد</h3>
-                
+
                 <a class="schedule-surgery" href="surgery-appointment.php?id=<?= (int) $id ?>">حجز عملية 🩺</a>
                 <a class="schedule-laser" href="laser-appointment.php?id=<?= (int) $id ?>">حجز ليزر 🔦 </a>
                 <a class="schedule-injection" href="injection-appointment.php?id=<?= (int) $id ?>"> حجز حقن 💉</a>
+                <a class="schedule-followup" href="exam-requests.php?patient_id=<?= (int) $id ?>">طلب فحص OCT 🧾</a>
                 <a class="schedule-followup" href="followup-appointment.php?id=<?= (int) $id ?>">حجز مراجعة 📅</a>
             </nav>
         </section>
@@ -2933,7 +2992,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                                 $toggleText = $defaultCollapsed ? 'عرض التفاصيل' : 'إخفاء التفاصيل';
                                 $mainClass = $defaultCollapsed ? 'encounter-main is-collapsed' : 'encounter-main';
 
-                                echo "<article class='$cardClass' data-has-va='" . ($hasVa ? "1" : "0") . "'>";
+                                echo "<article class='$cardClass' data-has-va='" . ($hasVa ? "1" : "0") . "' data-card-index='" . ($cardIndex + 1) . "'>";
                                 echo "<div class='encounter-head'>";
                                 echo "<div class='encounter-head-main'>";
                                 echo "<div class='encounter-date'><span>تاريخ الزيارة</span><span>" . h($visitDate) . "</span></div>";
@@ -3046,6 +3105,9 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                             }
                         }
                         ?>
+                    </div>
+                    <div class='timeline-load-more-wrap'>
+                        <button type='button' class='timeline-load-more' id='timelineLoadMoreBtn' hidden>عرض المزيد</button>
                     </div>
                 </div>
             </div>
@@ -3360,18 +3422,69 @@ LIMIT 20
 
                     document.querySelectorAll('.chart-filter').forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
-
-                    document.querySelectorAll('.encounter-card').forEach(card => {
-                        const hasVa = card.dataset.hasVa === '1';
-                        const show =
-                            filter === 'all' ||
-                            (filter === 'with-va' && hasVa) ||
-                            (filter === 'no-va' && !hasVa);
-
-                        card.style.display = show ? '' : 'none';
-                    });
+                    currentTimelineFilter = filter;
+                    applyTimelineFilterAndPaging(true);
                 });
             });
+
+            const timelinePageSize = 15;
+            let timelineVisibleCount = timelinePageSize;
+            let currentTimelineFilter = 'all';
+            const timelineCards = Array.from(document.querySelectorAll('.encounter-card'));
+            const timelineLoadMoreBtn = document.getElementById('timelineLoadMoreBtn');
+
+            function timelineCardMatchesFilter(card, filter) {
+                const hasVa = card.dataset.hasVa === '1';
+                return (
+                    filter === 'all' ||
+                    (filter === 'with-va' && hasVa) ||
+                    (filter === 'no-va' && !hasVa)
+                );
+            }
+
+            function applyTimelineFilterAndPaging(resetVisibleCount = false) {
+                if (resetVisibleCount) {
+                    timelineVisibleCount = timelinePageSize;
+                }
+
+                let matchedCount = 0;
+                let shownCount = 0;
+
+                timelineCards.forEach(card => {
+                    if (!timelineCardMatchesFilter(card, currentTimelineFilter)) {
+                        card.style.display = 'none';
+                        return;
+                    }
+
+                    matchedCount++;
+                    const isVisible = shownCount < timelineVisibleCount;
+                    card.style.display = isVisible ? '' : 'none';
+                    if (isVisible) {
+                        shownCount++;
+                    }
+                });
+
+                if (!timelineLoadMoreBtn) {
+                    return;
+                }
+
+                if (shownCount < matchedCount) {
+                    const remaining = matchedCount - shownCount;
+                    timelineLoadMoreBtn.hidden = false;
+                    timelineLoadMoreBtn.textContent = 'عرض المزيد (' + remaining + ')';
+                } else {
+                    timelineLoadMoreBtn.hidden = true;
+                }
+            }
+
+            if (timelineLoadMoreBtn) {
+                timelineLoadMoreBtn.addEventListener('click', function() {
+                    timelineVisibleCount += timelinePageSize;
+                    applyTimelineFilterAndPaging(false);
+                });
+            }
+
+            applyTimelineFilterAndPaging(true);
         </script>
 
         <script>

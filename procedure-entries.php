@@ -422,6 +422,36 @@ if ($editId > 0) {
         $editingEntry = $editResult ? mysqli_fetch_assoc($editResult) : null;
     }
 }
+
+if (!$editingEntry) {
+    $prefillPatientId = (int) ($_GET['patient_id'] ?? 0);
+    if ($prefillPatientId > 0) {
+        $activePatientWhere = clinic_active_patient_where($con, 'add_patient');
+        $prefillStmt = mysqli_prepare($con, "SELECT id, full_name FROM add_patient WHERE id = ? AND $activePatientWhere LIMIT 1");
+        if ($prefillStmt) {
+            mysqli_stmt_bind_param($prefillStmt, 'i', $prefillPatientId);
+            mysqli_stmt_execute($prefillStmt);
+            $prefillResult = mysqli_stmt_get_result($prefillStmt);
+            $prefillRow = $prefillResult ? mysqli_fetch_assoc($prefillResult) : null;
+            mysqli_stmt_close($prefillStmt);
+
+            if ($prefillRow) {
+                $editingEntry = [
+                    'id' => 0,
+                    'procedure_date' => $selectedDate,
+                    'patient_id' => (int) ($prefillRow['id'] ?? 0),
+                    'patient_name' => (string) ($prefillRow['full_name'] ?? ''),
+                    'procedure_type_id' => 0,
+                    'qty' => 1,
+                    'unit_cost' => 0,
+                    'notes' => '',
+                ];
+            }
+        }
+    }
+}
+
+$isEditingMode = !empty($editingEntry['id']);
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -786,7 +816,7 @@ if ($editId > 0) {
 
         <section class="grid">
             <article class="panel">
-                <h2><?php echo $editingEntry ? 'تعديل الإجراء' : 'إضافة إجراء لمريض'; ?></h2>
+                <h2><?php echo $isEditingMode ? 'تعديل الإجراء' : 'إضافة إجراء لمريض'; ?></h2>
                 <form method="post" class="form-grid">
                     <?php echo clinic_csrf_input(); ?>
                     <input type="hidden" name="entry_id" value="<?php echo (int) ($editingEntry['id'] ?? 0); ?>">
@@ -820,6 +850,7 @@ if ($editId > 0) {
                         </div>
                         <div class="patient-picked-actions">
                             <a id="openPatientFile" href="<?php echo !empty($editingEntry['patient_id']) ? 'patient-file.php?id=' . (int) $editingEntry['patient_id'] : '#'; ?>" class="<?php echo empty($editingEntry['patient_id']) ? 'is-disabled' : ''; ?>" aria-disabled="<?php echo empty($editingEntry['patient_id']) ? 'true' : 'false'; ?>">فتح ملف المريض</a>
+                            <a id="openExamRequest" href="<?php echo !empty($editingEntry['patient_id']) ? 'exam-requests.php?patient_id=' . (int) $editingEntry['patient_id'] : '#'; ?>" class="<?php echo empty($editingEntry['patient_id']) ? 'is-disabled' : ''; ?>" aria-disabled="<?php echo empty($editingEntry['patient_id']) ? 'true' : 'false'; ?>">طلب فحص</a>
                             <button id="clearPatientSelection" type="button">مسح الاختيار</button>
                         </div>
                     </div>
@@ -845,7 +876,7 @@ if ($editId > 0) {
                         <textarea id="notes" name="notes" placeholder="اختياري"><?php echo htmlspecialchars((string) ($editingEntry['notes'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></textarea>
                     </div>
                     <div class="field full">
-                        <?php if ($editingEntry): ?>
+                        <?php if ($isEditingMode): ?>
                             <button type="submit" class="btn" name="save_entry">حفظ التعديل</button>
                             <a class="icon-btn" style="padding:0 12px;width:auto;text-decoration:none;color:#334155;" href="procedure-entries.php?date=<?php echo urlencode($selectedDate); ?>">إلغاء التعديل</a>
                         <?php else: ?>
@@ -955,6 +986,7 @@ if ($editId > 0) {
             const resultsBox = document.getElementById('patientResults');
             const picked = document.getElementById('pickedPatient');
             const openPatientFile = document.getElementById('openPatientFile');
+            const openExamRequest = document.getElementById('openExamRequest');
             const clearPatientSelection = document.getElementById('clearPatientSelection');
             const externalToggle = document.getElementById('is_external_patient');
             const externalPatientWrap = document.getElementById('externalPatientWrap');
@@ -973,6 +1005,11 @@ if ($editId > 0) {
                 openPatientFile.classList.add('is-disabled');
                 openPatientFile.setAttribute('aria-disabled', 'true');
                 openPatientFile.setAttribute('href', '#');
+                if (openExamRequest) {
+                    openExamRequest.classList.add('is-disabled');
+                    openExamRequest.setAttribute('aria-disabled', 'true');
+                    openExamRequest.setAttribute('href', '#');
+                }
             }
 
             function updatePatientMode() {
@@ -989,6 +1026,11 @@ if ($editId > 0) {
                     openPatientFile.classList.add('is-disabled');
                     openPatientFile.setAttribute('aria-disabled', 'true');
                     openPatientFile.setAttribute('href', '#');
+                    if (openExamRequest) {
+                        openExamRequest.classList.add('is-disabled');
+                        openExamRequest.setAttribute('aria-disabled', 'true');
+                        openExamRequest.setAttribute('href', '#');
+                    }
                 } else {
                     nameInput.readOnly = false;
                     nameInput.placeholder = 'اكتب اسم المريض أو الهاتف';
@@ -1000,6 +1042,11 @@ if ($editId > 0) {
                         openPatientFile.classList.remove('is-disabled');
                         openPatientFile.setAttribute('aria-disabled', 'false');
                         openPatientFile.setAttribute('href', 'patient-file.php?id=' + encodeURIComponent(idInput.value));
+                        if (openExamRequest) {
+                            openExamRequest.classList.remove('is-disabled');
+                            openExamRequest.setAttribute('aria-disabled', 'false');
+                            openExamRequest.setAttribute('href', 'exam-requests.php?patient_id=' + encodeURIComponent(idInput.value));
+                        }
                     } else {
                         clearSelection();
                     }
@@ -1034,6 +1081,11 @@ if ($editId > 0) {
                 openPatientFile.classList.remove('is-disabled');
                 openPatientFile.setAttribute('aria-disabled', 'false');
                 openPatientFile.setAttribute('href', 'patient-file.php?id=' + encodeURIComponent(item.id || ''));
+                if (openExamRequest) {
+                    openExamRequest.classList.remove('is-disabled');
+                    openExamRequest.setAttribute('aria-disabled', 'false');
+                    openExamRequest.setAttribute('href', 'exam-requests.php?patient_id=' + encodeURIComponent(item.id || ''));
+                }
                 hideResults();
             }
 
@@ -1167,6 +1219,14 @@ if ($editId > 0) {
                     event.preventDefault();
                 }
             });
+
+            if (openExamRequest) {
+                openExamRequest.addEventListener('click', (event) => {
+                    if (!idInput.value) {
+                        event.preventDefault();
+                    }
+                });
+            }
 
             externalToggle.addEventListener('change', () => {
                 updatePatientMode();

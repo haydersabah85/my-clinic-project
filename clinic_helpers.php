@@ -189,6 +189,60 @@ function clinic_ensure_infrastructure(mysqli $con): void
     clinic_ensure_surgery_iol_power_column($con);
     clinic_ensure_treatment_type_tables($con);
     clinic_ensure_appointment_tables($con);
+    clinic_ensure_exam_requests_table($con);
+}
+
+function clinic_ensure_exam_requests_table(mysqli $con): void
+{
+    mysqli_query($con, "
+        CREATE TABLE IF NOT EXISTS exam_requests (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            patient_id INT NOT NULL,
+            patient_name VARCHAR(180) NOT NULL,
+            request_type VARCHAR(180) NOT NULL,
+            eye VARCHAR(10) NULL,
+            priority VARCHAR(20) NOT NULL DEFAULT 'normal',
+            requested_for_date DATE NULL,
+            notes TEXT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            result_notes TEXT NULL,
+            requested_by_user_id INT NOT NULL,
+            requested_by_name VARCHAR(120) NOT NULL,
+            handled_by_user_id INT NULL,
+            handled_by_name VARCHAR(120) NULL,
+            handled_at DATETIME NULL,
+            sync_status TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_exam_requests_patient (patient_id),
+            INDEX idx_exam_requests_status (status),
+            INDEX idx_exam_requests_created_at (created_at),
+            INDEX idx_exam_requests_requested_for_date (requested_for_date)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
+    clinic_ensure_column($con, 'exam_requests', 'patient_id', 'INT NOT NULL');
+    clinic_ensure_column($con, 'exam_requests', 'patient_name', 'VARCHAR(180) NOT NULL DEFAULT ""');
+    clinic_ensure_column($con, 'exam_requests', 'request_type', 'VARCHAR(180) NOT NULL DEFAULT ""');
+    clinic_ensure_column($con, 'exam_requests', 'eye', 'VARCHAR(10) NULL');
+    clinic_ensure_column($con, 'exam_requests', 'priority', 'VARCHAR(20) NOT NULL DEFAULT "normal"');
+    clinic_ensure_column($con, 'exam_requests', 'requested_for_date', 'DATE NULL');
+    clinic_ensure_column($con, 'exam_requests', 'notes', 'TEXT NULL');
+    clinic_ensure_column($con, 'exam_requests', 'status', 'VARCHAR(20) NOT NULL DEFAULT "pending"');
+    clinic_ensure_column($con, 'exam_requests', 'result_notes', 'TEXT NULL');
+    clinic_ensure_column($con, 'exam_requests', 'requested_by_user_id', 'INT NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, 'exam_requests', 'requested_by_name', 'VARCHAR(120) NOT NULL DEFAULT ""');
+    clinic_ensure_column($con, 'exam_requests', 'handled_by_user_id', 'INT NULL');
+    clinic_ensure_column($con, 'exam_requests', 'handled_by_name', 'VARCHAR(120) NULL');
+    clinic_ensure_column($con, 'exam_requests', 'handled_at', 'DATETIME NULL');
+    clinic_ensure_column($con, 'exam_requests', 'sync_status', 'TINYINT(1) NOT NULL DEFAULT 0');
+    clinic_ensure_column($con, 'exam_requests', 'created_at', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
+    clinic_ensure_column($con, 'exam_requests', 'updated_at', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+
+    clinic_ensure_index($con, 'exam_requests', 'idx_exam_requests_patient', '`patient_id`');
+    clinic_ensure_index($con, 'exam_requests', 'idx_exam_requests_status', '`status`');
+    clinic_ensure_index($con, 'exam_requests', 'idx_exam_requests_created_at', '`created_at`');
+    clinic_ensure_index($con, 'exam_requests', 'idx_exam_requests_requested_for_date', '`requested_for_date`');
 }
 
 function clinic_ensure_appointment_table(mysqli $con, string $table, string $typeColumn, bool $withReadiness = false): void
@@ -1073,6 +1127,7 @@ function clinic_required_permissions_for_script(string $scriptName): array
         'patient_reports.php' => ['reports'],
         'staff-messages.php' => ['appointments'],
         'staff-messages-poll.php' => ['appointments'],
+        'exam-requests.php' => ['appointments'],
     ];
 
     if (isset($exactMap[$scriptName])) {
