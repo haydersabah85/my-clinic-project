@@ -25,6 +25,7 @@ function visit_type_label(string $type): string
     if ($type === 'first') return 'أول مرة';
     if ($type === 'repeat') return 'متكررة';
     if ($type === 'free') return 'مراجعة';
+    if ($type === 'charity') return 'مجانية';
     return 'غير محدد';
 }
 
@@ -43,7 +44,7 @@ if (!in_array($visitStatus, ['all', 'done', 'pending'], true)) {
 }
 
 $visitType = (string) ($_GET['visit_type'] ?? 'all');
-if (!in_array($visitType, ['all', 'first', 'repeat', 'free'], true)) {
+if (!in_array($visitType, ['all', 'first', 'repeat', 'free', 'charity'], true)) {
     $visitType = 'all';
 }
 
@@ -83,6 +84,7 @@ $summary = [
     'visits_first' => 0,
     'visits_repeat' => 0,
     'visits_free' => 0,
+    'visits_charity' => 0,
     'patients_distinct' => 0,
     'procedures_count' => 0,
     'procedures_income' => 0.0,
@@ -105,6 +107,7 @@ $visitStatsSql = "
         SUM(CASE WHEN v.visit_type = 'first' THEN 1 ELSE 0 END) AS first_count,
         SUM(CASE WHEN v.visit_type = 'repeat' THEN 1 ELSE 0 END) AS repeat_count,
         SUM(CASE WHEN v.visit_type = 'free' THEN 1 ELSE 0 END) AS free_count,
+        SUM(CASE WHEN v.visit_type = 'charity' THEN 1 ELSE 0 END) AS charity_count,
         COUNT(DISTINCT v.patient_id) AS patient_count
     FROM visits v
     LEFT JOIN add_patient p ON p.id = v.patient_id
@@ -120,6 +123,7 @@ if ($visitStatsRes) {
         $summary['visits_first'] = (int) ($row['first_count'] ?? 0);
         $summary['visits_repeat'] = (int) ($row['repeat_count'] ?? 0);
         $summary['visits_free'] = (int) ($row['free_count'] ?? 0);
+        $summary['visits_charity'] = (int) ($row['charity_count'] ?? 0);
         $summary['patients_distinct'] = (int) ($row['patient_count'] ?? 0);
     }
     mysqli_free_result($visitStatsRes);
@@ -1021,6 +1025,7 @@ if ($trendMax < 1) {
                             <option value="first" <?php echo $visitType === 'first' ? 'selected' : ''; ?>>أول مرة</option>
                             <option value="repeat" <?php echo $visitType === 'repeat' ? 'selected' : ''; ?>>متكررة</option>
                             <option value="free" <?php echo $visitType === 'free' ? 'selected' : ''; ?>>مراجعة</option>
+                            <option value="charity" <?php echo $visitType === 'charity' ? 'selected' : ''; ?>>مجانية</option>
                         </select>
                     </div>
                     <div class="field">
@@ -1138,6 +1143,7 @@ if ($trendMax < 1) {
                                     أول مرة: <?php echo number_format($summary['visits_first']); ?><br>
                                     متكررة: <?php echo number_format($summary['visits_repeat']); ?><br>
                                     مراجعة: <?php echo number_format($summary['visits_free']); ?><br>
+                                    مجانية: <?php echo number_format($summary['visits_charity']); ?><br>
                                     مرضى مختلفون: <?php echo number_format($summary['patients_distinct']); ?>
                                 </div>
                             </div>

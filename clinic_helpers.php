@@ -596,6 +596,46 @@ function clinic_ensure_runtime_controls(mysqli $con): void
     ");
 }
 
+function clinic_ensure_visit_type_support(mysqli $con): void
+{
+    if (!clinic_table_exists($con, 'visits')) {
+        return;
+    }
+
+    $res = mysqli_query($con, "SHOW COLUMNS FROM visits LIKE 'visit_type'");
+    if (!$res) {
+        return;
+    }
+
+    $column = mysqli_fetch_assoc($res);
+    mysqli_free_result($res);
+    if (!$column) {
+        return;
+    }
+
+    $type = strtolower((string) ($column['Type'] ?? ''));
+    if (strpos($type, 'enum(') === false) {
+        return;
+    }
+
+    if (strpos($type, "'charity'") !== false) {
+        return;
+    }
+
+    $isNotNull = strtoupper((string) ($column['Null'] ?? 'YES')) === 'NO';
+    $defaultRaw = $column['Default'] ?? null;
+    $allowedDefaults = ['first', 'repeat', 'free', 'charity'];
+    $defaultValue = in_array((string) $defaultRaw, $allowedDefaults, true) ? (string) $defaultRaw : 'repeat';
+
+    $nullSql = $isNotNull ? 'NOT NULL' : 'NULL';
+    $defaultSql = " DEFAULT '" . mysqli_real_escape_string($con, $defaultValue) . "'";
+
+    mysqli_query($con, "
+        ALTER TABLE visits
+        MODIFY COLUMN visit_type ENUM('first','repeat','free','charity') $nullSql$defaultSql
+    ");
+}
+
 function clinic_ensure_sync_conflicts(mysqli $con): void
 {
     mysqli_query($con, "
@@ -1442,11 +1482,11 @@ function clinic_prescription_frequency_options(): array
     return [
         'مرة يوميا',
         'مرتان يوميا',
-        '3 مرات يوميا',
-        '4 مرات يوميا',
+        'ثلاثة مرات يوميا',
+        'أربع مرات يوميا',
         'كل 6 ساعات',
         'كل 8 ساعات',
-        'عند اللزوم',
+        'عند الحاجة',
         'قبل النوم',
     ];
 }
@@ -1456,13 +1496,13 @@ function clinic_prescription_duration_options(): array
     return [
         '3 أيام',
         '5 أيام',
-        '7 أيام',
+        'لمدة أسبوع',
         '10 أيام',
-        '14 يوم',
+        'لمدة أسبوعين',
         'شهر',
         '6 أسابيع',
-        '3 أشهر',
-        'مستمر حتى المراجعة',
+        'ثلاثة أشهر',
+        'باستمرار حتى المراجعة',
     ];
 }
 

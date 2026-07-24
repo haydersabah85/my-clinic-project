@@ -20,7 +20,9 @@ $canUpdateRequests = $isSecretary || $isAdmin;
 
 $requestTypeOptions = [
     'oct_macula' => 'OCT Macula',
+    'oct_angiography' => 'OCT Angiography',
     'oct_disc' => 'OCT Disc',
+    'oct_anterior' => 'OCT Anterior',
     'oct_rnfl' => 'OCT RNFL',
     'fundus_photo' => 'Fundus Photo',
     'ffa' => 'FFA',

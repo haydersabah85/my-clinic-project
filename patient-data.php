@@ -192,7 +192,7 @@ $flash = clinic_take_flash();
 
         .visit-actions {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 10px;
         }
 
@@ -211,6 +211,10 @@ $flash = clinic_take_flash();
 
         .visit-free {
             background: linear-gradient(120deg, #b0602c, #d5823c);
+        }
+
+        .visit-charity {
+            background: linear-gradient(120deg, #6d28d9, #8b5cf6);
         }
 
         .action-section {
@@ -592,6 +596,7 @@ $flash = clinic_take_flash();
                 <a class="visit-first" href="visits2.php?patient_id=<?= $patientId ?>&visit_type=first">زيارة أول مرة</a>
                 <a class="visit-repeat" href="visits2.php?patient_id=<?= $patientId ?>&visit_type=repeat">زيارة متكررة</a>
                 <a class="visit-free" href="visits2.php?patient_id=<?= $patientId ?>&visit_type=free">زيارة مراجعة</a>
+                <a class="visit-charity" href="visits2.php?patient_id=<?= $patientId ?>&visit_type=charity">زيارة مجانية</a>
             </div>
         </section>
 

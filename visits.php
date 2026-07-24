@@ -5,6 +5,10 @@ include_once 'clinic_helpers.php';
 
 clinic_ensure_runtime_controls($con);
 clinic_ensure_daily_revenue($con);
+clinic_ensure_visit_type_support($con);
+clinic_ensure_column($con, 'visits', 'is_paid', 'TINYINT(1) NOT NULL DEFAULT 0');
+clinic_ensure_column($con, 'visits', 'paid_at', 'DATETIME NULL');
+clinic_ensure_column($con, 'visits', 'paid_by', 'VARCHAR(120) NULL');
 
 $today = date('Y-m-d');
 
@@ -27,7 +31,7 @@ if ($isAdminUser) {
     }
 }
 
-$stats = ['total' => 0, 'free' => 0, 'done' => 0, 'pending' => 0];
+$stats = ['total' => 0, 'free' => 0, 'charity' => 0, 'done' => 0, 'pending' => 0, 'paid' => 0, 'unpaid' => 0, 'no_fee' => 0];
 $last_visit_date = null;
 $status_filter = $_GET['status'] ?? 'all';
 $allowed_status_filters = ['all', 'pending', 'done'];
@@ -42,6 +46,7 @@ $stmt = mysqli_prepare($con, "
         v.visit_type,
         v.visit_date,
         v.is_done,
+        v.is_paid,
         v.visit_id,
         p.id AS patient_id,
         p.full_name,
@@ -73,6 +78,14 @@ while ($row = mysqli_fetch_assoc($result)) {
         $stats['done']++;
     } else {
         $stats['pending']++;
+    }
+    $isNoFeeVisit = in_array((string) ($row['visit_type'] ?? ''), ['free', 'charity'], true);
+    if ($isNoFeeVisit) {
+        $stats['no_fee']++;
+    } elseif (!empty($row['is_paid'])) {
+        $stats['paid']++;
+    } else {
+        $stats['unpaid']++;
     }
     if (
         $status_filter === 'all' ||
@@ -475,6 +488,14 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             background: var(--ok);
         }
 
+        .card.paid-card::before {
+            background: #16a34a;
+        }
+
+        .card.unpaid-card::before {
+            background: #d97706;
+        }
+
         .card-icon {
             width: 44px;
             height: 44px;
@@ -500,6 +521,16 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
         .done-card .card-icon {
             background: rgba(53, 127, 90, 0.14);
             color: var(--ok);
+        }
+
+        .paid-card .card-icon {
+            background: rgba(22, 163, 74, 0.14);
+            color: #16a34a;
+        }
+
+        .unpaid-card .card-icon {
+            background: rgba(217, 119, 6, 0.14);
+            color: #b45309;
         }
 
         .card:hover {
@@ -614,7 +645,7 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
 
         table {
             width: 100%;
-            min-width: 940px;
+            min-width: 760px;
             border-collapse: separate;
             border-spacing: 0;
         }
@@ -636,12 +667,13 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             border-bottom: 1px solid rgba(106, 114, 130, 0.16);
         }
 
-        tbody tr:nth-child(even) {
-            background: rgba(39, 121, 104, 0.035);
+        tbody tr:hover {
+            background: rgba(39, 121, 104, 0.06);
         }
 
-        tbody tr:hover {
-            background: rgba(39, 121, 104, 0.1);
+        tbody tr.row-unpaid {
+            background: rgba(217, 119, 6, 0.09);
+            box-shadow: inset 4px 0 0 rgba(217, 119, 6, 0.35);
         }
 
         .badge {
@@ -655,23 +687,51 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
         }
 
         .first {
-            background: linear-gradient(120deg, #2f8d6b, #45ac84);
+            background: linear-gradient(135deg, #2f8d6b, #22c55e);
         }
 
         .repeat {
-            background: linear-gradient(120deg, #2d5eb3, #3d7de0);
+            background: linear-gradient(135deg, #1e4ed8, #0ea5e9);
         }
 
         .free {
             background: linear-gradient(120deg, #b0602c, #d5823c);
         }
 
+        .charity {
+            background: linear-gradient(120deg, #6d28d9, #8b5cf6);
+        }
+
         .status-done {
-            background: linear-gradient(120deg, #3f8f60, #5bb67f);
+            background: linear-gradient(120deg, #15803d, #22c55e);
         }
 
         .status-pending {
-            background: linear-gradient(120deg, #c34f4d, #d96c67);
+            background: linear-gradient(120deg, #b45309, #f59e0b);
+        }
+
+        .status-paid {
+            background: linear-gradient(120deg, #334155, #475569);
+        }
+
+        .status-unpaid {
+            background: linear-gradient(120deg, #b91c1c, #ef4444);
+        }
+
+        .status-no-fee {
+            background: linear-gradient(120deg, #334155, #475569);
+        }
+
+        .payment-toggle-form {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+
+        .payment-toggle {
+            border: 0;
+            cursor: pointer;
+            font: inherit;
         }
 
         .name-link {
@@ -679,6 +739,23 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             color: #2b6d7a;
             font-weight: 800;
             transition: color 0.2s ease;
+        }
+
+        .name-cell {
+            display: block;
+        }
+
+        .patient-col {
+            text-align: right;
+            min-width: 230px;
+        }
+
+        .patient-meta {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            display: block;
         }
 
         .next-patient-banner {
@@ -802,124 +879,36 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             color: #c58c41;
         }
 
-        .last-visit-text {
-            color: var(--muted);
-            font-size: 12px;
-            font-weight: 700;
-        }
-
         .actions {
             white-space: nowrap;
         }
 
-        .actions a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            width: 38px;
-            height: 38px;
-            margin: 0 3px;
-            border-radius: 12px;
-            color: #ffffff;
-            text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.26);
-            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.22);
-            transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
-            font-size: 15px;
-        }
-
-        .actions .inline-post-form {
-            display: inline-flex;
-            vertical-align: middle;
-        }
-
+        .actions a,
         .actions .inline-post-submit {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            width: 38px;
-            height: 38px;
-            margin: 0 3px;
-            border-radius: 12px;
+            width: 34px;
+            height: 34px;
+            margin: 0 2px;
+            border-radius: 8px;
             color: #ffffff;
             text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.26);
-            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
             transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
-            font-size: 15px;
+            font-size: 14px;
             cursor: pointer;
+            font-family: inherit;
+            padding: 0;
         }
 
-        .actions .inline-post-submit::after {
-            content: attr(data-label);
-            position: absolute;
-            inset-inline-start: 50%;
-            transform: translateX(-50%);
-            top: -34px;
-            background: rgba(17, 24, 39, 0.92);
-            color: #fff;
-            font-size: 11px;
-            padding: 5px 8px;
-            border-radius: 8px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.16s ease;
-            z-index: 8;
-        }
-
-        .actions .inline-post-submit:hover::after {
-            opacity: 1;
-        }
-
+        .actions a:hover,
         .actions .inline-post-submit:hover {
-            transform: translateY(-2px) scale(1.04);
+            transform: translateY(-1px) scale(1.03);
             filter: brightness(1.06);
-            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.3);
-        }
-
-        .actions .inline-post-submit:active {
-            transform: translateY(0) scale(0.97);
-            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.22);
-        }
-
-        .actions a:hover {
-            transform: translateY(-2px) scale(1.04);
-            filter: brightness(1.06);
-            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.3);
-        }
-
-        .actions a:active {
-            transform: translateY(0) scale(0.97);
-            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.22);
-        }
-
-        .actions a::after {
-            content: attr(data-label);
-            position: absolute;
-            inset-inline-start: 50%;
-            transform: translateX(-50%);
-            top: -34px;
-            background: rgba(17, 24, 39, 0.92);
-            color: #fff;
-            font-size: 11px;
-            padding: 5px 8px;
-            border-radius: 8px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.16s ease;
-            z-index: 8;
-        }
-
-        .actions a:hover::after {
-            opacity: 1;
-        }
-
-        .enter {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.25);
         }
 
         .edit {
@@ -1081,10 +1070,10 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                     </div>
                 </div>
                 <div class="card free-card">
-                    <div class="card-icon"><i class="fa-solid fa-rotate-left"></i></div>
+                    <div class="card-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
                     <div>
-                        <div class="num"><?= $stats['free'] ?></div>
-                        <div class="label">زيارة مراجعة</div>
+                        <div class="num"><?= $stats['free'] + $stats['charity'] ?></div>
+                        <div class="label">مراجعة + مجانية</div>
                     </div>
                 </div>
                 <div class="card pending-card">
@@ -1099,6 +1088,13 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                     <div>
                         <div class="num"><?= $stats['done'] ?></div>
                         <div class="label">تمت المعاينة</div>
+                    </div>
+                </div>
+                <div class="card unpaid-card">
+                    <div class="card-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div>
+                        <div class="num"><?= $stats['unpaid'] ?></div>
+                        <div class="label">غير مدفوع</div>
                     </div>
                 </div>
 
@@ -1169,18 +1165,17 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                     <thead>
                         <tr>
                             <th>التسلسل</th>
-                            <th>اسم المريض</th>
-                            <th>العمر</th>
-                            <th>اخر زيارة</th>
+                            <th style="text-align: right;">اسم المريض</th>
                             <th>نوع الزيارة</th>
-                            <th>الإجراء</th>
                             <th>حالة الزيارة</th>
+                            <th>الدفع</th>
+                            <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($visits)): ?>
                             <tr>
-                                <td colspan="7" class="empty">لا توجد زيارات مطابقة لهذا الفلتر</td>
+                                <td colspan="6" class="empty">لا توجد زيارات مطابقة لهذا الفلتر</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($visits as $row): ?>
@@ -1198,43 +1193,70 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                                         $visit_text = 'زيارة مراجعة';
                                         $visit_class = 'free';
                                         break;
+                                    case 'charity':
+                                        $visit_text = 'زيارة مجانية';
+                                        $visit_class = 'charity';
+                                        break;
                                     default:
                                         $visit_text = 'غير معروف';
                                         $visit_class = '';
                                 }
+
+                                $isNoFeeVisit = in_array((string) ($row['visit_type'] ?? ''), ['free', 'charity'], true);
+                                $isPaid = $isNoFeeVisit || ((int) ($row['is_paid'] ?? 0) === 1);
+                                $lastVisitText = $row['last_visit_date'] !== null ? ('آخر زيارة: ' . $row['last_visit_date']) : 'لا توجد زيارة سابقة';
                                 ?>
-                                <tr data-patient-id="<?= (int) $row['patient_id'] ?>">
+                                <tr data-patient-id="<?= (int) $row['patient_id'] ?>" class="<?= (!$isNoFeeVisit && !$isPaid) ? 'row-unpaid' : 'row-paid' ?>">
                                     <td><?= $row['daily_serial'] ?></td>
-                                    <td>
-                                        <a class="name-link clinic-user-content <?= ((int) $row['patient_id'] === $nextPatientId) ? 'next-patient-name' : '' ?>" data-no-translate href="patient-file.php?id=<?= $row['patient_id'] ?>">
-                                            <?= htmlspecialchars($row['full_name']) ?>
-                                        </a>
+                                    <td class="patient-col">
+                                        <div class="name-cell">
+                                            <a class="name-link clinic-user-content <?= ((int) $row['patient_id'] === $nextPatientId) ? 'next-patient-name' : '' ?>" data-no-translate href="patient-file.php?id=<?= $row['patient_id'] ?>">
+                                                <?= htmlspecialchars($row['full_name']) ?>
+                                            </a>
+                                        </div>
+                                        <small class="patient-meta">العمر: <?= htmlspecialchars((string) ($row['age'] ?? '-')) ?> | <?= htmlspecialchars($lastVisitText) ?></small>
                                     </td>
-                                    <td><?= htmlspecialchars($row['age']) ?></td>
-
-
+                                    <td><span class="badge <?= $visit_class ?>"><?= $visit_text ?></span></td>
                                     <td>
                                         <?php
-
-                                        if ($row['last_visit_date'] !== null) {
-                                            echo "<small class='last-visit-text'>آخر زيارة: " . $row['last_visit_date'] . "</small>";
+                                        if ($row['is_done'] == 1) {
+                                            echo '<span class="badge status-done">تمت المعاينة</span>';
                                         } else {
-                                            echo "<small class='last-visit-text'>لا توجد زيارة سابقة</small>";
+                                            echo '<span class="badge status-pending">قيد الانتظار</span>';
                                         }
                                         ?>
                                     </td>
-                                    <td><span class="badge <?= $visit_class ?>"><?= $visit_text ?></span></td>
+                                    <td>
+                                        <?php if ($isNoFeeVisit): ?>
+                                            <span class="badge status-no-fee">بدون كشف</span>
+                                        <?php elseif ($isPaid): ?>
+                                            <form class="payment-toggle-form" action="toggle-visit-payment.php" method="post">
+                                                <?= clinic_csrf_input() ?>
+                                                <input type="hidden" name="visit_id" value="<?= (int) $row['visit_id'] ?>">
+                                                <input type="hidden" name="is_paid" value="0">
+                                                <input type="hidden" name="back" value="<?= h('visits.php?status=' . $status_filter) ?>">
+                                                <button
+                                                    class="badge status-paid payment-toggle"
+                                                    title="اضغط للتغيير إلى غير واصل"
+                                                    type="submit">واصل</button>
+                                            </form>
+                                        <?php else: ?>
+                                            <form class="payment-toggle-form" action="toggle-visit-payment.php" method="post">
+                                                <?= clinic_csrf_input() ?>
+                                                <input type="hidden" name="visit_id" value="<?= (int) $row['visit_id'] ?>">
+                                                <input type="hidden" name="is_paid" value="1">
+                                                <input type="hidden" name="back" value="<?= h('visits.php?status=' . $status_filter) ?>">
+                                                <button
+                                                    class="badge status-unpaid payment-toggle"
+                                                    title="اضغط للتغيير إلى واصل"
+                                                    type="submit">غير واصل</button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="actions">
-                                        <a class="enter" data-label="فتح الملف" title="فتح الملف" href="patient-file.php?id=<?= $row['patient_id'] ?>">
-                                            <i class="fa-solid fa-notes-medical"></i>
-                                        </a>
+
                                         <a class="edit" data-label="تعديل الزيارة" title="تعديل الزيارة" href="edit-visit.php?id_edit=<?= $row['visit_id'] ?>">
                                             <i class="fa-solid fa-pen-to-square"></i>
-                                        </a>
-                                        <a class="delete" data-label="حذف الزيارة" title="حذف الزيارة"
-                                            href="delete-visits.php?id_delete=<?= $row['visit_id'] ?>"
-                                            onclick="return confirm('هل أنت متأكد من حذف هذه الزيارة؟');">
-                                            <i class="fa-solid fa-trash-can"></i>
                                         </a>
                                         <form class="inline-post-form" action="notify-next-patient.php" method="post">
                                             <?= clinic_csrf_input() ?>
@@ -1251,15 +1273,11 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                                                 <i class="fa-solid fa-bell-concierge"></i>
                                             </button>
                                         </form>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        if ($row['is_done'] == 1) {
-                                            echo '<span class="badge status-done">تمت المعاينة</span>';
-                                        } else {
-                                            echo '<span class="badge status-pending">قيد الانتظار</span>';
-                                        }
-                                        ?>
+                                        <a class="delete" data-label="حذف الزيارة" title="حذف الزيارة"
+                                            href="delete-visits.php?id_delete=<?= $row['visit_id'] ?>"
+                                            onclick="return confirm('هل أنت متأكد من حذف هذه الزيارة؟');">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

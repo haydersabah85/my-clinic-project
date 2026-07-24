@@ -730,8 +730,8 @@ $summary = [
     </div>
 
     <div class="columns">
-        <?php render_operation_column('العمليات', 'surgery', $surgeryRows, $date); ?>
-        <?php render_operation_column('الليزر', 'laser', $laserRows, $date); ?>
         <?php render_operation_column('الحقن', 'injection', $injectionRows, $date); ?>
+        <?php render_operation_column('الليزر', 'laser', $laserRows, $date); ?>
+        <?php render_operation_column('العمليات', 'surgery', $surgeryRows, $date); ?>
     </div>
 </section>

@@ -195,7 +195,7 @@ if (isset($_GET['id_edit'])) {
     .visit_type {
         grid-column: 1 / -1;
         display: grid;
-        grid-template-columns: repeat(3, minmax(170px, 1fr));
+        grid-template-columns: repeat(4, minmax(170px, 1fr));
         gap: 12px;
     }
 
@@ -226,6 +226,10 @@ if (isset($_GET['id_edit'])) {
 
     #c {
         background: linear-gradient(120deg, #b0602c, #d5823c);
+    }
+
+    #d {
+        background: linear-gradient(120deg, #6d28d9, #8b5cf6);
     }
 
     @media (max-width: 900px) {
@@ -313,6 +317,7 @@ if (isset($_GET['id_edit'])) {
             <a id="a" href="edit-visit2.php?visit_id=<?php echo $row['visit_id']; ?>&visit_type=first">زيارة أول مرة</a>
             <a id="b" href="edit-visit2.php?visit_id=<?php echo $row['visit_id']; ?>&visit_type=repeat">زيارة متكررة</a>
             <a id="c" href="edit-visit2.php?visit_id=<?php echo $row['visit_id']; ?>&visit_type=free">زيارة مراجعة</a>
+            <a id="d" href="edit-visit2.php?visit_id=<?php echo $row['visit_id']; ?>&visit_type=charity">زيارة مجانية</a>
         </div>
 
     </div>
