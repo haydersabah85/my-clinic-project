@@ -1,6 +1,9 @@
 <?php
 include 'config.php';
 include 'auth.php';
+include_once 'clinic_helpers.php';
+
+clinic_ensure_followup_type_support($con);
 
 $today = date('Y-m-d');
 $date_from = trim($_GET['date_from'] ?? '');
@@ -46,7 +49,7 @@ $query = mysqli_stmt_get_result($stmt);
     <meta charset="UTF-8">
     <title>مراجعات الأسبوع</title>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             if (localStorage.getItem("theme") === "dark") {
                 document.body.setAttribute("data-theme", "dark");
             }
@@ -115,6 +118,55 @@ $query = mysqli_stmt_get_result($stmt);
 
         .patient-row strong {
             color: #1f5169;
+        }
+
+        .row-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .entry-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .entry-type.free {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .entry-type.paid {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .type-badge.free {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .type-badge.paid {
+            background: #fef3c7;
+            color: #92400e;
         }
 
         .today {
@@ -209,6 +261,16 @@ $query = mysqli_stmt_get_result($stmt);
             color: #bfdbfe;
         }
 
+        body[data-theme="dark"] .entry-type.free {
+            background: rgba(2, 132, 199, 0.18);
+            color: #bae6fd;
+        }
+
+        body[data-theme="dark"] .entry-type.paid {
+            background: rgba(217, 119, 6, 0.2);
+            color: #fde68a;
+        }
+
         body[data-theme="dark"] .today {
             background: rgba(127, 29, 29, 0.42) !important;
             border-color: rgba(248, 113, 113, 0.34);
@@ -258,7 +320,7 @@ $query = mysqli_stmt_get_result($stmt);
             }
         }
     </style>
-<script src="assets/lang.js" data-clinic-lang defer></script>
+    <script src="assets/lang.js" data-clinic-lang defer></script>
 </head>
 
 <body>
@@ -277,34 +339,42 @@ $query = mysqli_stmt_get_result($stmt);
         <a href="followups.php"><button type="button" class="delete-btn">كل المواعيد</button></a>
         <a href="followup-appointment.php"><button type="button">إعطاء موعد</button></a>
     </form><?php
-    $current_date = '';
+            $current_date = '';
 
-    if (mysqli_num_rows($query) > 0) {
+            if (mysqli_num_rows($query) > 0) {
 
-        while ($row = mysqli_fetch_assoc($query)) {
+                while ($row = mysqli_fetch_assoc($query)) {
 
-            if ($current_date != $row['followup_date']) {
+                    if ($current_date != $row['followup_date']) {
 
-                if ($current_date != '') {
-                    echo "</div>";
-                }
+                        if ($current_date != '') {
+                            echo "</div>";
+                        }
 
-                $current_date = $row['followup_date'];
+                        $current_date = $row['followup_date'];
 
-                echo "<div class='day-card'>";
-                echo "<div class='day-title'>📌 " . date('l d-m-Y', strtotime($current_date)) . "</div>";
-            }
+                        echo "<div class='day-card'>";
+                        echo "<div class='day-title'>📌 " . date('l d-m-Y', strtotime($current_date)) . "</div>";
+                    }
 
-            $class = '';
-            if ($row['followup_date'] == $today) {
-                $class = 'today';
-            } elseif ($row['followup_date'] == date('Y-m-d', strtotime('+1 day'))) {
-                $class = 'tomorrow';
-            }
-    ?>
+                    $class = '';
+                    if ($row['followup_date'] == $today) {
+                        $class = 'today';
+                    } elseif ($row['followup_date'] == date('Y-m-d', strtotime('+1 day'))) {
+                        $class = 'tomorrow';
+                    }
+            ?>
 
             <div class="patient-row <?php echo $class; ?>">
                 <div>
+                    <div class="row-meta">
+                        <span class="entry-type <?php echo (($row['followup_type'] ?? 'review') === 'next_visit') ? 'paid' : 'free'; ?>">
+                            <?php echo (($row['followup_type'] ?? 'review') === 'next_visit') ? '🧾 زيارة قادمة (مدفوعة)' : '🟢 مراجعة مجانية'; ?>
+                        </span>
+                        <span class="type-badge <?php echo (($row['followup_type'] ?? 'review') === 'next_visit') ? 'paid' : 'free'; ?>">
+                            النوع: <?php echo (($row['followup_type'] ?? 'review') === 'next_visit') ? 'زيارة قادمة' : 'مراجعة'; ?>
+                        </span>
+                    </div>
                     <strong><?php echo $row['full_name']; ?></strong><br>
                     📞 <?php echo $row['phone']; ?><br>
                     📝 <?php echo $row['note']; ?><br>
@@ -323,13 +393,13 @@ $query = mysqli_stmt_get_result($stmt);
             </div>
 
     <?php
-    
-        }
 
-        echo "</div>";
-    } else {
-        echo "<p class='empty-message'>لا توجد مراجعات حسب التصفية الحالية</p>";
-    }
+                }
+
+                echo "</div>";
+            } else {
+                echo "<p class='empty-message'>لا توجد مراجعات حسب التصفية الحالية</p>";
+            }
     ?>
 
 </body>

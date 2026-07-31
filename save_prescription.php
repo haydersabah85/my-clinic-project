@@ -10,6 +10,7 @@ $diagnosis = trim($_POST['diagnosis'] ?? '');
 $followup_date = trim($_POST['followup_date'] ?? '');
 $followup_reason = trim($_POST['followup_reason'] ?? '');
 $followup_note = trim($_POST['followup_note'] ?? '');
+$followup_type = strtolower(trim((string) ($_POST['followup_type'] ?? 'review')));
 $syncFields = $IS_LOCAL ? ", sync_status" : "";
 $syncValues = $IS_LOCAL ? ", 0" : "";
 
@@ -100,6 +101,7 @@ try {
         $followup_date,
         $followup_reason,
         $followup_note,
+        $followup_type,
         !empty($IS_LOCAL)
     );
 

@@ -551,20 +551,27 @@ LIMIT 20
                 <textarea id="diagnosis" name="diagnosis" rows="3" placeholder="اكتب التشخيص هنا..."></textarea>
 
                 <div class="followup-box">
-                    <h3 class="section-title">موعد المراجعة القادم</h3>
-                    <p class="followup-note">اترك الحقول فارغة إذا لم تكن هناك مراجعة مطلوبة. عند الحفظ سيُضاف الموعد تلقائيًا إلى قائمة مواعيد المراجعة.</p>
+                    <h3 class="section-title">موعد المتابعة</h3>
+                    <p class="followup-note">اختر نوع الموعد المناسب ثم أدخل التاريخ والسبب. سيتم حفظه في القائمة المناسبة سواء كانت مراجعة مجانية أو زيارة قادمة.</p>
                     <div class="followup-grid">
                         <div>
-                            <label for="followup_date">تاريخ المراجعة</label>
+                            <label for="followup_type">نوع الموعد</label>
+                            <select id="followup_type" name="followup_type">
+                                <option value="review">موعد المراجعة القادمة</option>
+                                <option value="next_visit">موعد الفحص القادم</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="followup_date">تاريخ الموعد</label>
                             <input type="date" id="followup_date" name="followup_date" min="<?php echo date('Y-m-d'); ?>">
                         </div>
                         <div>
-                            <label for="followup_reason">سبب المراجعة</label>
+                            <label for="followup_reason">سبب الموعد</label>
                             <input type="text" id="followup_reason" name="followup_reason" placeholder="مثال: قياس الضغط أو تقييم التحسن">
                         </div>
                         <div style="grid-column: 1 / -1;">
-                            <label for="followup_note">ملاحظات للمراجعة القادمة</label>
-                            <textarea id="followup_note" name="followup_note" rows="2" placeholder="تعليمات أو فحوص مطلوبة في الزيارة القادمة"></textarea>
+                            <label for="followup_note">ملاحظات للموعد</label>
+                            <textarea id="followup_note" name="followup_note" rows="2" placeholder="تعليمات أو فحوص مطلوبة في الموعد القادم"></textarea>
                         </div>
                     </div>
                 </div>

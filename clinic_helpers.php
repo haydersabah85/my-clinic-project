@@ -182,6 +182,7 @@ function clinic_ensure_infrastructure(mysqli $con): void
     clinic_ensure_column($con, 'prescriptions', 'next_followup_date', 'DATE NULL');
     clinic_ensure_column($con, 'prescriptions', 'next_followup_reason', 'VARCHAR(255) NULL');
     clinic_ensure_column($con, 'prescriptions', 'next_followup_note', 'TEXT NULL');
+    clinic_ensure_followup_type_support($con);
     clinic_ensure_column($con, 'followups', 'source_type', 'VARCHAR(50) NULL');
     clinic_ensure_column($con, 'followups', 'source_id', 'INT NULL');
     clinic_ensure_index($con, 'followups', 'idx_followups_source', '`source_type`, `source_id`');
@@ -593,6 +594,29 @@ function clinic_ensure_runtime_controls(mysqli $con): void
             setting_value TEXT NULL,
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+}
+
+function clinic_ensure_followup_type_support(mysqli $con): void
+{
+    if (!clinic_table_exists($con, 'followups')) {
+        return;
+    }
+
+    $res = mysqli_query($con, "SHOW COLUMNS FROM followups LIKE 'followup_type'");
+    if (!$res) {
+        return;
+    }
+
+    $column = mysqli_fetch_assoc($res);
+    mysqli_free_result($res);
+    if ($column) {
+        return;
+    }
+
+    mysqli_query($con, "
+        ALTER TABLE followups
+        ADD COLUMN followup_type ENUM('review','next_visit') NOT NULL DEFAULT 'review' AFTER followup_reason
     ");
 }
 
@@ -1510,7 +1534,7 @@ function clinic_get_prescription_followup(mysqli $con, array $prescription): ?ar
 {
     if (!empty($prescription['followup_id']) && !empty($prescription['patient_id'])) {
         $followup_stmt = mysqli_prepare($con, '
-            SELECT followup_date, followup_reason, note
+            SELECT followup_date, followup_reason, note, followup_type
             FROM followups
             WHERE id = ? AND patient_id = ?
             LIMIT 1
@@ -1521,6 +1545,7 @@ function clinic_get_prescription_followup(mysqli $con, array $prescription): ?ar
         mysqli_stmt_execute($followup_stmt);
         $followup = mysqli_fetch_assoc(mysqli_stmt_get_result($followup_stmt));
         if ($followup) {
+            $followup['followup_type'] = (($followup['followup_type'] ?? 'review') === 'next_visit') ? 'next_visit' : 'review';
             return $followup;
         }
     }
@@ -1530,6 +1555,7 @@ function clinic_get_prescription_followup(mysqli $con, array $prescription): ?ar
             'followup_date' => $prescription['next_followup_date'] ?? '',
             'followup_reason' => $prescription['next_followup_reason'] ?? '',
             'note' => $prescription['next_followup_note'] ?? '',
+            'followup_type' => 'review',
         ];
     }
 
@@ -1565,7 +1591,8 @@ function clinic_followup_print_line(?array $followup): string
 
     $date = (string) $followup['followup_date'];
     $day = clinic_arabic_day_name($date);
-    $text = 'الفحص القادم يوم ' . $day . ' بتاريخ ' . $date;
+    $typeLabel = (($followup['followup_type'] ?? 'review') === 'next_visit') ? 'موعد الفحص القادم' : 'موعد المراجعة القادمة';
+    $text = $typeLabel . ' يوم ' . $day . ' بتاريخ ' . $date;
 
     if (!empty($followup['followup_reason'])) {
         $text .= ' - ' . trim((string) $followup['followup_reason']);
@@ -1582,11 +1609,13 @@ function clinic_sync_prescription_followup(
     string $followup_date,
     string $followup_reason,
     string $followup_note,
+    string $followup_type,
     bool $isLocal
 ): int {
     $followup_date = trim($followup_date);
     $followup_reason = trim($followup_reason);
     $followup_note = trim($followup_note);
+    $followup_type = in_array($followup_type, ['review', 'next_visit'], true) ? $followup_type : 'review';
     $hasFollowup = ($followup_date !== '' || $followup_reason !== '' || $followup_note !== '');
 
     if ($hasFollowup && ($followup_date === '' || $followup_reason === '')) {
@@ -1624,17 +1653,17 @@ function clinic_sync_prescription_followup(
         if ($isLocal) {
             $update_stmt = mysqli_prepare($con, '
                 UPDATE followups
-                SET followup_date = ?, followup_reason = ?, note = ?, source_type = "prescription", source_id = ?, updated_at = NOW(), sync_status = 0
+                SET followup_date = ?, followup_reason = ?, note = ?, followup_type = ?, source_type = "prescription", source_id = ?, updated_at = NOW(), sync_status = 0
                 WHERE id = ? AND patient_id = ?
             ');
-            mysqli_stmt_bind_param($update_stmt, 'sssiii', $followup_date, $followup_reason, $followup_note, $prescription_id, $current_followup_id, $patient_id);
+            mysqli_stmt_bind_param($update_stmt, 'ssssiii', $followup_date, $followup_reason, $followup_note, $followup_type, $prescription_id, $current_followup_id, $patient_id);
         } else {
             $update_stmt = mysqli_prepare($con, '
                 UPDATE followups
-                SET followup_date = ?, followup_reason = ?, note = ?, source_type = "prescription", source_id = ?, updated_at = NOW()
+                SET followup_date = ?, followup_reason = ?, note = ?, followup_type = ?, source_type = "prescription", source_id = ?, updated_at = NOW()
                 WHERE id = ? AND patient_id = ?
             ');
-            mysqli_stmt_bind_param($update_stmt, 'sssiii', $followup_date, $followup_reason, $followup_note, $prescription_id, $current_followup_id, $patient_id);
+            mysqli_stmt_bind_param($update_stmt, 'ssssiii', $followup_date, $followup_reason, $followup_note, $followup_type, $prescription_id, $current_followup_id, $patient_id);
         }
         mysqli_stmt_execute($update_stmt);
         return $current_followup_id;
@@ -1642,16 +1671,16 @@ function clinic_sync_prescription_followup(
 
     if ($isLocal) {
         $insert_stmt = mysqli_prepare($con, '
-            INSERT INTO followups (patient_id, followup_date, followup_reason, note, source_type, source_id, updated_at, sync_status)
-            VALUES (?, ?, ?, ?, "prescription", ?, NOW(), 0)
+            INSERT INTO followups (patient_id, followup_date, followup_reason, note, followup_type, source_type, source_id, updated_at, sync_status)
+            VALUES (?, ?, ?, ?, ?, "prescription", ?, NOW(), 0)
         ');
-        mysqli_stmt_bind_param($insert_stmt, 'isssi', $patient_id, $followup_date, $followup_reason, $followup_note, $prescription_id);
+        mysqli_stmt_bind_param($insert_stmt, 'issssi', $patient_id, $followup_date, $followup_reason, $followup_note, $followup_type, $prescription_id);
     } else {
         $insert_stmt = mysqli_prepare($con, '
-            INSERT INTO followups (patient_id, followup_date, followup_reason, note, source_type, source_id, updated_at)
-            VALUES (?, ?, ?, ?, "prescription", ?, NOW())
+            INSERT INTO followups (patient_id, followup_date, followup_reason, note, followup_type, source_type, source_id, updated_at)
+            VALUES (?, ?, ?, ?, ?, "prescription", ?, NOW())
         ');
-        mysqli_stmt_bind_param($insert_stmt, 'isssi', $patient_id, $followup_date, $followup_reason, $followup_note, $prescription_id);
+        mysqli_stmt_bind_param($insert_stmt, 'issssi', $patient_id, $followup_date, $followup_reason, $followup_note, $followup_type, $prescription_id);
     }
     mysqli_stmt_execute($insert_stmt);
 

@@ -103,7 +103,8 @@ if (!$linked_followup && (!empty($p['next_followup_date']) || !empty($p['next_fo
         </p>
 
         <?php if ($linked_followup) { ?>
-            <p><b>المراجعة القادمة:</b>
+            <?php $followup_label = (($linked_followup['followup_type'] ?? 'review') === 'next_visit') ? 'موعد الفحص القادم' : 'موعد المراجعة القادمة'; ?>
+            <p><b><?= htmlspecialchars($followup_label, ENT_QUOTES, 'UTF-8'); ?>:</b>
                 <?php echo htmlspecialchars($linked_followup['followup_date'] ?: '-', ENT_QUOTES, 'UTF-8'); ?>
                 <?php if (!empty($linked_followup['followup_reason'])) echo ' - ' . htmlspecialchars($linked_followup['followup_reason'], ENT_QUOTES, 'UTF-8'); ?>
                 <?php if (!empty($linked_followup['note'])) echo '<br><span style="color:#475569;">' . htmlspecialchars($linked_followup['note'], ENT_QUOTES, 'UTF-8') . '</span>'; ?>

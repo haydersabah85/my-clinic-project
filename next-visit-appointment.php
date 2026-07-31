@@ -1,6 +1,9 @@
 <?php
 include 'config.php';
 include 'auth.php';
+include_once 'clinic_helpers.php';
+
+clinic_ensure_followup_type_support($con);
 
 $patient_id = 0;
 if (isset($_GET['id'])) {
@@ -52,7 +55,7 @@ while ($row = mysqli_fetch_assoc($capacity_result)) {
 }
 
 $previous_followups = mysqli_query($con, "
-    SELECT followup_date, followup_reason, note, status
+    SELECT followup_date, followup_reason, note, status, followup_type
     FROM followups
     WHERE patient_id = $patient_id
     ORDER BY followup_date DESC
@@ -379,8 +382,8 @@ function arDayName(string $date): string
     <div class="page">
         <section class="hero">
             <div class="hero-main">
-                <h1>تحديد موعد المراجعة القادمة</h1>
-                <p>اختر يوم مراجعة مناسب للمريض مع سبب واضح وملاحظة مختصرة.</p>
+                <h1>تحديد موعد الزيارة القادمة</h1>
+                <p>هذا النوع مخصص للزيارة القادمة/المتكررة التي تُحسب كموعد مدفوع بعد فترة زمنية أكبر من المراجعة المجانية.</p>
                 <div class="hero-actions">
                     <a href="patient-file.php?id=<?= $patient_id ?>">ملف المريض</a>
                     <a href="followups.php">قائمة المتابعة</a>
@@ -429,8 +432,11 @@ function arDayName(string $date): string
                     <?php endforeach; ?>
                 </div>
 
-                <label for="followup_reason">سبب المراجعة</label>
-                <input type="text" id="followup_reason" name="followup_reason" placeholder="مثال: مراجعة ضغط العين" required>
+                <div class="empty" style="margin-bottom:12px; border:1px solid #fde68a; background:#fffbeb; color:#92400e;">نوع الموعد: زيارة قادمة مدفوعة</div>
+                <input type="hidden" name="followup_type" value="next_visit">
+
+                <label for="followup_reason">سبب الزيارة القادمة</label>
+                <input type="text" id="followup_reason" name="followup_reason" placeholder="مثال: متابعة بعد شهر" required>
 
                 <label for="note">ملاحظات إضافية</label>
                 <textarea id="note" name="note" placeholder="اكتب أي تفاصيل مهمة للزيارة القادمة..."></textarea>
@@ -466,6 +472,7 @@ function arDayName(string $date): string
                                 <strong><?= htmlspecialchars($followup['followup_date'], ENT_QUOTES, 'UTF-8') ?></strong>
                                 <p>
                                     <?= htmlspecialchars($followup['followup_reason'] ?: 'بدون سبب مسجل', ENT_QUOTES, 'UTF-8') ?><br>
+                                    النوع: <?= htmlspecialchars(($followup['followup_type'] ?? 'review') === 'next_visit' ? 'زيارة قادمة' : 'مراجعة مجانية', ENT_QUOTES, 'UTF-8') ?><br>
                                     الحالة: <?= htmlspecialchars($followup['status'], ENT_QUOTES, 'UTF-8') ?>
                                 </p>
                             </div>

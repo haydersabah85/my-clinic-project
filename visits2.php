@@ -44,6 +44,16 @@ if (isset($_GET['patient_id'])) {
 
     try {
         $stmt->execute();
+
+        $followup_stmt = $con->prepare("
+            UPDATE followups
+            SET status = 'done', updated_at = NOW()" . ($IS_LOCAL ? ", sync_status = 0" : "") . "
+            WHERE patient_id = ? AND status = 'pending'
+        ");
+        $followup_stmt->bind_param("i", $patient_id);
+        $followup_stmt->execute();
+        $followup_stmt->close();
+
         echo
         "<script>alert('تم اضافة الزيارة بنجاح.');</script>";
     } catch (Exception $e) {

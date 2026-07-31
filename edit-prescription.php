@@ -32,11 +32,12 @@ $linked_followup = [
     'followup_date' => $prescription['next_followup_date'] ?? '',
     'followup_reason' => $prescription['next_followup_reason'] ?? '',
     'note' => $prescription['next_followup_note'] ?? '',
+    'followup_type' => 'review',
 ];
 
 if (!empty($prescription['followup_id'])) {
     $followup_stmt = mysqli_prepare($con, "
-        SELECT followup_date, followup_reason, note
+        SELECT followup_date, followup_reason, note, followup_type
         FROM followups
         WHERE id = ? AND patient_id = ?
         LIMIT 1
@@ -441,19 +442,26 @@ function selected($value, $current): string
             <textarea id="diagnosis" name="diagnosis" rows="3"><?= htmlspecialchars($prescription['diagnosis'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
 
             <div class="followup-card">
-                <h2 class="section-title" style="margin-top:0;">موعد المراجعة القادم</h2>
-                <p class="followup-hint">عند تعبئة التاريخ والسبب سيتم تحديث موعد المراجعة المرتبط بهذه الوصفة تلقائيًا.</p>
+                <h2 class="section-title" style="margin-top:0;">موعد المتابعة</h2>
+                <p class="followup-hint">اختر نوع الموعد ثم أدخل التاريخ والسبب؛ سيتم حفظه في القائمة المناسبة.</p>
                 <div class="followup-grid">
                     <div>
-                        <label for="followup_date">تاريخ المراجعة</label>
+                        <label for="followup_type">نوع الموعد</label>
+                        <select id="followup_type" name="followup_type">
+                            <option value="review" <?= selected('review', $linked_followup['followup_type'] ?? 'review') ?>>موعد المراجعة القادمة</option>
+                            <option value="next_visit" <?= selected('next_visit', $linked_followup['followup_type'] ?? 'review') ?>>موعد الفحص القادم</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="followup_date">تاريخ الموعد</label>
                         <input type="date" id="followup_date" name="followup_date" value="<?= htmlspecialchars($linked_followup['followup_date'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     </div>
                     <div>
-                        <label for="followup_reason">سبب المراجعة</label>
+                        <label for="followup_reason">سبب الموعد</label>
                         <input type="text" id="followup_reason" name="followup_reason" placeholder="مثال: تقييم الاستجابة للعلاج" value="<?= htmlspecialchars($linked_followup['followup_reason'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                     </div>
                     <div style="grid-column: 1 / -1;">
-                        <label for="followup_note">ملاحظات للمراجعة</label>
+                        <label for="followup_note">ملاحظات للموعد</label>
                         <textarea id="followup_note" name="followup_note" rows="2" placeholder="فحوص أو تعليمات للموعد القادم"><?= htmlspecialchars($linked_followup['note'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                     </div>
                 </div>

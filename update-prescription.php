@@ -16,6 +16,7 @@ $diagnosis = trim($_POST['diagnosis'] ?? '');
 $followup_date = trim($_POST['followup_date'] ?? '');
 $followup_reason = trim($_POST['followup_reason'] ?? '');
 $followup_note = trim($_POST['followup_note'] ?? '');
+$followup_type = strtolower(trim((string) ($_POST['followup_type'] ?? 'review')));
 
 if ($prescription_id <= 0 || $patient_id <= 0) {
     die("خطأ: بيانات الوصفة غير مكتملة");
@@ -43,6 +44,7 @@ try {
         $followup_date,
         $followup_reason,
         $followup_note,
+        $followup_type,
         !empty($IS_LOCAL)
     );
 
