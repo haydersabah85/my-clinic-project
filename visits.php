@@ -570,6 +570,27 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             flex: 1 1 320px;
         }
 
+        .helper-strip {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .helper-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(44, 140, 119, 0.1);
+            color: var(--accent-2);
+            border: 1px solid rgba(44, 140, 119, 0.24);
+        }
+
         .search-box input {
             width: min(100%, 580px);
             border: 1px solid var(--panel-border);
@@ -883,6 +904,10 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             white-space: nowrap;
         }
 
+        .is-hidden {
+            display: none !important;
+        }
+
         .actions a,
         .actions .inline-post-submit {
             display: inline-flex;
@@ -1144,6 +1169,10 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                     <input type="text" id="searchInput" placeholder="🔍 ابحث باسم المريض أو نوع الزيارة أو الرقم التسلسلي...">
                 </div>
 
+                <div class="helper-strip">
+                    <span class="helper-pill"><i class="fa-solid fa-magnifying-glass"></i> بحث مباشر</span>
+                </div>
+
                 <div class="status-filters" aria-label="فلترة حالة الزيارة">
                     <a class="status-filter <?= $status_filter === 'all' ? 'active' : '' ?>" href="visits.php">
                         <i class="fa-solid fa-list"></i>
@@ -1206,7 +1235,7 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
                                 $isPaid = $isNoFeeVisit || ((int) ($row['is_paid'] ?? 0) === 1);
                                 $lastVisitText = $row['last_visit_date'] !== null ? ('آخر زيارة: ' . $row['last_visit_date']) : 'لا توجد زيارة سابقة';
                                 ?>
-                                <tr data-patient-id="<?= (int) $row['patient_id'] ?>" class="<?= (!$isNoFeeVisit && !$isPaid) ? 'row-unpaid' : 'row-paid' ?>">
+                                <tr data-patient-id="<?= (int) $row['patient_id'] ?>" data-search="<?= h($row['full_name'] . ' ' . $visit_text . ' ' . $row['daily_serial'] . ' ' . $row['visit_id']) ?>" class="<?= (!$isNoFeeVisit && !$isPaid) ? 'row-unpaid' : 'row-paid' ?>">
                                     <td><?= $row['daily_serial'] ?></td>
                                     <td class="patient-col">
                                         <div class="name-cell">
@@ -1330,15 +1359,21 @@ $nextPatientId = (int) ($nextPatientAlert['patient_id'] ?? 0);
             });
         }
 
-        document.getElementById('searchInput').addEventListener('keyup', function() {
-            const filter = this.value.toLowerCase();
-            const rows = document.querySelectorAll('tbody tr');
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            const rows = Array.from(document.querySelectorAll('tbody tr[data-search]'));
+            const updateRows = () => {
+                const filter = searchInput.value.trim().toLowerCase();
+                rows.forEach(row => {
+                    const haystack = (row.getAttribute('data-search') || '').toLowerCase();
+                    const matches = !filter || haystack.includes(filter);
+                    row.classList.toggle('is-hidden', !matches);
+                });
+            };
 
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(filter) ? '' : 'none';
-            });
-        });
+            searchInput.addEventListener('input', updateRows);
+            updateRows();
+        }
 
         setupSidebarAccordion();
     </script>

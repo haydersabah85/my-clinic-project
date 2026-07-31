@@ -883,6 +883,7 @@ $alertsSummary = [
 
   .health-grid .card {
     padding: 16px;
+    min-height: 102px;
   }
 
   .health-grid .card span {
@@ -2028,6 +2029,28 @@ $alertsSummary = [
           <a href="add-patient.php">➕ إضافة مريض </a>
         </div>
       </div>
+
+      <section class="box" aria-label="نظرة ذكية">
+        <h3>لوحة العمل الذكية</h3>
+        <div class="health-grid">
+          <div class="card">
+            <span><?= (int) $followups ?></span>
+            <p>متابعات اليوم</p>
+          </div>
+          <div class="card">
+            <span><?= (int) $tomorrowFollowups ?></span>
+            <p>متابعات الغد</p>
+          </div>
+          <div class="card">
+            <span><?= (int) $pendingOperations ?></span>
+            <p>عمليات قادمة</p>
+          </div>
+          <div class="card">
+            <span><?= (int) $critical ?></span>
+            <p>حالات حرجة</p>
+          </div>
+        </div>
+      </section>
 
       <section class="box" aria-label="System health">
         <h3><?= h(clinic_t('system_health')) ?></h3>

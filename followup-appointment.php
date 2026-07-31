@@ -260,6 +260,15 @@ if ($patient_id > 0) {
 
 <body class="clinic-polished">
     <div class="page">
+        <div class="panel" style="margin-bottom:16px; border:1px solid #bfdbfe; background:linear-gradient(135deg, #f0f9ff, #eff6ff);">
+            <h2 style="margin:0 0 8px; color:#1d4ed8;">إرشادات سريعة</h2>
+            <div style="display:grid; gap:6px; color:#334155; font-weight:700;">
+                <div>• المراجعة المجانية: مناسبة لزيارة سريعة أو متابعة قصيرة.</div>
+                <div>• إذا كان الموعد يحتاج إلى متابعة مدفوعة أو تكرار بعد فترة أطول، استخدم صفحة الزيارة القادمة.</div>
+                <div>• هذه الأنواع ستظهر بوضوح في صفحة المتابعة لتسهيل العمل اليومي.</div>
+            </div>
+        </div>
+
         <div class="topbar">
             <div>
                 <h1>إعطاء موعد مراجعة مجانية</h1>

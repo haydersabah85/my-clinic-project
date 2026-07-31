@@ -380,6 +380,15 @@ function arDayName(string $date): string
 
 <body>
     <div class="page">
+        <div class="panel" style="margin-bottom:16px; border:1px solid #bbf7d0; background:linear-gradient(135deg, #f0fdf4, #ecfeff);">
+            <h2 style="margin:0 0 8px; color:#166534;">معلومة سريعة</h2>
+            <div style="display:grid; gap:6px; color:#334155; font-weight:700;">
+                <div>• هذا النوع مخصص للزيارة القادمة المتكررة أو المتابعة المدفوعة.</div>
+                <div>• يفضل اختيار تاريخ مناسب مع قدرة اليوم وسهولة متابعة الفريق.</div>
+                <div>• بعد الحفظ، ستظهر هذه المتابعة بشكل واضح في صفحة المتابعة مع نوعها.</div>
+            </div>
+        </div>
+
         <section class="hero">
             <div class="hero-main">
                 <h1>تحديد موعد الزيارة القادمة</h1>

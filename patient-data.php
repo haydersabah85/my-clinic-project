@@ -22,6 +22,29 @@ if (!$row) {
 $patientId = (int) $row['id'];
 $patientName = $row['full_name'] ?? '';
 $flash = clinic_take_flash();
+
+$visitCount = 0;
+$lastVisitDate = '—';
+$pendingFollowupCount = 0;
+$lastFollowupDate = '—';
+
+$visitStatsStmt = mysqli_prepare($con, "SELECT COUNT(*) AS visit_count, MAX(visit_date) AS last_visit_date FROM visits WHERE patient_id = ?");
+if ($visitStatsStmt) {
+    mysqli_stmt_bind_param($visitStatsStmt, 'i', $patientId);
+    mysqli_stmt_execute($visitStatsStmt);
+    $visitStats = mysqli_fetch_assoc(mysqli_stmt_get_result($visitStatsStmt));
+    $visitCount = (int) ($visitStats['visit_count'] ?? 0);
+    $lastVisitDate = $visitStats['last_visit_date'] ? (string) $visitStats['last_visit_date'] : '—';
+}
+
+$followupStatsStmt = mysqli_prepare($con, "SELECT COUNT(*) AS pending_count, MAX(followup_date) AS last_followup_date FROM followups WHERE patient_id = ? AND status = 'pending'");
+if ($followupStatsStmt) {
+    mysqli_stmt_bind_param($followupStatsStmt, 'i', $patientId);
+    mysqli_stmt_execute($followupStatsStmt);
+    $followupStats = mysqli_fetch_assoc(mysqli_stmt_get_result($followupStatsStmt));
+    $pendingFollowupCount = (int) ($followupStats['pending_count'] ?? 0);
+    $lastFollowupDate = $followupStats['last_followup_date'] ? (string) $followupStats['last_followup_date'] : '—';
+}
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -135,6 +158,48 @@ $flash = clinic_take_flash();
             color: #fff;
             background: rgba(255, 255, 255, .16);
             border-color: rgba(255, 255, 255, .2);
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .insight-card {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 13px 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .insight-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(29, 78, 216, .16), rgba(15, 118, 110, .14));
+            font-size: 20px;
+        }
+
+        .insight-card strong {
+            display: block;
+            font-size: 18px;
+            color: var(--text);
+        }
+
+        .insight-card span {
+            display: block;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--muted);
         }
 
         .content-grid {
@@ -293,6 +358,10 @@ $flash = clinic_take_flash();
                 grid-template-columns: 1fr;
             }
 
+            .insight-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .hero-actions {
                 justify-content: stretch;
             }
@@ -305,6 +374,10 @@ $flash = clinic_take_flash();
         @media (max-width: 640px) {
             body {
                 padding: 14px;
+            }
+
+            .insight-grid {
+                grid-template-columns: 1fr;
             }
 
             .hero {
@@ -587,6 +660,37 @@ $flash = clinic_take_flash();
                 <a href="dashboard.php">لوحة التحكم</a>
                 <a href="main.php">كل المرضى</a>
                 <a href="edit-patient.php?id_edit=<?= $patientId ?>">تعديل البيانات</a>
+            </div>
+        </section>
+
+        <section class="insight-grid" aria-label="مؤشرات سريعة للمريض">
+            <div class="insight-card">
+                <div class="insight-icon">📅</div>
+                <div>
+                    <strong><?= (int) $visitCount ?></strong>
+                    <span>عدد الزيارات</span>
+                </div>
+            </div>
+            <div class="insight-card">
+                <div class="insight-icon">🗓️</div>
+                <div>
+                    <strong><?= h($lastVisitDate) ?></strong>
+                    <span>آخر زيارة</span>
+                </div>
+            </div>
+            <div class="insight-card">
+                <div class="insight-icon">⏳</div>
+                <div>
+                    <strong><?= (int) $pendingFollowupCount ?></strong>
+                    <span>متابعة معلقة</span>
+                </div>
+            </div>
+            <div class="insight-card">
+                <div class="insight-icon">🔔</div>
+                <div>
+                    <strong><?= h($lastFollowupDate) ?></strong>
+                    <span>آخر متابعة</span>
+                </div>
             </div>
         </section>
 

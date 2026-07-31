@@ -1880,6 +1880,77 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         }
 
         /* ==================================================
+   PATIENT INSIGHTS
+================================================== */
+        .patient-insight-card {
+            margin: 14px 0 18px;
+            padding: 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(37, 99, 235, 0.16);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(14, 165, 233, 0.05));
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        .insight-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: 900;
+        }
+
+        .insight-head span {
+            color: #0f766e;
+            font-size: 13px;
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .insight-pill {
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-align: center;
+        }
+
+        .insight-pill strong {
+            display: block;
+            font-size: 20px;
+            color: #1d4ed8;
+        }
+
+        .insight-pill span {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 800;
+        }
+
+        .insight-pill.is-danger {
+            border-color: rgba(239, 68, 68, 0.28);
+            background: rgba(254, 242, 242, 0.9);
+        }
+
+        .insight-pill.is-danger strong {
+            color: #b91c1c;
+        }
+
+        .insight-note {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.68);
+            color: #334155;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* ==================================================
    STATISTICS CARDS
 ================================================== */
         .stats-grid {
@@ -2322,6 +2393,21 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         body[data-theme="dark"] .record-jumpbar {
             background: rgba(15, 23, 42, .94);
             color: var(--text);
+        }
+
+        body[data-theme="dark"] .patient-insight-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(13, 148, 136, 0.12));
+            border-color: rgba(96, 165, 250, 0.2);
+        }
+
+        body[data-theme="dark"] .insight-pill {
+            background: rgba(15, 23, 42, 0.78);
+            border-color: rgba(148, 163, 184, 0.16);
+        }
+
+        body[data-theme="dark"] .insight-note {
+            background: rgba(15, 23, 42, 0.68);
+            color: #dbeafe;
         }
 
         body[data-theme="dark"] .patient-info-actions,
@@ -2805,7 +2891,42 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         $laser_count = mysqli_num_rows(mysqli_query($con, "SELECT id FROM laser WHERE patient_id = $id"));
         $injection_count = mysqli_num_rows(mysqli_query($con, "SELECT id FROM injection WHERE patient_id = $id"));
         $retina_count = mysqli_num_rows(mysqli_query($con, "SELECT id FROM retina_drawings WHERE patient_id = $id"));
+
+        $pending_followups = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM followups WHERE patient_id = {$id} AND status = 'pending'"))['total'] ?? 0;
+        $overdue_followups = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM followups WHERE patient_id = {$id} AND status = 'pending' AND followup_date < CURDATE()"))['total'] ?? 0;
+        $latest_followup = mysqli_fetch_assoc(mysqli_query($con, "SELECT followup_date, followup_reason, followup_type FROM followups WHERE patient_id = {$id} AND status = 'pending' ORDER BY followup_date ASC, id ASC LIMIT 1"));
         ?>
+
+        <div class="patient-insight-card">
+            <div class="insight-head">
+                <strong>مؤشرات سريعة</strong>
+                <span><?= !empty($row['is_critical']) ? 'مريض يحتاج انتباه' : 'حالة طبيعية' ?></span>
+            </div>
+            <div class="insight-grid">
+                <div class="insight-pill">
+                    <strong><?= (int) $pending_followups ?></strong>
+                    <span>متابعات معلقة</span>
+                </div>
+                <div class="insight-pill <?= $overdue_followups > 0 ? 'is-danger' : '' ?>">
+                    <strong><?= (int) $overdue_followups ?></strong>
+                    <span>متأخرة</span>
+                </div>
+                <div class="insight-pill">
+                    <strong><?= (int) $visits_count ?></strong>
+                    <span>زيارات</span>
+                </div>
+                <div class="insight-pill">
+                    <strong><?= (int) $va_count ?></strong>
+                    <span>VA / IOP</span>
+                </div>
+            </div>
+            <?php if ($latest_followup): ?>
+                <div class="insight-note">
+                    <strong>أقرب متابعة:</strong>
+                    <?= htmlspecialchars(($latest_followup['followup_date'] ?? '-') . ' • ' . ($latest_followup['followup_reason'] ?: 'بدون سبب') . ' • ' . (($latest_followup['followup_type'] ?? 'review') === 'next_visit' ? 'زيارة قادمة' : 'مراجعة مجانية'), ENT_QUOTES, 'UTF-8') ?>
+                </div>
+            <?php endif; ?>
+        </div>
 
         <div class="stats-grid">
             <a class="stat-card stat-visits" href="#clinical-timeline" aria-label="الانتقال إلى الزيارات">
