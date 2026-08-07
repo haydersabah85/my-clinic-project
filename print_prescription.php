@@ -42,6 +42,22 @@ $q = mysqli_query($con, "SELECT id, medicine_name, medicine_form FROM medicines"
 while ($m = mysqli_fetch_assoc($q)) {
     $medicine_names[$m['id']] = $m['medicine_name'] . "  " . $m['medicine_form'];
 }
+
+function clinic_print_prescription_number($n)
+{
+    $map = [1000 => 'M', 900 => 'CM', 500 => 'D', 400 => 'CD', 100 => 'C', 90 => 'XC', 50 => 'L', 40 => 'XL', 10 => 'X', 9 => 'IX', 5 => 'V', 4 => 'IV', 1 => 'I'];
+    $result = '';
+    while ($n > 0) {
+        foreach ($map as $value => $letter) {
+            if ($n >= $value) {
+                $result .= $letter;
+                $n -= $value;
+                break;
+            }
+        }
+    }
+    return $result;
+}
 ?>
 
 <!DOCTYPE html>
@@ -186,6 +202,20 @@ while ($m = mysqli_fetch_assoc($q)) {
             font-size: 17px;
             color: #143dc6;
             page-break-inside: avoid;
+        }
+
+        .medicine-number {
+            display: inline-block;
+            margin-left: 6px;
+            min-width: 22px;
+            font-weight: 700;
+            color: #d32f2f;
+        }
+
+        .medicine-number::after {
+            content: ".";
+            margin-right: 4px;
+            color: #d32f2f;
         }
 
         .footer {

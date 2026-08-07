@@ -773,6 +773,50 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             max-height: none;
         }
 
+        .chart-board {
+            display: flex;
+            flex-direction: column;
+            max-height: none;
+            overflow: visible;
+            padding-inline-end: 4px;
+            scrollbar-gutter: stable;
+            overscroll-behavior: contain;
+        }
+
+        .chart-board.timeline-scrollable {
+            max-height: min(78vh, 900px);
+            overflow: hidden;
+        }
+
+        .chart-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .chart-board:not(.timeline-scrollable) .chart-toolbar {
+            position: static;
+        }
+
+        .visit-timeline {
+            flex: 1 1 auto;
+            overflow-y: hidden;
+            overflow-x: hidden;
+            min-height: 0;
+            padding-inline-end: 6px;
+            scroll-behavior: smooth;
+        }
+
+        .chart-board.timeline-scrollable .visit-timeline {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+        }
+
         /* بطاقات الأقسام */
         .previous_visits,
         .previous_va,
@@ -793,7 +837,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         }
 
         .previous_visits {
-            overflow: hidden;
+            overflow: visible;
         }
 
         /* ارتفاعات مناسبة */
@@ -843,13 +887,6 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             letter-spacing: -0.2px;
         }
 
-        #clinical-timeline .chart-board {
-            max-height: clamp(460px, 72vh, 960px);
-            overflow: auto;
-            padding-inline-end: 4px;
-            scrollbar-gutter: stable;
-            overscroll-behavior: contain;
-        }
 
         /* ==================================================
    TABLES
@@ -2814,7 +2851,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                 <span class="patient-info-value"><?php echo htmlspecialchars($row['phone_no']); ?></span>
             </p>
             <?php if (!empty($row['is_critical'])): ?>
-                <span class="critical-patient-badge">🚨 مريض مهم / يحتاج انتباهاً</span>
+                <span class="critical-patient-badge">🚨 مريض حرج (تم تعليمه يدويًا)</span>
             <?php endif; ?>
             <div class="patient-info-actions">
                 <h3 class="patient-action-title">إدارة ملف المريض</h3>
@@ -2838,7 +2875,8 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         <div class="nav">
             <?php
 
-            $critical_class = (($row['is_critical'] ?? 0) == 1) ? 'critical-blink' : '';
+            $isCritical = !empty($row['is_critical']);
+            $critical_class = $isCritical ? 'critical-blink' : '';
             ?>
 
             <a href="marked_as_done.php?id=<?= $id ?>"
@@ -2849,10 +2887,10 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                 <span class="nav-action-label">تمت المعاينة</span>
             </a>
 
-            <a href="mark_critical.php?id=<?= $id ?>"
+            <a href="mark_critical.php?id=<?= (int) $id ?>"
                 class="icon-btn warning-icon <?= $critical_class ?>"
-                data-title="تعليم كمريض حرج">
-                <span class="nav-icon" aria-hidden="true">🚨</span><span class="nav-action-label">مريض حرج</span>
+                data-title="<?= $isCritical ? 'إلغاء التعليم كمريض حرج' : 'تعليم كمريض حرج' ?>">
+                <span class="nav-icon" aria-hidden="true">🚨</span><span class="nav-action-label"><?= $isCritical ? 'إلغاء حرج' : 'مريض حرج' ?></span>
             </a>
 
             <a href="#" class="icon-btn followup-btn"
@@ -2900,7 +2938,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         <div class="patient-insight-card">
             <div class="insight-head">
                 <strong>مؤشرات سريعة</strong>
-                <span><?= !empty($row['is_critical']) ? 'مريض يحتاج انتباه' : 'حالة طبيعية' ?></span>
+                <span><?= !empty($row['is_critical']) ? 'مريض حرج يدويًا' : 'حالة طبيعية' ?></span>
             </div>
             <div class="insight-grid">
                 <div class="insight-pill">
@@ -2970,7 +3008,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         <div class="previous_data">
             <div class="previous_visits record-section" id="clinical-timeline">
                 <h3 class="section-title">التسلسل السريري</h3>
-                <div class="chart-board">
+                <div class="chart-board<?= !empty($timelineScrollEnabled) && $timelineScrollEnabled ? ' timeline-scrollable' : '' ?>">
                     <div class="chart-toolbar">
                         <strong>عرض الزيارات مجمعة حسب التاريخ</strong>
                         <div class="chart-filters" aria-label="فلترة التسلسل">
@@ -2983,6 +3021,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                         <?php
                         if (!empty($id)) {
                             $id = (int)$id;
+                            $timelineScrollEnabled = false;
                             $visitRows = [];
                             $vaRowsByDate = [];
                             $retinaRowsByDate = [];
@@ -3008,6 +3047,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
 
                             $dateKeys = array_keys($dates);
                             rsort($dateKeys);
+                            $timelineScrollEnabled = count($dateKeys) > 8;
                             $withVaCount = 0;
                             $withoutVaCount = 0;
                             $withRetinaCount = 0;

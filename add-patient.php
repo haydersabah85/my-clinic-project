@@ -66,12 +66,26 @@ include_once "clinic_helpers.php";
     }
 
     .page-header {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       gap: 18px;
       margin-bottom: 18px;
-      padding: 8px 2px 0;
+      padding: 18px 20px;
+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.10), rgba(37, 99, 235, 0.08));
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-header::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 6px;
+      background: linear-gradient(180deg, var(--primary), var(--blue));
     }
 
     .page-title {
@@ -79,6 +93,7 @@ include_once "clinic_helpers.php";
       font-size: 30px;
       line-height: 1.25;
       font-weight: 800;
+      color: var(--primary);
     }
 
     .page-subtitle {
@@ -95,6 +110,7 @@ include_once "clinic_helpers.php";
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
+      align-items: center;
     }
 
     .btn {
@@ -360,7 +376,7 @@ include_once "clinic_helpers.php";
         </div>
       </div>
 
-      
+
 
       <div class="form-footer">
         <a class="btn btn-muted" href="dashboard.php">إلغاء</a>
@@ -388,22 +404,25 @@ include_once "clinic_helpers.php";
         if (!params.get('name') && !params.get('phone')) return [];
 
         const response = await fetch('check-patient-duplicates.php?' + params.toString(), {
-          headers: { Accept: 'application/json' }
+          headers: {
+            Accept: 'application/json'
+          }
         });
         const data = await response.json();
         if (currentRequest !== requestId) return matches;
 
         matches = Array.isArray(data.matches) ? data.matches : [];
         warning.classList.toggle('is-visible', matches.length > 0);
-        warning.textContent = matches.length
-          ? 'تنبيه: يوجد مريض مشابه: ' + matches.map(item =>
-              item.full_name + ' (رقم ' + item.id + (item.phone_no ? '، ' + item.phone_no : '') + ')'
-            ).join('، ')
-          : '';
+        warning.textContent = matches.length ?
+          'تنبيه: يوجد مريض مشابه: ' + matches.map(item =>
+            item.full_name + ' (رقم ' + item.id + (item.phone_no ? '، ' + item.phone_no : '') + ')'
+          ).join('، ') :
+          '';
         return matches;
       }
 
       [nameInput, phoneInput, ageInput].forEach(input => {
+        input.addEventListener('input', () => checkDuplicates().catch(() => {}));
         input.addEventListener('blur', () => checkDuplicates().catch(() => {}));
       });
 

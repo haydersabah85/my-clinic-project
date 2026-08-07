@@ -803,13 +803,14 @@ $id = (int) $row['id'];
     <div class="nav">
         <?php
 
-        $critical_class = ($row['is_critical'] == 1) ? 'critical-blink' : '';
+        $isCritical = !empty($row['is_critical']);
+        $critical_class = $isCritical ? 'critical-blink' : '';
         ?>
 
-        <a href="mark_critical.php?id=<?= $id ?>"
+        <a href="mark_critical.php?id=<?= (int) $id ?>"
             class="icon-btn warning-icon <?= $critical_class ?>"
-            data-title="تعليم كمريض حرج">
-            🚨
+            data-title="<?= $isCritical ? 'إلغاء التعليم كمريض حرج' : 'تعليم كمريض حرج' ?>">
+            <?= $isCritical ? '🚨' : '🚨' ?>
         </a>
 
         <a href="#" class="icon-btn followup-btn"

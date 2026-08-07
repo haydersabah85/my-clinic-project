@@ -43,6 +43,22 @@ $q = mysqli_query($con, "SELECT id, medicine_name, medicine_form FROM medicines"
 while ($m = mysqli_fetch_assoc($q)) {
     $medicine_names[$m['id']] = $m['medicine_name'] . "  " . $m['medicine_form'];
 }
+
+function clinic_print_prescription_number($n)
+{
+    $map = [1000 => 'M', 900 => 'CM', 500 => 'D', 400 => 'CD', 100 => 'C', 90 => 'XC', 50 => 'L', 40 => 'XL', 10 => 'X', 9 => 'IX', 5 => 'V', 4 => 'IV', 1 => 'I'];
+    $result = '';
+    while ($n > 0) {
+        foreach ($map as $value => $letter) {
+            if ($n >= $value) {
+                $result .= $letter;
+                $n -= $value;
+                break;
+            }
+        }
+    }
+    return $result;
+}
 ?>
 
 <!DOCTYPE html>
@@ -132,6 +148,20 @@ while ($m = mysqli_fetch_assoc($q)) {
             page-break-inside: avoid;
         }
 
+        .medicine-number {
+            display: inline-block;
+            margin-left: 6px;
+            min-width: 22px;
+            font-weight: 700;
+            color: #0f3d91;
+        }
+
+        .medicine-number::after {
+            content: ".";
+            margin-right: 4px;
+            color: #0f3d91;
+        }
+
         .medicine strong {
             color: rgb(20, 69, 232);
             margin-right: 10px;
@@ -190,7 +220,7 @@ while ($m = mysqli_fetch_assoc($q)) {
     <div class="page">
         <!-- <img class="print-logo" src="assets/logo.png" alt="شعار العيادة"> -->
         <div class="rx-area">
-           
+
             <?php if ($followup_print_line !== '') { ?>
                 <div class="next-followup">
                     <?php echo h($followup_print_line); ?>
@@ -199,11 +229,13 @@ while ($m = mysqli_fetch_assoc($q)) {
                     <?php } ?>
                 </div>
             <?php } ?>
-            
+
             <div class="diagnosis"><?php echo h($p['diagnosis']); ?></div>
 
-            <?php while ($row = mysqli_fetch_assoc($items)) { ?>
+            <?php $counter = 1;
+            while ($row = mysqli_fetch_assoc($items)) { ?>
                 <div class="medicine">
+                    <span class="medicine-number"><?php echo h(clinic_print_prescription_number($counter++)); ?></span>
                     <strong><?php echo h($medicine_names[$row['medicine_id']] ?? ''); ?></strong>
                     <span class="medicine-part"><?php echo h($row['dose']); ?></span>
                     <span class="medicine-part"><?php echo h($row['frequency']); ?></span>
