@@ -9,20 +9,26 @@ if (!$id) {
     die('Invalid prescription id.');
 }
 
+$date = filter_input(INPUT_GET, 'date', FILTER_SANITIZE_STRING);
+$prescription_date = !empty($date) ? date('Y-m-d', strtotime($date)) : '';
 $stmt = $con->prepare("
     SELECT p.*, pa.full_name AS patient_name, pa.age AS age
     FROM prescriptions p
     JOIN add_patient pa ON p.patient_id = pa.id
-    WHERE p.id = ?
+    WHERE p.id = ? 
     LIMIT 1
 ");
-$stmt->bind_param('i', $id);
+$stmt->bind_param('i', $id,);
 $stmt->execute();
 $p = $stmt->get_result()->fetch_assoc();
 
 if (!$p) {
     http_response_code(404);
     die('Prescription not found.');
+}
+
+if (!empty($p['prescription_date'])) {
+    $prescription_date = date('Y-m-d', strtotime($p['prescription_date']));
 }
 
 $linked_followup = clinic_get_prescription_followup($con, $p);
@@ -99,11 +105,12 @@ function clinic_print_prescription_number($n)
         .rx-area {
             direction: ltr;
             position: absolute;
-            top: 90mm;
-            right: 13mm;
-            left: 17mm;
-            font-size: 17px;
-            line-height: 2;
+            border: 1px solid #e2e8f0;
+            top: 70mm;
+            right: 12mm;
+            left: 14mm;
+            font-size: 16px;
+            line-height: 1.5;
         }
 
         .print-logo {
@@ -114,9 +121,53 @@ function clinic_print_prescription_number($n)
             height: auto;
         }
 
+        .patient-details {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px 14px;
+            margin-bottom: 17mm;
+            font-size: 14px;
+            line-height: 1.7;
+            direction: rtl;
+            padding-top: 2mm;
+        }
+
+        .patient-detail {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 6px;
+            color: #1f2937;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .patient-detail:first-child {
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .patient-detail:last-child {
+            margin-right: auto;
+            text-align: left;
+        }
+
+        .patient-detail-label {
+            color: #2a150f;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .patient-detail-value {
+            color: #334155;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
         .diagnosis {
             text-align: center;
-            font-size: 19px;
+            font-size: 18px;
             font-weight: bold;
             color: #63089c;
             margin-bottom: 8mm;
@@ -129,7 +180,7 @@ function clinic_print_prescription_number($n)
             border-radius: 10px;
             background: rgba(21, 101, 192, 0.06);
             color: #0f3d91;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 800;
             text-align: center;
         }
@@ -220,6 +271,20 @@ function clinic_print_prescription_number($n)
     <div class="page">
         <!-- <img class="print-logo" src="assets/logo.png" alt="شعار العيادة"> -->
         <div class="rx-area">
+            <div class="patient-details">
+                <div class="patient-detail">
+                    <span class="patient-detail-label">الأسم:</span>
+                    <span class="patient-detail-value"><?php echo h($p['patient_name']); ?></span>
+                </div>
+                <div class="patient-detail">
+                    <span class="patient-detail-label">العمر:</span>
+                    <span class="patient-detail-value"><?php echo h($p['age']); ?></span>
+                </div>
+                <div class="patient-detail">
+                    <span class="patient-detail-label">التاريخ:</span>
+                    <span class="patient-detail-value"><?php echo h($prescription_date ?: '-'); ?></span>
+                </div>
+            </div>
 
             <?php if ($followup_print_line !== '') { ?>
                 <div class="next-followup">
