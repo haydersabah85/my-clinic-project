@@ -105,7 +105,7 @@ function clinic_print_prescription_number($n)
         .rx-area {
             direction: ltr;
             position: absolute;
-            border: 1px solid #e2e8f0;
+           
             top: 70mm;
             right: 12mm;
             left: 14mm;
