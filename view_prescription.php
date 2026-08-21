@@ -9,7 +9,7 @@ $id = (int)$_GET['id'];
 $linked_followup = null;
 
 $p = mysqli_fetch_assoc(mysqli_query($con, "
-SELECT p.*, pa.full_name as patient_name
+SELECT p.*, pa.full_name as patient_name, pa.age as patient_age
 FROM prescriptions p
 JOIN add_patient pa ON p.patient_id = pa.id
 WHERE p.id = $id
@@ -68,12 +68,56 @@ if (!$linked_followup && (!empty($p['next_followup_date']) || !empty($p['next_fo
     }
 
     .container {
-        max-width: 600px;
+        max-width: 700px;
         margin: auto;
         background: #f8f9fa;
         padding: 20px;
-        border-radius: 8px;
+        border-radius: 12px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .patient-card {
+        background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+        border: 1px solid #dfeaff;
+        border-right: 5px solid #3b82f6;
+        border-radius: 16px;
+        padding: 14px;
+        margin: 20px 0;
+    }
+
+    .patient-details {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .patient-detail {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 44px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 12px;
+        padding: 8px 10px;
+    }
+
+    .patient-detail-label {
+        color: #475569;
+        font-weight: 700;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .patient-detail-value {
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 15px;
+        text-align: left;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     h2 {
@@ -88,6 +132,12 @@ if (!$linked_followup && (!empty($p['next_followup_date']) || !empty($p['next_fo
     hr {
         margin: 20px 0;
     }
+
+    @media (max-width: 600px) {
+        .patient-details {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <body>
@@ -96,10 +146,25 @@ if (!$linked_followup && (!empty($p['next_followup_date']) || !empty($p['next_fo
 
         <h2>الوصفة محفوظة بنجاح ✅</h2>
 
-        <p><b>اسم المريض:</b> <?php echo $p['patient_name']; ?></p>
-        <p><b>التاريخ:</b> <?php echo $p['prescription_date']; ?></p>
+        <div class="patient-card">
+            <div class="patient-details">
+                <div class="patient-detail">
+                    <span class="patient-detail-label">الاسم</span>
+                    <span class="patient-detail-value"><?php echo htmlspecialchars($p['patient_name'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div class="patient-detail">
+                    <span class="patient-detail-label">العمر</span>
+                    <span class="patient-detail-value"><?php echo htmlspecialchars($p['patient_age'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div class="patient-detail">
+                    <span class="patient-detail-label">التاريخ</span>
+                    <span class="patient-detail-value"><?php echo htmlspecialchars($p['prescription_date'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+            </div>
+        </div>
+
         <p><b>التشخيص:</b>
-            <?php echo $p['diagnosis']; ?>
+            <?php echo htmlspecialchars($p['diagnosis'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
         </p>
 
         <?php if ($linked_followup) { ?>
@@ -142,6 +207,11 @@ if (!$linked_followup && (!empty($p['next_followup_date']) || !empty($p['next_fo
         <a href="print_treatment_only.php?id=<?php echo $id; ?>" target="_blank">
             <button style="background:#2e7d32;color:#fff;padding:8px 12px;border:none;border-radius:6px; cursor: pointer;">
                 💊 طباعة العلاج فقط
+            </button>
+        </a>
+        <a href="patient-file.php?id=<?php echo $p['patient_id']; ?>" target="_blank">
+            <button style="background:#6b21a8;color:#fff;padding:8px 12px;border:none;border-radius:6px; cursor: pointer;">
+                🗂 ملف المريض
             </button>
         </a>
     </div>

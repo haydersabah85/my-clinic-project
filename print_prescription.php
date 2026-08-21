@@ -101,6 +101,15 @@ function clinic_print_prescription_number($n)
             overflow: hidden;
             margin: 0 auto;
             background: #fff;
+            z-index: 0;
+        }
+
+        .header,
+        .patient-card,
+        .rx-box,
+        .footer {
+            position: relative;
+            z-index: 2;
         }
 
         .top-curve,
@@ -110,6 +119,7 @@ function clinic_print_prescription_number($n)
             width: 100%;
             height: 30mm;
             background: linear-gradient(to left, #1565c0, #1e88e5);
+            z-index: 1;
         }
 
         .top-curve {
@@ -139,12 +149,52 @@ function clinic_print_prescription_number($n)
             font-size: 14px;
         }
 
-        .patient-info {
+        .patient-card {
             margin-top: 10mm;
+            background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+            border: 1px solid #dfeaff;
+            border-right: 5px solid #3b82f6;
+            border-radius: 16px;
+            padding: 12px 14px;
+            box-shadow: 0 8px 18px rgba(59, 130, 246, 0.06);
+            clear: both;
+        }
+
+        .patient-details {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            width: 100%;
+        }
+
+        .patient-detail {
             display: flex;
+            align-items: center;
             justify-content: space-between;
             gap: 8px;
+            min-height: 42px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 12px;
+            padding: 8px 10px;
+            min-width: 0;
+        }
+
+        .patient-detail-label {
+            color: #475569;
+            font-weight: 700;
             font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .patient-detail-value {
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 15px;
+            text-align: left;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .rx-box {
@@ -293,10 +343,22 @@ function clinic_print_prescription_number($n)
             <h3>تخصص دقيق في جراحة الشبكية والسائل الزجاجي</h3>
         </div>
 
-        <div class="patient-info">
-            <div>الاسم: <?php echo h($p['patient_name']); ?></div>
-            <div>العمر: <?php echo h($p['age']); ?></div>
-            <div>التاريخ: <?php echo date('Y-m-d'); ?></div>
+        <?php $print_date = !empty($p['prescription_date']) ? date('Y-m-d', strtotime($p['prescription_date'])) : date('Y-m-d'); ?>
+        <div class="patient-card">
+            <div class="patient-details">
+                <div class="patient-detail">
+                    <span class="patient-detail-label">الاسم</span>
+                    <span class="patient-detail-value"><?php echo h($p['patient_name']); ?></span>
+                </div>
+                <div class="patient-detail">
+                    <span class="patient-detail-label">العمر</span>
+                    <span class="patient-detail-value"><?php echo h($p['age']); ?></span>
+                </div>
+                <div class="patient-detail">
+                    <span class="patient-detail-label">التاريخ</span>
+                    <span class="patient-detail-value"><?php echo h($print_date); ?></span>
+                </div>
+            </div>
         </div>
 
         <div class="rx-box">

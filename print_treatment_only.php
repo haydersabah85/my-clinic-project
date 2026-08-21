@@ -105,12 +105,11 @@ function clinic_print_prescription_number($n)
         .rx-area {
             direction: ltr;
             position: absolute;
-           
-            top: 70mm;
+            top: 69mm;
             right: 12mm;
             left: 14mm;
             font-size: 16px;
-            line-height: 1.5;
+            line-height: 1.8;
         }
 
         .print-logo {
@@ -129,7 +128,7 @@ function clinic_print_prescription_number($n)
             gap: 6px 14px;
             margin-bottom: 17mm;
             font-size: 14px;
-            line-height: 1.7;
+            line-height: 1.3;
             direction: rtl;
             padding-top: 2mm;
         }
@@ -156,21 +155,34 @@ function clinic_print_prescription_number($n)
         .patient-detail-label {
             color: #2a150f;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 15px;
         }
 
         .patient-detail-value {
             color: #334155;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 15px;
         }
 
         .diagnosis {
             text-align: center;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #63089c;
             margin-bottom: 8mm;
+        }
+
+        .prescription-rx {
+            display: inline-block;
+            margin: 0 0 3mm 0;
+            color: #a11d1d;
+            font-size: 24px;
+            font-weight: 900;
+            line-height: 1;
+            vertical-align: middle;
+            transform: translateY(-1px);
+            letter-spacing: -1px;
+            text-shadow: 0 0 0.5px rgba(161, 29, 29, 0.18);
         }
 
         .next-followup {
@@ -180,7 +192,7 @@ function clinic_print_prescription_number($n)
             border-radius: 10px;
             background: rgba(21, 101, 192, 0.06);
             color: #0f3d91;
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 800;
             text-align: center;
         }
@@ -221,7 +233,7 @@ function clinic_print_prescription_number($n)
         .medicine-part {
             display: inline-block;
             margin-right: 10px;
-            font-size: 16px;
+            font-size: 15px;
         }
 
         .print-btn {
@@ -296,6 +308,10 @@ function clinic_print_prescription_number($n)
             <?php } ?>
 
             <div class="diagnosis"><?php echo h($p['diagnosis']); ?></div>
+
+            <div style="margin-bottom: 4mm;">
+                <span class="prescription-rx" aria-label="علامة الوصفة الطبية">℞</span>
+            </div>
 
             <?php $counter = 1;
             while ($row = mysqli_fetch_assoc($items)) { ?>
