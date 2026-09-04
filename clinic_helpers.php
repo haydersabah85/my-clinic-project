@@ -1504,10 +1504,14 @@ function clinic_audit(mysqli $con, string $action, string $table, ?int $record_i
 function clinic_prescription_frequency_options(): array
 {
     return [
-        'مرة يوميا',
-        'مرتان يوميا',
-        'ثلاثة مرات يوميا',
-        'أربع مرات يوميا',
+        '1x1',
+        '1x2',
+        '1x3',
+        '1x4',
+        'مرة باليوم',
+        'مرتان باليوم',
+        'ثلاثة مرات باليوم',
+        'أربع مرات باليوم',
         'كل 6 ساعات',
         'كل 8 ساعات',
         'عند الحاجة',
@@ -1518,13 +1522,13 @@ function clinic_prescription_frequency_options(): array
 function clinic_prescription_duration_options(): array
 {
     return [
-        '3 أيام',
-        '5 أيام',
+        'ثلاثة أيام',
+        'خمسة أيام',
         'لمدة أسبوع',
-        '10 أيام',
+        'عشرة أيام',
         'لمدة أسبوعين',
         'شهر',
-        '6 أسابيع',
+        'ستة أسابيع',
         'ثلاثة أشهر',
         'باستمرار حتى المراجعة',
     ];
@@ -1583,6 +1587,21 @@ function clinic_arabic_day_name(string $date): string
     return $days[$english] ?? $english;
 }
 
+function clinic_format_display_date(string $date): string
+{
+    $date = trim($date);
+    if ($date === '') {
+        return '';
+    }
+
+    $timestamp = strtotime($date);
+    if ($timestamp === false) {
+        return $date;
+    }
+
+    return date('Y/m/d', $timestamp);
+}
+
 function clinic_followup_print_line(?array $followup): string
 {
     if (!$followup || empty($followup['followup_date'])) {
@@ -1590,9 +1609,10 @@ function clinic_followup_print_line(?array $followup): string
     }
 
     $date = (string) $followup['followup_date'];
+    $displayDate = clinic_format_display_date($date);
     $day = clinic_arabic_day_name($date);
     $typeLabel = (($followup['followup_type'] ?? 'review') === 'next_visit') ? 'موعد الفحص القادم' : 'موعد المراجعة القادمة';
-    $text = $typeLabel . ' يوم ' . $day . ' بتاريخ ' . $date;
+    $text = $typeLabel . ' يوم ' . $day . ' بتاريخ ' . $displayDate;
 
     if (!empty($followup['followup_reason'])) {
         $text .= ' - ' . trim((string) $followup['followup_reason']);

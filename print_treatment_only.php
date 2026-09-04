@@ -105,9 +105,9 @@ function clinic_print_prescription_number($n)
         .rx-area {
             direction: ltr;
             position: absolute;
-            top: 69mm;
-            right: 12mm;
-            left: 14mm;
+            top: 66mm;
+            right: 11mm;
+            left: 11mm;
             font-size: 16px;
             line-height: 1.8;
         }
@@ -126,9 +126,9 @@ function clinic_print_prescription_number($n)
             align-items: center;
             justify-content: space-between;
             gap: 6px 14px;
-            margin-bottom: 17mm;
+            margin-bottom: 16mm;
             font-size: 14px;
-            line-height: 1.3;
+            line-height: 1.1;
             direction: rtl;
             padding-top: 2mm;
         }
@@ -155,18 +155,18 @@ function clinic_print_prescription_number($n)
         .patient-detail-label {
             color: #2a150f;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 12px;
         }
 
         .patient-detail-value {
-            color: #334155;
+            color: #0f54b5;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 14px;
         }
 
         .diagnosis {
             text-align: center;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             color: #63089c;
             margin-bottom: 8mm;
@@ -174,9 +174,9 @@ function clinic_print_prescription_number($n)
 
         .prescription-rx {
             display: inline-block;
-            margin: 0 0 3mm 0;
+            margin: 0 0 4mm 0;
             color: #a11d1d;
-            font-size: 24px;
+            font-size: 23px;
             font-weight: 900;
             line-height: 1;
             vertical-align: middle;
@@ -192,9 +192,10 @@ function clinic_print_prescription_number($n)
             border-radius: 10px;
             background: rgba(21, 101, 192, 0.06);
             color: #0f3d91;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 800;
             text-align: center;
+            direction: rtl;
         }
 
         .next-followup-note {
@@ -205,7 +206,7 @@ function clinic_print_prescription_number($n)
         }
 
         .medicine {
-            margin-bottom: 6mm;
+            margin-bottom: 4mm;
             color: #f21818;
             font-weight: bold;
             page-break-inside: avoid;
