@@ -819,6 +819,7 @@ function clinic_apply_online_deletions(mysqli $localDb, mysqli $onlineDb): int
         'laser_appointment'     => 'id',
         'injection_appointment' => 'id',
         'medicines'             => 'id',
+        'va'                    => 'va_id',
     ];
 
     $lastChecked = clinic_get_app_setting($localDb, 'deleted_records_last_checked_at', '1970-01-01 00:00:00');
@@ -1165,6 +1166,7 @@ function clinic_required_permissions_for_script(string $scriptName): array
         'add-image.php' => ['patients'],
         'add-image2.php' => ['patients'],
         'delete-image.php' => ['patients'],
+        'delete-va.php' => ['patients'],
         'common-medicines.php' => ['prescriptions'],
         'common-medicines2.php' => ['prescriptions'],
         'treatment.php' => ['prescriptions'],

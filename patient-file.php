@@ -605,6 +605,17 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             color: #fff;
         }
 
+        .va-delete-icon {
+            background: linear-gradient(135deg, #f59e0b, #b45309);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 18px rgba(245, 158, 11, 0.25);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+            line-height: 1;
+        }
+
         .warning-icon {
             background: linear-gradient(135deg, #facc15, #eab308);
             color: #111827;
@@ -3249,6 +3260,7 @@ if (!function_exists('pf_extract_first_visit_summary')) {
                                 echo "<a class='icon-btn retina-action' href='retina-chart.php?patient_id=" . h($id) . "&date=" . h($visitDate) . "' data-title='رسم الشبكية'>◎</a>";
                                 if (!empty($vaForDate)) {
                                     echo "<a class='text-action' href='edit-va.php?id_edit=" . h($vaForDate[0]['va_id']) . "'>تعديل VA</a>";
+                                    echo "<a class='icon-btn va-delete-icon' href='delete-va.php?id_delete=" . h($vaForDate[0]['va_id']) . "&patient_id=" . h($id) . "' onclick=\"return confirm('هل تريد حذف هذا الفحص VA؟');\" data-title='حذف VA'>VA ×</a>";
                                 }
                                 foreach ($visitsForDate as $visit_row) {
                                     echo "<button type='button' class='icon-btn edit-icon edit-btn' data-note='" . h($visit_row['notes']) . "' data-id='" . h($visit_row['id']) . "' data-title='تعديل الزيارة'>✏️</button>";
