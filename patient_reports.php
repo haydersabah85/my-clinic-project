@@ -492,11 +492,11 @@ if ($listStmt) {
             .print-sheet {
                 display: block;
                 position: absolute;
-                top: 90mm;
-                right: 20mm;
-                left: 20mm;
-                font-size: 16px;
-                line-height: 1.5;
+                top: 60mm;
+                right: 12mm;
+                left: 12mm;
+                font-size: 14px;
+                line-height: 1.4;
                 white-space: pre-wrap;
                 color: #111827 !important;
             }
@@ -678,14 +678,48 @@ if ($listStmt) {
 
         function preparePrint() {
             const reportInput = document.getElementById('report_body');
-            const reportText = reportInput.value || '';
+            const reportDateInput = document.getElementById('report_date');
+            const reportTitleInput = document.getElementById('report_title');
+            const reportText = (reportInput && reportInput.value) || '';
+            const patientName = <?php echo json_encode((string) ($patient['full_name'] ?? ''), JSON_UNESCAPED_UNICODE); ?>;
+            const patientAge = <?php echo json_encode((string) ($patient['age'] ?? ''), JSON_UNESCAPED_UNICODE); ?>;
+            const reportDate = (reportDateInput && reportDateInput.value) || new Date().toISOString().slice(0, 10);
             const printSheet = document.getElementById('printSheet');
-            printSheet.textContent = reportText;
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function formatDate(value) {
+                if (!value) return '';
+                const [year, month, day] = value.split('-');
+                if (!year || !month || !day) return value;
+                return `${year}-${month}-${day}`;
+            }
+
+            const patientHeader = `
+                <div style="direction:rtl; margin:0 0 4px; font-size:13px; line-height:1.4; color:#111827; border-bottom:1px solid #d9e3ef; padding-bottom:6px; display:flex; flex-wrap:nowrap; justify-content:space-between; align-items:center; gap:8px; white-space:nowrap;">
+                    <span><strong>الاسم:</strong> ${escapeHtml(patientName)}</span>
+                    <span><strong>العمر:</strong> ${escapeHtml(patientAge)}</span>
+                    <span><strong>التاريخ:</strong> ${escapeHtml(formatDate(reportDate))}</span>
+                </div>
+            `;
+
+            printSheet.innerHTML = patientHeader + '<div style="white-space:pre-wrap; line-height:1.3; font-size:16px; color:#111827;">' + escapeHtml(reportText).replace(/\n/g, '<br>') + '</div>';
+
             const isLatin = /[A-Za-z]/.test(reportText);
             const isArabic = /[\u0600-\u06FF]/.test(reportText);
             const printDir = isLatin && (!isArabic || reportText.search(/[A-Za-z]/) < reportText.search(/[\u0600-\u06FF]/)) ? 'ltr' : 'rtl';
             printSheet.dir = printDir;
             printSheet.style.textAlign = printDir === 'ltr' ? 'left' : 'right';
+            printSheet.style.padding = '12mm 10mm';
+            printSheet.style.background = '#fff';
+
             window.print();
         }
     </script>
