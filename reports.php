@@ -88,8 +88,11 @@ $summary = [
     'patients_distinct' => 0,
     'procedures_count' => 0,
     'procedures_income' => 0.0,
-    'surgeries_count' => 0,
+    'retina_count' => 0,
+    'retina_income' => 0.0,
     'laser_count' => 0,
+    'laser_income' => 0.0,
+    'surgeries_count' => 0,
     'injection_count' => 0,
     'followups_count' => 0,
     'followups_pending' => 0,
@@ -130,7 +133,13 @@ if ($visitStatsRes) {
 }
 
 $procStatsSql = "
-    SELECT COUNT(*) AS total_count, COALESCE(SUM(total_cost), 0) AS total_income
+    SELECT
+        COUNT(*) AS total_count,
+        COALESCE(SUM(total_cost), 0) AS total_income,
+        COALESCE(SUM(CASE WHEN category = 'retina' THEN qty ELSE 0 END), 0) AS retina_count,
+        COALESCE(SUM(CASE WHEN category = 'retina' THEN total_cost ELSE 0 END), 0) AS retina_income,
+        COALESCE(SUM(CASE WHEN category = 'laser' THEN qty ELSE 0 END), 0) AS laser_count,
+        COALESCE(SUM(CASE WHEN category = 'laser' THEN total_cost ELSE 0 END), 0) AS laser_income
     FROM procedure_entries
     WHERE procedure_date BETWEEN '{$escapedFrom}' AND '{$escapedTo}'
 ";
@@ -140,6 +149,10 @@ if ($procStatsRes) {
     if ($row) {
         $summary['procedures_count'] = (int) ($row['total_count'] ?? 0);
         $summary['procedures_income'] = (float) ($row['total_income'] ?? 0);
+        $summary['retina_count'] = (int) ($row['retina_count'] ?? 0);
+        $summary['retina_income'] = (float) ($row['retina_income'] ?? 0);
+        $summary['laser_count'] = (int) ($row['laser_count'] ?? 0);
+        $summary['laser_income'] = (float) ($row['laser_income'] ?? 0);
     }
     mysqli_free_result($procStatsRes);
 }
@@ -1064,12 +1077,24 @@ if ($trendMax < 1) {
                         <div class="value"><?php echo number_format($summary['procedures_income'], 0); ?></div>
                     </article>
                     <article class="card">
-                        <div class="title">العمليات</div>
-                        <div class="value"><?php echo number_format($summary['surgeries_count']); ?></div>
+                        <div class="title">إجراءات تصوير الشبكية</div>
+                        <div class="value"><?php echo number_format($summary['retina_count']); ?></div>
                     </article>
                     <article class="card">
-                        <div class="title">الليزر</div>
+                        <div class="title">إيراد تصوير الشبكية</div>
+                        <div class="value"><?php echo number_format($summary['retina_income'], 0); ?></div>
+                    </article>
+                    <article class="card">
+                        <div class="title">إجراءات الليزر</div>
                         <div class="value"><?php echo number_format($summary['laser_count']); ?></div>
+                    </article>
+                    <article class="card">
+                        <div class="title">إيراد الليزر</div>
+                        <div class="value"><?php echo number_format($summary['laser_income'], 0); ?></div>
+                    </article>
+                    <article class="card">
+                        <div class="title">العمليات</div>
+                        <div class="value"><?php echo number_format($summary['surgeries_count']); ?></div>
                     </article>
                     <article class="card">
                         <div class="title">الإبر</div>
