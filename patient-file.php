@@ -435,6 +435,8 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         }
 
         .record-section {
+            position: relative;
+            z-index: 1;
             scroll-margin-top: 150px;
         }
 
@@ -848,6 +850,8 @@ if (!function_exists('pf_extract_first_visit_summary')) {
         }
 
         .previous_visits {
+            position: relative;
+            z-index: 2;
             overflow: visible;
         }
 
@@ -1911,9 +1915,18 @@ if (!function_exists('pf_extract_first_visit_summary')) {
             .previous_surgeries,
             .previous_lasers,
             .previous_injections,
-            .patient_visits {
+            .patient_visits,
+            .previous_medicines {
+                position: relative;
+                z-index: 1;
+                overflow: visible;
+                max-height: none;
                 padding: 16px;
                 border-radius: 18px;
+            }
+
+            .previous_visits {
+                z-index: 3;
             }
 
             .section-title {
